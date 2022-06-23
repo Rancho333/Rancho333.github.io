@@ -8,13 +8,13 @@ subtitle: 知行合一，致良知！
 description: "No pain, no gain!"
 keywords: "Racncho, Rancho Blog, 嵌入式"
 author: Rancho
-language: zh-Hans 
+language: zh-CN 
 timezone:
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-#url: https://rancho333.github.io/
-url: https://rancho333.gitee.io/
+url: https://rancho333.github.io/
+#url: https://rancho333.gitee.io/
 root: /
 permalink: :year/:month/:day/:title/
 permalink_defaults:
@@ -75,15 +75,59 @@ pagination_dir: page
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-#theme: next
-theme: landscape
+theme: next
+#theme: landscape
 #theme: butterfly
+search:
+  path: search.xml
+  field: post
+  format: html
+  limit: 10000
+
+# Live2D
+# https://github.com/EYHN/hexo-helper-live2d
+live2d:
+  enable: true
+  pluginRootPath: live2dw/
+  pluginJsPath: lib/
+  pluginModelPath: assets/ Relative)
+
+  # 脚本加载源
+  scriptFrom: local # 默认从本地加载脚本
+  # scriptFrom: jsdelivr # 从 jsdelivr CDN 加载脚本
+  # scriptFrom: unpkg # 从 unpkg CDN 加载脚本
+  # scriptFrom: https://cdn.jsdelivr.net/npm/live2d-widget@3.x/lib/L2Dwidget.min.js # 从自定义地址加载脚本
+  tagMode: false # 只在有 {{ live2d() }} 标签的页面上加载 / 在所有页面上加载
+  log: false # 是否在控制台打印日志
+
+  # 选择看板娘模型
+  model:
+    use: live2d-widget-model-shizuku  # npm package的名字
+    # use: wanko # /live2d_models/ 目录下的模型文件夹名称
+    # use: ./wives/wanko # 站点根目录下的模型文件夹名称
+    # use: https://cdn.jsdelivr.net/npm/live2d-widget-model-wanko@1.0.5/assets/wanko.model.json # 自定义网络数据源
+  display:
+    position: left # 显示在左边还是右边
+    width: 100 # 宽度
+    height: 180 # 高度
+  mobile:
+    show: false
+  react:
+    opacityDefault: 0.7 # 默认透明度
 
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: git
-  #repository: https://github.com/Rancho333/rancho333.github.io.git
-  repository: https://gitee.com/Rancho333/rancho333.git
+  #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
+  repository: https://github.com/Rancho333/rancho333.github.io.git
+  #repository: https://gitee.com/Rancho333/rancho333.git
   branch: master
   message: Blog
+
+feed:
+  type: rss2
+  path: rss2.xml
+  limit: 10
+  hub:
+  content: 'true'

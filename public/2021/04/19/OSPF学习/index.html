@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/pictures/R-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/pictures/R-16x16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"rancho333.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="写在前面跟着上文SONiC路由协议简述, 这篇文章记录一下OSPF协议的学习内容。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OSPF学习">
+<meta property="og:url" content="https://rancho333.github.io/2021/04/19/OSPF%E5%AD%A6%E4%B9%A0/index.html">
+<meta property="og:site_name" content="Rancho Blog">
+<meta property="og:description" content="写在前面跟着上文SONiC路由协议简述, 这篇文章记录一下OSPF协议的学习内容。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-04-19T07:31:37.000Z">
+<meta property="article:modified_time" content="2021-05-06T08:43:45.504Z">
+<meta property="article:author" content="Rancho">
+<meta property="article:tag" content="通信协议">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://rancho333.github.io/2021/04/19/OSPF%E5%AD%A6%E4%B9%A0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>OSPF学习 | Rancho Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/rss2.xml" title="Rancho Blog" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Rancho Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">知行合一，致良知！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>公益 404</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/Rancho333" class="github-corner" title="Rancho&#39;s GitHub" aria-label="Rancho&#39;s GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/04/19/OSPF%E5%AD%A6%E4%B9%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/pictures/R-W.png">
+      <meta itemprop="name" content="Rancho">
+      <meta itemprop="description" content="No pain, no gain!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rancho Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          OSPF学习
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-04-19 15:31:37" itemprop="dateCreated datePublished" datetime="2021-04-19T15:31:37+08:00">2021-04-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-05-06 16:43:45" itemprop="dateModified" datetime="2021-05-06T16:43:45+08:00">2021-05-06</time>
+              </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+            <span class="post-meta-divider">|</span>
+<span title="post.wordcount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span>字数： 1.9k</span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>跟着上文<a target="_blank" rel="noopener" href="https://rancho333.gitee.io/2021/04/08/SONiC%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/">SONiC路由协议简述</a>, 这篇文章记录一下OSPF协议的学习内容。</p>
+<span id="more"></span>
+
+<p>这篇文档应当回答以下几个问题。</p>
+<ol>
+<li>什么是Router ID? 有什么作用？</li>
+<li>为什么要划分区域？为何需要骨干区域？怎样合理划分区域？</li>
+<li>cost值有什么作用？</li>
+<li>LSA描述的网络类型有哪些？</li>
+<li>为什么要选举DR/BDR? 它们有什么作用？</li>
+</ol>
+<h2 id="OSPF概述"><a href="#OSPF概述" class="headerlink" title="OSPF概述"></a>OSPF概述</h2><p>TCP/IP协议中，寻找一台计算机到另一台计算的路由时很重要的，有以下几个考量：</p>
+<ol>
+<li>要判断是否能找到路由</li>
+<li>找到路由后找一条最短的路（花费最小）</li>
+<li>不能自环</li>
+<li>能动态处理路由的变化</li>
+</ol>
+<p>OSPF(open shortest path first，开放最短路径优先)是一种基于链路状态的动态路由协议, 最新的RFC是2328，协议的基本思路如下：在AS中每一台运行OSPF的路由器收集<em>各自的接口/邻接信息</em>称为链路状态，通过Flooding算法在整个系统广播自己的链路状态，使得整个系统内部维护一个同步LSDB，根据这一数据库，路由器计算出以自己为根，其它网络节点为叶的一根最短路径树，从而计算出自己到达系统内部可达的最佳路由。</p>
+<p>相较于RIP周期性的洪泛自己的路由表，无法了解网络的拓扑结构，只是通过路由更新以及简单的机制来学习路由(依照传闻的更新)， OSPF交互的是链路状态，每台OSPF路由器都知晓网络拓扑。</p>
+<p>一句话说明ospf协议， ospf就是寻找去某个终点计算机的最短路径的方法。</p>
+<h3 id="ospf协议基本特征"><a href="#ospf协议基本特征" class="headerlink" title="ospf协议基本特征"></a>ospf协议基本特征</h3><ul>
+<li>适应范围 —— OSPF支持各种规模的网络，最多可以支持几百台路由器</li>
+<li>快速收敛 —— 当网路拓扑结构发生变化，OSPF立即发送更新报文，使之在AS中同步</li>
+<li>无自环 —— OSPF通过收集到的链路状态用最短路径树算法计算路由，从算法本身保证了不会生成自环路由</li>
+<li>子网掩码 —— OSPF在描述路由时携带网段的掩码信息，所以OSPF协议不受自然掩码的限制，对VLSM支持的很好</li>
+<li>区域划分 —— 允许AS的网络划分成区域来划分，区域间传送的路由信息被进一步抽象，从而减少了占用网络的带宽以及CPU的计算压力</li>
+<li>等价路由 —— 支持到同一目的地址的多条等价路由，这些等价路由会被同时发现和使用</li>
+<li>路由分级 —— OSPF使用4类不同的路由，按优先级：区域内路由、区域间路由、第一类外部路由、第二类外部路由</li>
+<li>支持验证 —— 支持基于接口的报文验证以保证路由计算的安全性</li>
+<li>组播发送 —— OSPF在有组播发送能力的链路层上以组播地址发送协议报文，既达到了广播的作用，又最大程度的减少了对其它网络设备的干扰</li>
+</ul>
+<h3 id="ospf相关术语"><a href="#ospf相关术语" class="headerlink" title="ospf相关术语"></a>ospf相关术语</h3><ul>
+<li>RouterID 是一个32-bits的无符号整数，用于唯一标识AS内的一台路由器，OSPF直接基于IP，协议号是89,对于Router ID：<ul>
+<li>Router ID一般需要手工配置</li>
+<li>如果没有配置，首先选取最大的loopback接口地址，其次选择最大的物理接口地址</li>
+<li>如果一台路由器的Router ID在运行中改变，则必须重启OSPF协议或重启路由器才能使新的Router ID生效</li>
+</ul>
+</li>
+<li>Area区域 区域号是一个32bits的整数，一般用十进制整数来标识<br>  ospf引入区域的概念是为了隔离和区分AS内的各部分，并由此减少路由器必须维护的整个AS的信息量（CPU计算和线路传输）。OSPF使用Area实现了分层——两层模式，即transit area和regular areas。transit area(backbone 或 area 0)负责的主要功能是IP包快速和有效的传输，互联OSPF其它区域类型。一般情况下，regular area不允许其他区域的流量通过它到达另外一个区域，必须穿越transit area。regular areas还可有很多子类型，如stub area，not-so-stubby area。<ul>
+<li>ABR(area border router) 连接不同的area，区域之间通过ABR将一个区域内的已计算出的路由封装成Type3类的LSA发送到另一个区域来传递路由信息。此时LSA中包含的不再是链路状态信息，而是纯粹的路由信息。或者说，此时的OSPF是基于D-V算法而不是链路状态算法。D-V算法无法保证消除路由自环，<em>自环产生的主要是</em>因为生成该条路由信息的路由器没有加入生成者的信息，即每一条路由信息都无法知道最初是由谁所生成。OSPF协议在生成LSA时首先将自己的Router ID加入到LSA中，但是如果该路由信息传递超过两个区域后，就会丧失最初的生成者信息。<br>  解决方法是：所有ABR将本区域内的路由信息封装成LSA，统一的发送给一个特定的区域，再由该区域将这些信息转发给其它区域。在这个特定区域内，每一条LSA都确定的知道生成者信息。在其它区域内所有的到区域外的路由都会发送到这个特定区域中，所以就不会产生自环。</li>
+<li>ASBR(autonomous system border router)：一个OSPF路由器，但它连接到另一个AS，或者在同一个AS的网络区域中，但运行不同于OSPF的IGP </li>
+</ul>
+</li>
+<li>cost值 OSPF选择路径是依靠整个链路cost值的总和。计算方法是：10^8/链路带宽。越小优先级越高。缺省情况下，接口按照当前的波特率自动计算接口运行OSPF协议所需的开销。</li>
+<li>DR/BDR：如果网络上有N台路由器，需要建立n*(n-1)/2个邻接关系，使用DR(designated router)来进行信息传递，所有路由器都只将路由信息发送给DR和BDR，再由DR将路由信息发送给本网段内其它路由器，这样只需要建立(n-2)*2+1个邻接关系。通过hello报文进行选举，priority大于0的进行选举，priority一样，router ID大的当选。DR不可被抢占，除非失效，失效后BDR接替成为DR，同时选举出新的BDR。DR是某个网段中概念，是针对路由器的接口而言的。两台DROther路由器之间不进行路由信息的交换，但仍互相发送HELLO报文，他们之间的邻居状态机停留在2-Way状态。</li>
+</ul>
+<h3 id="OSPF网络类型"><a href="#OSPF网络类型" class="headerlink" title="OSPF网络类型"></a>OSPF网络类型</h3><p>根据链路层协议类型，OSPF将网络分为四种类型：</p>
+<ol>
+<li>broadcast：链路层协议是Ethernet、FDDI、Token Ring,以组播的方式发送协议报文，选举DR/BDR.</li>
+<li>NBMA(Non broadcast multiaccess):链路层协议是FR、ATM、HDLC或X.25。手工指定邻居。</li>
+<li>p2p(point-to-point)：链路层协议是PPP或LAPB</li>
+<li>p2mp(point-to-multipoint):没有一种链路层协议会被缺省的认为是p2mp类型，p2mp必然是由其它网络类型强制更改的，常见的做法是将非全联通的NBMA改为点到多点的网络。<br>由于现在链路层协议一般就是Ethernet，所以其它类型只做一个简单了解。</li>
+</ol>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a target="_blank" rel="noopener" href="http://www.h3c.com/cn/d_200805/605874_30003_0.htm">OSPF技术介绍</a><br><a target="_blank" rel="noopener" href="http://ccietea.com/Folder_TechNotes/OSPF.pdf">OSPF笔记</a></p>
+
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Rancho
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://rancho333.github.io/2021/04/19/OSPF%E5%AD%A6%E4%B9%A0/" title="OSPF学习">https://rancho333.github.io/2021/04/19/OSPF学习/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E9%80%9A%E4%BF%A1%E5%8D%8F%E8%AE%AE/" rel="tag"># 通信协议</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/04/08/SONiC%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/" rel="prev" title="SONiC路由协议简述">
+      <i class="fa fa-chevron-left"></i> SONiC路由协议简述
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/04/23/SONiC%E4%B8%ADOSPF%E4%BD%BF%E7%94%A8%E7%AE%80%E8%BF%B0/" rel="next" title="SONiC中OSPF使用简述">
+      SONiC中OSPF使用简述 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="nav-number">1.</span> <span class="nav-text">写在前面</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#OSPF%E6%A6%82%E8%BF%B0"><span class="nav-number">2.</span> <span class="nav-text">OSPF概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ospf%E5%8D%8F%E8%AE%AE%E5%9F%BA%E6%9C%AC%E7%89%B9%E5%BE%81"><span class="nav-number">2.1.</span> <span class="nav-text">ospf协议基本特征</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ospf%E7%9B%B8%E5%85%B3%E6%9C%AF%E8%AF%AD"><span class="nav-number">2.2.</span> <span class="nav-text">ospf相关术语</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#OSPF%E7%BD%91%E7%BB%9C%E7%B1%BB%E5%9E%8B"><span class="nav-number">2.3.</span> <span class="nav-text">OSPF网络类型</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-number">3.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Rancho"
+      src="/pictures/R-W.png">
+  <p class="site-author-name" itemprop="name">Rancho</p>
+  <div class="site-description" itemprop="description">No pain, no gain!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">54</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">35</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Rancho333" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Rancho333" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Rancho</span>
+</div>
+
+<div class="theme-info">
+  <div class="powered-by"></div>
+  <span class="post-count">全站共 75.6k 字</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/ Relative)","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"left","width":100,"height":180},"mobile":{"show":false},"react":{"opacityDefault":0.7}});</script></body>
+</html>

@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/pictures/R-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/pictures/R-16x16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"rancho333.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="关于NAT的一些基本问题 什么是NAT? NAT的工作方式 NAT的弊端及处理方式 ALG ICMP报文的特殊处理 IP分片的特殊处理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="NAT简述及仿真实验">
+<meta property="og:url" content="https://rancho333.github.io/2021/09/29/NAT%E7%AE%80%E8%BF%B0%E5%8F%8A%E4%BB%BF%E7%9C%9F%E5%AE%9E%E9%AA%8C/index.html">
+<meta property="og:site_name" content="Rancho Blog">
+<meta property="og:description" content="关于NAT的一些基本问题 什么是NAT? NAT的工作方式 NAT的弊端及处理方式 ALG ICMP报文的特殊处理 IP分片的特殊处理">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://rancho333.github.io/pictures/cisco_nat_seq.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/linux_nat_seq.jpg">
+<meta property="og:image" content="https://rancho333.github.io/pictures/sonic_nat_config.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/topo_nat.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/before_nat.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/after_nat.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/inside_source.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/outside_ping.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/outside_dest.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/topo_d_nat.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/r1_d_nat.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/r4_d_nat.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/nat_tran.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/nat_stat.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/r1_pat_to.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/r1_pat_from.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/r4_pat_to.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/r4_pat_from.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/pat_tran.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/r1_pat_ping_to.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/r1_pat_ping_from.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/pat_tran_ping.png">
+<meta property="article:published_time" content="2021-09-29T05:52:24.000Z">
+<meta property="article:modified_time" content="2021-12-17T02:57:30.573Z">
+<meta property="article:author" content="Rancho">
+<meta property="article:tag" content="NAT">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://rancho333.github.io/pictures/cisco_nat_seq.png">
+
+<link rel="canonical" href="https://rancho333.github.io/2021/09/29/NAT%E7%AE%80%E8%BF%B0%E5%8F%8A%E4%BB%BF%E7%9C%9F%E5%AE%9E%E9%AA%8C/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>NAT简述及仿真实验 | Rancho Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/rss2.xml" title="Rancho Blog" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Rancho Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">知行合一，致良知！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>公益 404</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/Rancho333" class="github-corner" title="Rancho&#39;s GitHub" aria-label="Rancho&#39;s GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/09/29/NAT%E7%AE%80%E8%BF%B0%E5%8F%8A%E4%BB%BF%E7%9C%9F%E5%AE%9E%E9%AA%8C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/pictures/R-W.png">
+      <meta itemprop="name" content="Rancho">
+      <meta itemprop="description" content="No pain, no gain!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rancho Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          NAT简述及仿真实验
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-09-29 13:52:24" itemprop="dateCreated datePublished" datetime="2021-09-29T13:52:24+08:00">2021-09-29</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-12-17 10:57:30" itemprop="dateModified" datetime="2021-12-17T10:57:30+08:00">2021-12-17</time>
+              </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+            <span class="post-meta-divider">|</span>
+<span title="post.wordcount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span>字数： 5.8k</span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+<ul>
+<li><a href="#%E5%85%B3%E4%BA%8Enat%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E6%9C%AC%E9%97%AE%E9%A2%98">关于NAT的一些基本问题</a><ul>
+<li><a href="#%E4%BB%80%E4%B9%88%E6%98%AFnat">什么是NAT?</a></li>
+<li><a href="#nat%E7%9A%84%E5%B7%A5%E4%BD%9C%E6%96%B9%E5%BC%8F">NAT的工作方式</a></li>
+<li><a href="#nat%E7%9A%84%E5%BC%8A%E7%AB%AF%E5%8F%8A%E5%A4%84%E7%90%86%E6%96%B9%E5%BC%8F">NAT的弊端及处理方式</a><ul>
+<li><a href="#alg">ALG</a></li>
+<li><a href="#icmp%E6%8A%A5%E6%96%87%E7%9A%84%E7%89%B9%E6%AE%8A%E5%A4%84%E7%90%86">ICMP报文的特殊处理</a></li>
+<li><a href="#ip%E5%88%86%E7%89%87%E7%9A%84%E7%89%B9%E6%AE%8A%E5%A4%84%E7%90%86">IP分片的特殊处理</a><span id="more"></span></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#nat%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%B7%A5%E4%BD%9C%E6%A8%A1%E5%9E%8B">NAT的基本工作模型</a><ul>
+<li><a href="#%E4%BC%A0%E7%BB%9Fnat">传统NAT</a><ul>
+<li><a href="#%E5%9F%BA%E6%9C%AC%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2basic-nat">基本地址转换(Basic NAT)</a></li>
+<li><a href="#naptnetwork-address-port-translation">NAPT(network address port translation)</a></li>
+<li><a href="#%E5%85%B3%E4%BA%8E%E9%9D%99%E6%80%81nat%E5%92%8C%E5%8A%A8%E6%80%81nat">关于静态NAT和动态NAT</a></li>
+</ul>
+</li>
+<li><a href="#bi-directional-nat-or-two-way-nat">Bi-directional NAT or Two-Way NAT</a></li>
+<li><a href="#twice-nat">Twice NAT</a></li>
+</ul>
+</li>
+<li><a href="#nat%E7%9A%84%E4%B8%80%E4%BA%9B%E5%BA%94%E7%94%A8%E6%96%B9%E6%A1%88">NAT的一些应用方案</a><ul>
+<li><a href="#nat%E7%9A%84%E5%8F%8C%E7%83%AD%E6%9C%BA%E5%A4%87%E4%BB%BDnat%E5%A4%9A%E5%87%BA%E5%8F%A3%E7%AD%96%E7%95%A5">NAT的双热机备份/NAT多出口策略</a></li>
+<li><a href="#nat%E7%A9%BF%E8%B6%8A%E6%8A%80%E6%9C%AF">NAT穿越技术</a></li>
+<li><a href="#nat%E4%B8%8Evpn">NAT与VPN</a></li>
+<li><a href="#nat%E4%B8%8E%E8%B7%AF%E7%94%B1%E7%9A%84%E5%85%B3%E7%B3%BB%E5%8F%8A%E4%B8%80%E4%BA%9B%E5%A4%84%E7%90%86%E7%BB%86%E8%8A%82">NAT与路由的关系及一些处理细节</a></li>
+<li><a href="#sonic%E4%B8%ADnat%E7%9A%84%E5%AE%9E%E7%8E%B0">SONiC中NAT的实现</a></li>
+<li><a href="#nat-ptv4v6%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2">NAT-PT(V4/V6地址转换)</a></li>
+</ul>
+</li>
+<li><a href="#gns3%E4%B8%8Anat%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%AE%9E%E9%AA%8C">GNS3上NAT的基本实验</a><ul>
+<li><a href="#%E9%9D%99%E6%80%81nat%E5%AE%9E%E9%AA%8C">静态NAT实验</a></li>
+<li><a href="#%E5%8A%A8%E6%80%81nat%E5%AE%9E%E9%AA%8C">动态NAT实验</a></li>
+<li><a href="#pat%E5%AE%9E%E9%AA%8C">PAT实验</a></li>
+</ul>
+</li>
+<li><a href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99">参考资料</a></li>
+</ul>
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+<h1 id="关于NAT的一些基本问题"><a href="#关于NAT的一些基本问题" class="headerlink" title="关于NAT的一些基本问题"></a>关于NAT的一些基本问题</h1><p>本文旨在对NAT有一个全局的了解，包括NAT技术的起因，技术的实现方式以及应用场景，技术存在的缺点以及解决方式，最后以几个基本的实验进行验证收尾，对于某些复杂的应用场景或技术细节，会简述而不深究，这些等到真实的应用中去打磨。</p>
+<h2 id="什么是NAT"><a href="#什么是NAT" class="headerlink" title="什么是NAT?"></a>什么是NAT?</h2><p>NAT的名字很准确，Network Address Translator(网络地址转换)，就是替换私网IP报文头部的地址信息，从而提供公网可达性和上层协议的连接能力。按照rfc2663的说法，NAT是从一个IP地址范围映射到另一个范围的方法，很显然，这种说法更加概括<br>NAT的使用场景：</p>
+<ul>
+<li>私网到公网的翻译</li>
+<li>重叠地址之间的翻译</li>
+<li>保护内网IP设备</li>
+</ul>
+<p>关于私网，RFC1918规定了三个保留地址段落：10.0.0.0-10.255.255.255；172.16.0.0-172.31.255.255；192.168.0.0-192.168.255.255。</p>
+<h2 id="NAT的工作方式"><a href="#NAT的工作方式" class="headerlink" title="NAT的工作方式"></a>NAT的工作方式</h2><p>NAT功能在网络出口路由器上使能，在报文离开私网进入公网时，将源IP替换为公网IP，报文从公网进入私网时，做相反的替换。NAT处理报文的几个关键特点：</p>
+<ul>
+<li>网络被分为私网和公网两个部分，NAT网关设置在私网到公网的路由出口位置，双向流量必须都经过NAT网关</li>
+<li>NAT网关在两个访问方向上完成两次地址转换，出方向上做源信息替换，入方向上做目的地址替换</li>
+<li><em>NAT网关的存在对通信双方是透明的</em>(这是NAT致力于达到的，但做的不好，因为有些上层协议会在内部携带IP地址信息)</li>
+<li>NAT网关为了实现双向翻译，需要维护一张关联表，把会话信息记录下来</li>
+</ul>
+<h2 id="NAT的弊端及处理方式"><a href="#NAT的弊端及处理方式" class="headerlink" title="NAT的弊端及处理方式"></a>NAT的弊端及处理方式</h2><p>NAT缓解公网IP不够用的同时带来了一些不好的影响，需要通过另一些技术去解决。</p>
+<ul>
+<li>NAT无法做到透明传输，ALG技术来解决</li>
+<li>NAT破环了IP协议架构端到端的通信模型，破坏了节点在通讯中的对等地位。NAT穿透技术进行解决</li>
+<li>NAT使IP会话的时效变短，因为IP和端口资源有限，而通信的需求无限，NAT网关会对关联表进行老化操作(特别是UDP通信)，这可能会导致用户可感知的连接中断，通过上层协议设置连接保活机制来解决</li>
+<li>使依赖IP进行主机跟踪的机制失效，如：基于用户行为的日志分析，基于IP的用户授权，服务器连接设置同一时间只接收同一IP的有限访问，总之NAT屏蔽了通信的一端，把简单的事情复杂化了</li>
+<li>ICMP复用和解复用需要特殊处理，如果ICMP payload无法提供足够信息，解复用会失败</li>
+<li>IP分片，因为只有第一个分片有传输层信息，NAT很难识别后续分片与关联表的对应关系，需要特殊处理</li>
+</ul>
+<h3 id="ALG"><a href="#ALG" class="headerlink" title="ALG"></a>ALG</h3><p>NAT工作在L3和L4，ALG(application level gateways)是用以解决NAT对应用层无感知的常用方式。NAT网关基于传输层端口信息来识别连接是否为已知的应用类型，在识别为已知应用时，会对其报文内容进行检查，当发现任何形式表达的IP地址和端口时，会把这些信息同步转换。</p>
+<p>但是，应用层协议很多而且在不断变化，而设备中的ALG都是针对特定协议特定版本开发的，尽管Linux允许动态加载ALG特性，其管理维护成本依然很高。因此，ALG只能解决常用的用户需求，而且，有些报文从源端发出就已经加密，ALG也无能为力。</p>
+<h3 id="ICMP报文的特殊处理"><a href="#ICMP报文的特殊处理" class="headerlink" title="ICMP报文的特殊处理"></a>ICMP报文的特殊处理</h3><p>NAT网关通常采用五元组进行NAT映射，即源地址、源端口、IP协议类型、目的地址、目的端口。ICMP报文直接承载在IP报文之上，没有L4信息。以ping为例，对于ICMP请求报文，TYPE+CODE字段作为源端口，identifier作为目的端口记录，反之亦然。windows上发出的ICMP报文identifier字段全部是0x0400，处理上有些差别。<br>这段话来自华三的《NAT专题》，在思科的c3600上实验时，发现其只使用identifier标识一个ICMP会话，即ICMP的src port和dst port都是identifier的值。这里表示理解，只要NAT设备能够区别出不同内部主机发的报文即可，具体实现厂家可能有所差异。</p>
+<h3 id="IP分片的特殊处理"><a href="#IP分片的特殊处理" class="headerlink" title="IP分片的特殊处理"></a>IP分片的特殊处理</h3><p>当进行IP分片时，这些信息只有首片报文会携带(只有首片中有端口号，只有首片中有icmp的identifier)，后续分片报文依靠报文ID、分片标志位、分片偏移量依次关联到前一个分片。在PAT转换类型中，除了对IP地址进行处理，还会处理L4的端口号，ICMP报文头中的identifier字段信息。因此，除首片外的报文无法进行转换，需要特殊处理，有两种方式：</p>
+<ul>
+<li>先缓存，等所有报文到达后，进行虚拟重组，再进行NAT转换，将转换后的报文再顺序发出</li>
+<li>在首片到达并转换后，保存转换首片使用的IP以及identifier信息，在后续分片到达后使用同样表项进行转换。</li>
+</ul>
+<h1 id="NAT的基本工作模型"><a href="#NAT的基本工作模型" class="headerlink" title="NAT的基本工作模型"></a>NAT的基本工作模型</h1><p>NAT是网络地址转换的总称，基于不同的应用场景它有不同的配置。大的分类上可以分为传统NAT和two-way NAT以及twice NAT。</p>
+<h2 id="传统NAT"><a href="#传统NAT" class="headerlink" title="传统NAT"></a>传统NAT</h2><p>传统NAT只能由内网主机发起通信，是单向的。传统NAT有两种实现。</p>
+<h3 id="基本地址转换-Basic-NAT"><a href="#基本地址转换-Basic-NAT" class="headerlink" title="基本地址转换(Basic NAT)"></a>基本地址转换(Basic NAT)</h3><p>NAT设备拥有多个公网ip，数量远少于内网主机的数量，当有内网主机访问外网时分配公网ip，访问结束时释放。NAT设备拥有公网IP地址的数目，应该根据网络高峰可能访问外网的内网主机数目的统计值来确定。</p>
+<p>上面这段话是对rfc2663 4.1.1章节的一个翻译，结合实际的应用，Basic NAT就是只进行IP地址转换的NAT模式。</p>
+<h3 id="NAPT-network-address-port-translation"><a href="#NAPT-network-address-port-translation" class="headerlink" title="NAPT(network address port translation)"></a>NAPT(network address port translation)</h3><p>一个外网地址可以同时分配给多个内网地址公用。该模式下，NAPT会转换源IP，源端口以及相关的ip，tcp/udp和icmp的header checksums.转换的id可以是 tcp/udp的端口号或者icmp的query ID。其转换的基本原理可形容为：<br>(iAddr;iPort) &lt;——&gt; (eAddr; ePort)<br>与此相关可称之为PAT(port address translation)模式，NAT使用最多的模式就是PAT模式。相反的不使用port进行地址转换称为NO-PAT(not port address translation)，而NAPT根据是否关心对端的信息可以分为下面两种：</p>
+<ol>
+<li><p>endpoint-independent mapping(不关心对端地址和端口的转换模式)<br>NAT设备通过建立三元组(源地址、源端口号、协议类型)表项来进行地址分配和报文过滤。即，只要来自相同源地址和源端口号的报文，不论其目的地址是否相同，通过NAPT映射后，其源地址和源端口号都被转换成同一个外部地址和端口号，并且NAT设备允许外部网络的主机通过该转换后的地址和端口来访问这些内部网络的主机。这种模式可以很好的支持位于不同NAT设备之后的主机进行互访。</p>
+</li>
+<li><p>address and port-dependent mapping(关心对端地址和端口转换模式)<br>NAT设备通过建立五元组(源地址、源端口号、协议类型、目的地址、目的端口号)进行地址分配和报文过滤。即，对于来自相同源地址和源端口号的报文，若其目的地址和目的端口号不同，通过NAPT映射后，会被转换成不同的外部地址和端口号，并且NAT设备只允许这些目的地址对应的外部网络的主机才可以访问对应的内部主机。这种模式安全性好，但是不便于位于不同NAT设备之后的主机间的互访。</p>
+</li>
+</ol>
+<p>而通过对外部主机地址+端口的限制，又可以分为：</p>
+<ul>
+<li>全锥形：对于inbound,只要NAT表项中存在，不关心src ip</li>
+<li>限制锥形：对于inbound, 关心src ip</li>
+<li>端口限制锥形: 对于inbound, 关心src ip + src port</li>
+<li>对称形: 对于outbound和inbound, 只有src ip, src port, dst ip, dst port完全一致才认为是一个会话，否则创建新的表项<br>这些都是本质是NAT的应用，更加细粒度的进行控制过滤，是NAT的一种工作方式, 可以称之为<em>policy NAT</em>。</li>
+</ul>
+<h3 id="关于静态NAT和动态NAT"><a href="#关于静态NAT和动态NAT" class="headerlink" title="关于静态NAT和动态NAT"></a>关于静态NAT和动态NAT</h3><p>这是另一种分类方式，静态NAT即内外网地址信息静态绑定，是一一映射，这种很少使用，可用来隐藏私网ip和重叠地址网络的通信。动态NAT则是使用外网地址池，有资源回收机制，这种用法也少，地主家也不能买这么多公网IP地址。</p>
+<h2 id="Bi-directional-NAT-or-Two-Way-NAT"><a href="#Bi-directional-NAT-or-Two-Way-NAT" class="headerlink" title="Bi-directional NAT or Two-Way NAT"></a>Bi-directional NAT or Two-Way NAT</h2><p>外部网络能够有主动访问内网主机的机会，如给外网提供一台Web服务器，或是一台FTP服务器。实现双向NAT的关键在于DNS-ALG的引入，借助DNS-ALG,实现处于不同网络中的主机直接通过域名来相互访问。<br>静态NAT一般就是双向NAT.</p>
+<h2 id="Twice-NAT"><a href="#Twice-NAT" class="headerlink" title="Twice NAT"></a>Twice NAT</h2><p>相对于traditional NAT和bi-directional NAT中NAT设备只会对报文的源或者目的进行修改，twice NAT则对报文的src/dst同时进行修改。例如当外网主机使用的外网的ip已经分配给别的组织地址，这时需要将dst也改掉。这种方式常用于支持内网用户主动访问与之地址重叠(overlap)的外网资源。</p>
+<p>当内网主机A向外网主机B发起通信时，但是内网中有主机D使用的是和B一样的IP地址（如之前ISP分配的，现在收回了；如同一公司的异地组网），如果A直接和B进行通信，那么报文会转发给D。A 通过发送DNS请求B的ip，DNS-ALG接收到之后给其分配一个可路由的内网地址C，现在A向C通信，NAT设备收到之后，对于src ip,按传统NAT转换，对于dest ip，将地址C改为B的地址，发给外网，收到之后，反之亦然。<br>Twice NAT would not be allowed to advertise local networks to the external network or vice versa.</p>
+<p>NAT可分为SNAT、DNAT和twice NAT, 对于inside——&gt;outside的流量，做SNAT，对于outside——&gt;inside的流量，做DNAT。</p>
+<h1 id="NAT的一些应用方案"><a href="#NAT的一些应用方案" class="headerlink" title="NAT的一些应用方案"></a>NAT的一些应用方案</h1><h2 id="NAT的双热机备份-NAT多出口策略"><a href="#NAT的双热机备份-NAT多出口策略" class="headerlink" title="NAT的双热机备份/NAT多出口策略"></a>NAT的双热机备份/NAT多出口策略</h2><p>与出口网关一样，NAT存在单点故障的问题。进行双热机备份当然是很好的方式。双热机备份分为对称式和非对称式，对称式即进出流量只能走相同的设备，非对称式则没有这个要求，可以进行负载均衡。这里简单列举一下对称式的实现方式：</p>
+<ul>
+<li>利用VRRP实现流量切换</li>
+<li>利用动态路由实现流量切换</li>
+</ul>
+<h2 id="NAT穿越技术"><a href="#NAT穿越技术" class="headerlink" title="NAT穿越技术"></a>NAT穿越技术</h2><p>这里只是插个眼，不做深入研究，NAT穿越技术有：</p>
+<ul>
+<li>ALG</li>
+<li>探针技术STUN与TURN</li>
+<li>中间件技术</li>
+<li>中继代理技术</li>
+<li>特定协议的自穿越技术</li>
+</ul>
+<h2 id="NAT与VPN"><a href="#NAT与VPN" class="headerlink" title="NAT与VPN"></a>NAT与VPN</h2><p>常见的VPN有：GRE、L2TP、IPsec、SSL VPN等。NAT在工作过程中会修改L3和L4的信息，在分析VPN与NAT共存时，首先需要分析该VPN隧道的封装方式，看有没有传输层端口，其次要分析VPN隧道的协商过程中是否使用报文的IP地址。具体分析在这里不展开了，说个结论：SSL VPN与L2TP VPN与NAT可以天然共存，IPsec VPN在部分模式下可与NAT共存，而GRE无法穿越NAT.</p>
+<h2 id="NAT与路由的关系及一些处理细节"><a href="#NAT与路由的关系及一些处理细节" class="headerlink" title="NAT与路由的关系及一些处理细节"></a>NAT与路由的关系及一些处理细节</h2><p>对cisco的实现，参见下图：<br><img src="https://rancho333.github.io/pictures/cisco_nat_seq.png"><br>对于inside-&gt;outside的流量，NAT转化发生在routing之后；对于outside-&gt;inside的流量，NAT转换发生在路由之前.所以自cisco的实现中，NAT与路由的关系只取决于流量的方向，通过inside/outside修饰接口分割出两个区域，通过source/dest表明流量的方向。</p>
+<p>Cisco会在特定的时间将“一条NAT映射策略”安装到系统的inside NAT表或者outside NAT表中，对于从网口进入的数据包，会根据网口是inside还是outside去匹配inside NAT表或者outside NAT表中的NAT规则，仅此而已。不管是inside NAT表还是outside NAT表，都各有两张，一张是SNAT表，另一张是DNAT表。对于每一个数据包，都要用源IP地址去查询SNAT表，用目标IP地址去查询DNAT表。这在下面的静态NAT实验中将有很好的体现。</p>
+<p>对Linux的实现，参见下图：<br><img src="https://rancho333.github.io/pictures/linux_nat_seq.jpg"><br>Linux中并没有将NAT应用于接口的说法，NAT的配置是全局的。此时接口就是一个match，写match/target去匹配执行就好。SNAT位于post-routing域，DNAT位于pre-routing域。SNAT指的是内网发往外网的流量修改src ip, DNAT指的是外网发往内网的流量修改dest ip。Linux中的NAT是基于五元组的，也就是NAT结果和一个流(conntrack)关联在一起。</p>
+<p>Linux的nat中，待转换的IP地址是一个match，因此不管是一对一的转换还是一对多的转换，原理都是一样的。Linux并不区分静态转换和动态转换。在内核中，永远都不会出现所谓的NAT映射表，iptables添加的NAT规则不会生成映射，数据包进入匹配nat成功，也不会生成映射，nat结果仅仅存在于conntrack中作为tuple的一部分体现。</p>
+<p>Linux的nat查询对于第一个包是逐条匹配iptables nat表规则，对于后续的包，则转化为针对五元组的conntrack哈希查询。</p>
+<p>借用一下SONiC中对NAT的配置：<br><img src="https://rancho333.github.io/pictures/sonic_nat_config.png"><br>命令行里面默认的NAT类型是dnat，这里不理解，等待后续使用去验证。这个NAT条目只有外网发到内网的流量才会触发呀？这不符合NAT使用最多的场景呀！</p>
+<p>思科强调使用者得使用域，Linux强调技术本身的合理性.</p>
+<h2 id="SONiC中NAT的实现"><a href="#SONiC中NAT的实现" class="headerlink" title="SONiC中NAT的实现"></a>SONiC中NAT的实现</h2><p><a target="_blank" rel="noopener" href="https://github.com/Azure/SONiC/blob/master/doc/nat/nat_design_spec.md">SONiC中NAT</a>是SONiC对NAT的设计文档。鉴于TH4不支持NAT，SONiC的上NAT的实验后续再进行。</p>
+<h2 id="NAT-PT-V4-V6地址转换"><a href="#NAT-PT-V4-V6地址转换" class="headerlink" title="NAT-PT(V4/V6地址转换)"></a>NAT-PT(V4/V6地址转换)</h2><p>IPv4与IPv6的过渡技术有双栈、隧道和翻译。其中翻译就是使用的NAT-PT技术。这里插个眼，后续有需要在深入。</p>
+<h1 id="GNS3上NAT的基本实验"><a href="#GNS3上NAT的基本实验" class="headerlink" title="GNS3上NAT的基本实验"></a>GNS3上NAT的基本实验</h1><p>以上都是看的一些文档资料，实验看看效果才好，实验环境为GNS3+c3600，做三个基本场景的实验：</p>
+<ul>
+<li>静态NAT实验</li>
+<li>动态NAT实验</li>
+<li>PAT实验</li>
+</ul>
+<h2 id="静态NAT实验"><a href="#静态NAT实验" class="headerlink" title="静态NAT实验"></a>静态NAT实验</h2><p>基本命令为<code>ip nat inside static a b</code>, 系统会将a——&gt;b的源地址转换加入到inside的SNAT表中，同时将b——&gt;a的目的地址转换加入到outside的DNAT表中。针对后面所有的数据包，不管是内部发起的，还是外部发起的，都会根据接口使能的inside nat还是outside nat来查表匹配。<br>拓扑图如下：<br><img src="https://rancho333.github.io/pictures/topo_nat.png"><br>配置如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">R1:</span><br><span class="line">interface Ethernet0&#x2F;0</span><br><span class="line"> ip address 192.168.1.2 255.255.255.0</span><br><span class="line">router ospf 1</span><br><span class="line"> network 192.168.1.0 0.0.0.255 area 0</span><br><span class="line"></span><br><span class="line">R2:</span><br><span class="line">interface Ethernet0&#x2F;0</span><br><span class="line"> ip address 192.168.1.1 255.255.255.0</span><br><span class="line"> ip nat inside</span><br><span class="line">interface Ethernet0&#x2F;1</span><br><span class="line"> ip address 202.100.10.1 255.255.255.0</span><br><span class="line"> ip nat outside</span><br><span class="line">router ospf 1</span><br><span class="line"> network 192.168.1.0 0.0.0.255 area 0</span><br><span class="line"> network 202.100.10.0 0.0.0.255 area 0</span><br><span class="line">ip nat inside source static 192.168.1.2 202.100.10.3</span><br><span class="line"></span><br><span class="line">R3:</span><br><span class="line">interface Ethernet0&#x2F;1</span><br><span class="line"> ip address 202.100.10.2 255.255.255.0</span><br><span class="line">router ospf 1</span><br><span class="line"> network 202.100.10.0 0.0.0.255 area 0</span><br></pre></td></tr></table></figure>
+<p>在R1上ping R3，分别在R2的左右两侧进行抓包，左侧为NAT之前的报文：<br><img src="https://rancho333.github.io/pictures/before_nat.png"><br>右侧为NAT之后的报文，发现src ip已经发生改变：<br><img src="https://rancho333.github.io/pictures/after_nat.png"></p>
+<p>注意我们只配置了<code>ip nat inside source</code>, 即我们只在inside接口上使能了SNAT，但是对于R4返回的数据包，是在outside接口上做DNAT，我们并没有做这个配置，这是因为cisco自动进行了这种关联，在命令行中我们也会发现cisco在outside上只有<code>ip nat outside source</code>。从NAT转换表中我们也可以看出这种自动关联的动作。<br><img src="https://rancho333.github.io/pictures/inside_source.png"><br>在ping动作之前，表中其实只有第二行，第一行的icmp是ping之后流量触发时建立，发现多了outside global和outside local字段。</p>
+<p><code>ip nat outside source</code>表示从outside发往inside的报文做SNAT。进一步的总结下，cisco NAT的四种类型：</p>
+<ol>
+<li>从inside到outside时做SNAT</li>
+<li>从inside到outside时做DNAT</li>
+<li>从outside到inside时做SNAT</li>
+<li>从outside到inside时做DNAT<br>其中1,4是成对的，2,3是成对的。即配1了4会自动部署，配3了2会自动部署，验证一下2,3的成对关系：<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ip nat outside source static 202.100.10.2 192.168.1.3</span><br></pre></td></tr></table></figure>
+然后使用R3 ping R1，抓包结果为：<br><img src="https://rancho333.github.io/pictures/outside_ping.png"><br>可以看到R1给192.168.1.3回了icmp reply报文，但是R3并没有收到地址转换后的报文。</li>
+</ol>
+<p>NAT表项转换为：<br><img src="https://rancho333.github.io/pictures/outside_dest.png"><br>同样第一行为我们配置的，第二行为流量触发的，可以发现增加了<code>inside local</code>和<code>inside local</code></p>
+<p>这里需要结合cisco中NAT与路由的关系来回答这个问题：<br>显然这里是步骤<code>2</code>出了问题，inside-&gt;outside流量是在路由之后完成的，即R1给R3的icmp reply报文是针对192.168.1.3做的路由，R3自然收不到报文<br>所以需要在R2上配置一条静态路由：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ip route 192.168.1.3 255.255.255.255 202.100.10.2</span><br></pre></td></tr></table></figure>
+<p>或者在outside上面配置source时添加add-route选项：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ip nat outside source static 202.100.10.2 192.168.1.3 add-route # add-route会给prefix 192.168.1.3添加next-hop为202.100.10.2</span><br></pre></td></tr></table></figure>
+<p><em>说明一下：这里的SNAT单纯表示替换source ip，DNAT单纯表示替换dest ip，SNAT和DNAT在Linux中与路由的关系在这里不适用</em></p>
+<h2 id="动态NAT实验"><a href="#动态NAT实验" class="headerlink" title="动态NAT实验"></a>动态NAT实验</h2><p>对于动态NAT，配置完命令后系统不会添加任何NAT规则只有当某一个包匹配到了ACL，要引发NAT时，系统会动态的从pool中选取一个要转换的IP地址，加入到inside的SNAT表项中，同时针对反方向的目的地址转换规则将其加入到outside的DNAT表项中。<br>因此，cisco的动态NAT是单向的，因为反向的数据包进入时不会匹配到ACL，不会引发NAT规则，也就不会生成任何NAT表项。在此例中，如果R3先ping R1是不通的，必须先让R1 ping R3生成NAT表项后，双方才能互通。</p>
+<p>实验拓扑图如下：<br><img src="https://rancho333.github.io/pictures/topo_d_nat.png"></p>
+<p>本次实验通过配置一个NAT地址池，让R1、R4与R3通信时发生NAT转换。设备配置如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">R1：</span><br><span class="line">interface Ethernet0&#x2F;0</span><br><span class="line"> ip address 192.168.1.2 255.255.255.0</span><br><span class="line">ip route 0.0.0.0 0.0.0.0 192.168.1.1            #R1模拟私网主机，配置网关</span><br><span class="line"></span><br><span class="line">R2:</span><br><span class="line">interface Ethernet0&#x2F;0</span><br><span class="line"> ip address 192.168.1.1 255.255.255.0</span><br><span class="line"> ip nat inside                  # 配置NAT inside域</span><br><span class="line">interface Ethernet0&#x2F;1</span><br><span class="line"> ip address 202.100.10.1 255.255.255.0</span><br><span class="line"> ip nat outside                 # 配置NAT outside域</span><br><span class="line">interface Ethernet0&#x2F;2</span><br><span class="line"> ip address 192.168.2.1 255.255.255.0</span><br><span class="line"> ip nat inside                  # 配置NAT inside域</span><br><span class="line">ip nat pool rancho-test 202.100.10.3 202.100.10.10 prefix-length 24   # 设置NAT地址池</span><br><span class="line">ip nat inside source list 1 pool rancho-test                          # 设置地址池与ACL的映射  </span><br><span class="line">access-list 1 permit 192.168.2.2                                      # 设置ACL规则，标准acl只匹配source</span><br><span class="line">access-list 1 permit 192.168.1.2                                    </span><br><span class="line">access-list 1 deny any</span><br><span class="line"></span><br><span class="line">R3：</span><br><span class="line">interface Ethernet0&#x2F;1</span><br><span class="line"> ip address 202.100.10.2 255.255.255.0</span><br><span class="line">ip route 0.0.0.0 0.0.0.0 202.100.10.1</span><br><span class="line"></span><br><span class="line">R4:</span><br><span class="line">interface Ethernet0&#x2F;2</span><br><span class="line"> ip address 192.168.2.2 255.255.255.0</span><br><span class="line">ip route 0.0.0.0 0.0.0.0 192.168.2.1</span><br></pre></td></tr></table></figure>
+
+<p>在R2左右两侧抓包，对应为NAT转换前后的包，对于R1 ping R3的抓包：<br><img src="https://rancho333.github.io/pictures/r1_d_nat.png"><br>配置的NAT地址池从202.100.10.3开始，第一个命中NAT规则的分配start ip。</p>
+<p>对于R4 ping R3的抓包：<br><img src="https://rancho333.github.io/pictures/r4_d_nat.png"><br>后续命中NAT规则的依次分配，对于192.168.2.2分配外网IP：202.100.10.4</p>
+<p>在R2上查看生成的NAT转换表项(在ping之前为空，只有当命中ACL规则，触发NAT转换才会生成，这是和静态NAT表项的区别)：<br><img src="https://rancho333.github.io/pictures/nat_tran.png"><br>转换表项和抓包的对比是吻合的。</p>
+<p>查看下R2上关于NAT的统计数据以及使能的NAT的配置：<br><img src="https://rancho333.github.io/pictures/nat_stat.png"></p>
+<h2 id="PAT实验"><a href="#PAT实验" class="headerlink" title="PAT实验"></a>PAT实验</h2><p>复用<code>动态NAt实验</code>的拓扑和基本配置，只需要将<code>R2</code>上的NAT配置做一些修改，使R1、R4访问R3时使用R2上右侧端口的IP。R2上的配置修改如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">- ip nat pool rancho-test 202.100.10.3 202.100.10.10 prefix-length 24   # 设置NAT地址池</span><br><span class="line">- ip nat inside source list 1 pool rancho-test                          # 设置地址池与ACL的映射</span><br><span class="line">+ ip nat inside source list 1 interface Ethernet0&#x2F;1 overload            # ACL 1的流量复用 0&#x2F;1端口的IP地址</span><br></pre></td></tr></table></figure>
+<p>同样在R2左右两侧抓包，对应PAT转换前后的包，对于R1 telnet R3，发出去的包为：<br><img src="https://rancho333.github.io/pictures/r1_pat_to.png"><br>R3对R1的返回包为：<br><img src="https://rancho333.github.io/pictures/r1_pat_from.png"></p>
+<p>对于R4 telnet R3, 发出去的包为:<br><img src="https://rancho333.github.io/pictures/r4_pat_to.png"><br>R3对R4的返回包为：<br><img src="https://rancho333.github.io/pictures/r4_pat_from.png"></p>
+<p>查看R2上的NAT转换表，与抓包内容符合：<br><img src="https://rancho333.github.io/pictures/pat_tran.png"></p>
+<p>这里可以发现PAT转换前后src port并没有发生改变(直接使用的就是源TCP包中的port)，在命令里面也没有看到配置port范围的命令，不知道这是不是思科的特殊实现, 如果NAT设备发现相同的端口再处理？<em>此处存疑，思科肯定会有处理的方式</em></p>
+<p>对于ICMP报文的特殊处理，以R1 ping R3为例，ICMP request报文为：<br><img src="https://rancho333.github.io/pictures/r1_pat_ping_to.png"><br>ICMP reply报文为：<br><img src="https://rancho333.github.io/pictures/r1_pat_ping_from.png"><br>R2上的NAT转换表为：<br><img src="https://rancho333.github.io/pictures/pat_tran_ping.png"><br>这里这看到在PAT模式中，NAT设备通过ICMP报文中的identifier字段来标识一个ICMP的NAT转换。</p>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><p><a target="_blank" rel="noopener" href="https://datatracker.ietf.org/doc/html/rfc2663">rfc2663</a><br><a target="_blank" rel="noopener" href="https://datatracker.ietf.org/doc/html/rfc3022">rfc3022</a><br><a target="_blank" rel="noopener" href="https://datatracker.ietf.org/doc/html/rfc4787">rfc4787</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/armlinuxww/article/details/113541634">彻底理解Cisco NAT内部的一些事</a><br><a target="_blank" rel="noopener" href="http://www.h3c.com/cn/d_201904/1175248_30005_0.htm#_Toc7355633">H3C NAT配置</a><br><a target="_blank" rel="noopener" href="https://www.firewall.cx/cisco-technical-knowledgebase/cisco-routers/260-cisco-router-nat-overload.html">CONFIGURING NAT OVERLOAD ON A CISCO ROUTER</a><br><a target="_blank" rel="noopener" href="https://github.com/Azure/SONiC/blob/master/doc/nat/nat_design_spec.md#221-snat-and-dnat">SONiC NAT design</a></p>
+
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Rancho
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://rancho333.github.io/2021/09/29/NAT%E7%AE%80%E8%BF%B0%E5%8F%8A%E4%BB%BF%E7%9C%9F%E5%AE%9E%E9%AA%8C/" title="NAT简述及仿真实验">https://rancho333.github.io/2021/09/29/NAT简述及仿真实验/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/NAT/" rel="tag"># NAT</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/09/06/SONiC%E4%B8%ADsyncd%E8%B0%83%E7%94%A8SAI%E7%AE%80%E6%9E%90/" rel="prev" title="SONiC中syncd调用SAI简析">
+      <i class="fa fa-chevron-left"></i> SONiC中syncd调用SAI简析
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/10/08/SONiC%E8%87%AA%E5%8A%A8%E5%8C%96%E7%BC%96%E8%AF%91%E7%AE%80%E8%BF%B0/" rel="next" title="SONiC自动化编译简述">
+      SONiC自动化编译简述 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%B3%E4%BA%8ENAT%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E6%9C%AC%E9%97%AE%E9%A2%98"><span class="nav-number">1.</span> <span class="nav-text">关于NAT的一些基本问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFNAT"><span class="nav-number">1.1.</span> <span class="nav-text">什么是NAT?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NAT%E7%9A%84%E5%B7%A5%E4%BD%9C%E6%96%B9%E5%BC%8F"><span class="nav-number">1.2.</span> <span class="nav-text">NAT的工作方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NAT%E7%9A%84%E5%BC%8A%E7%AB%AF%E5%8F%8A%E5%A4%84%E7%90%86%E6%96%B9%E5%BC%8F"><span class="nav-number">1.3.</span> <span class="nav-text">NAT的弊端及处理方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ALG"><span class="nav-number">1.3.1.</span> <span class="nav-text">ALG</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ICMP%E6%8A%A5%E6%96%87%E7%9A%84%E7%89%B9%E6%AE%8A%E5%A4%84%E7%90%86"><span class="nav-number">1.3.2.</span> <span class="nav-text">ICMP报文的特殊处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IP%E5%88%86%E7%89%87%E7%9A%84%E7%89%B9%E6%AE%8A%E5%A4%84%E7%90%86"><span class="nav-number">1.3.3.</span> <span class="nav-text">IP分片的特殊处理</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#NAT%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%B7%A5%E4%BD%9C%E6%A8%A1%E5%9E%8B"><span class="nav-number">2.</span> <span class="nav-text">NAT的基本工作模型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BC%A0%E7%BB%9FNAT"><span class="nav-number">2.1.</span> <span class="nav-text">传统NAT</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2-Basic-NAT"><span class="nav-number">2.1.1.</span> <span class="nav-text">基本地址转换(Basic NAT)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NAPT-network-address-port-translation"><span class="nav-number">2.1.2.</span> <span class="nav-text">NAPT(network address port translation)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E9%9D%99%E6%80%81NAT%E5%92%8C%E5%8A%A8%E6%80%81NAT"><span class="nav-number">2.1.3.</span> <span class="nav-text">关于静态NAT和动态NAT</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bi-directional-NAT-or-Two-Way-NAT"><span class="nav-number">2.2.</span> <span class="nav-text">Bi-directional NAT or Two-Way NAT</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Twice-NAT"><span class="nav-number">2.3.</span> <span class="nav-text">Twice NAT</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#NAT%E7%9A%84%E4%B8%80%E4%BA%9B%E5%BA%94%E7%94%A8%E6%96%B9%E6%A1%88"><span class="nav-number">3.</span> <span class="nav-text">NAT的一些应用方案</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#NAT%E7%9A%84%E5%8F%8C%E7%83%AD%E6%9C%BA%E5%A4%87%E4%BB%BD-NAT%E5%A4%9A%E5%87%BA%E5%8F%A3%E7%AD%96%E7%95%A5"><span class="nav-number">3.1.</span> <span class="nav-text">NAT的双热机备份&#x2F;NAT多出口策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NAT%E7%A9%BF%E8%B6%8A%E6%8A%80%E6%9C%AF"><span class="nav-number">3.2.</span> <span class="nav-text">NAT穿越技术</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NAT%E4%B8%8EVPN"><span class="nav-number">3.3.</span> <span class="nav-text">NAT与VPN</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NAT%E4%B8%8E%E8%B7%AF%E7%94%B1%E7%9A%84%E5%85%B3%E7%B3%BB%E5%8F%8A%E4%B8%80%E4%BA%9B%E5%A4%84%E7%90%86%E7%BB%86%E8%8A%82"><span class="nav-number">3.4.</span> <span class="nav-text">NAT与路由的关系及一些处理细节</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SONiC%E4%B8%ADNAT%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.5.</span> <span class="nav-text">SONiC中NAT的实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NAT-PT-V4-V6%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2"><span class="nav-number">3.6.</span> <span class="nav-text">NAT-PT(V4&#x2F;V6地址转换)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#GNS3%E4%B8%8ANAT%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%AE%9E%E9%AA%8C"><span class="nav-number">4.</span> <span class="nav-text">GNS3上NAT的基本实验</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%99%E6%80%81NAT%E5%AE%9E%E9%AA%8C"><span class="nav-number">4.1.</span> <span class="nav-text">静态NAT实验</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A8%E6%80%81NAT%E5%AE%9E%E9%AA%8C"><span class="nav-number">4.2.</span> <span class="nav-text">动态NAT实验</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PAT%E5%AE%9E%E9%AA%8C"><span class="nav-number">4.3.</span> <span class="nav-text">PAT实验</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-number">5.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Rancho"
+      src="/pictures/R-W.png">
+  <p class="site-author-name" itemprop="name">Rancho</p>
+  <div class="site-description" itemprop="description">No pain, no gain!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">54</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">35</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Rancho333" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Rancho333" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Rancho</span>
+</div>
+
+<div class="theme-info">
+  <div class="powered-by"></div>
+  <span class="post-count">全站共 75.6k 字</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/ Relative)","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"left","width":100,"height":180},"mobile":{"show":false},"react":{"opacityDefault":0.7}});</script></body>
+</html>

@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/pictures/R-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/pictures/R-16x16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"rancho333.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="写在前面这篇文章分为两个部分ARP协议简介以及ARP协议的实际应用。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ARP协议简述及应用">
+<meta property="og:url" content="https://rancho333.github.io/2020/12/25/ARP%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0%E5%8F%8A%E5%BA%94%E7%94%A8/index.html">
+<meta property="og:site_name" content="Rancho Blog">
+<meta property="og:description" content="写在前面这篇文章分为两个部分ARP协议简介以及ARP协议的实际应用。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://rancho333.gitee.io/pictures/arp_protocol.png">
+<meta property="og:image" content="https://rancho333.gitee.io/pictures/arp_data_raw.png">
+<meta property="og:image" content="https://rancho333.gitee.io/pictures/arp_data.png">
+<meta property="og:image" content="https://rancho333.gitee.io/pictures/ping_arp.png">
+<meta property="og:image" content="https://rancho333.gitee.io/pictures/general_arp_agent.png">
+<meta property="og:image" content="https://rancho333.gitee.io/pictures/local_arp_agent.png">
+<meta property="og:image" content="https://rancho333.gitee.io/pictures/varp_mlag_vrrp.png">
+<meta property="article:published_time" content="2020-12-25T05:22:08.000Z">
+<meta property="article:modified_time" content="2021-04-26T05:56:42.785Z">
+<meta property="article:author" content="Rancho">
+<meta property="article:tag" content="通信协议">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://rancho333.gitee.io/pictures/arp_protocol.png">
+
+<link rel="canonical" href="https://rancho333.github.io/2020/12/25/ARP%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0%E5%8F%8A%E5%BA%94%E7%94%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>ARP协议简述及应用 | Rancho Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/rss2.xml" title="Rancho Blog" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Rancho Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">知行合一，致良知！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>公益 404</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/Rancho333" class="github-corner" title="Rancho&#39;s GitHub" aria-label="Rancho&#39;s GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2020/12/25/ARP%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0%E5%8F%8A%E5%BA%94%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/pictures/R-W.png">
+      <meta itemprop="name" content="Rancho">
+      <meta itemprop="description" content="No pain, no gain!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rancho Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          ARP协议简述及应用
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-12-25 13:22:08" itemprop="dateCreated datePublished" datetime="2020-12-25T13:22:08+08:00">2020-12-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-04-26 13:56:42" itemprop="dateModified" datetime="2021-04-26T13:56:42+08:00">2021-04-26</time>
+              </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+            <span class="post-meta-divider">|</span>
+<span title="post.wordcount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span>字数： 5.3k</span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>这篇文章分为两个部分ARP协议简介以及ARP协议的实际应用。</p>
+<span id="more"></span>
+<h1 id="ARP协议简介"><a href="#ARP协议简介" class="headerlink" title="ARP协议简介"></a>ARP协议简介</h1><h2 id="ARP的作用"><a href="#ARP的作用" class="headerlink" title="ARP的作用"></a>ARP的作用</h2><p>ARP(Address Resolution Protocol，地址解析协议)是将IP地址解析为以太网MAC地址的协议。与之相对的，将MAC地址解析为IP地址的协议称为RARP。</p>
+<p>在局域网中，当终端设备需要将数据发送给另一个终端设备时，它必须知道对方网络的IP地址。但是仅仅有IP地址是不够的，因为IP数据必须封装成帧才能通过物理网络发送，因此发送端还必须有接收端的MAC地址，所以需要一个从IP地址到物理地址的映射。ARP就是实现这个功能的协议。</p>
+<h2 id="ARP报文的结构"><a href="#ARP报文的结构" class="headerlink" title="ARP报文的结构"></a>ARP报文的结构</h2><p><img src="https://rancho333.gitee.io/pictures/arp_protocol.png"> </p>
+<p>对于各个字段的解释如下</p>
+<table>
+<thead>
+<tr>
+<th align="left">字段</th>
+<th align="left">长度（bit）</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Ethernet Address of destination</td>
+<td align="left">48</td>
+<td align="left">目的以太网地址。发送ARP请求时，为广播MAC地址，0xFF.FF.FF.FF.FF.FF</td>
+</tr>
+<tr>
+<td align="left">Ethernet Address of sneder</td>
+<td align="left">48</td>
+<td align="left">源以太网地址</td>
+</tr>
+<tr>
+<td align="left">Frame Type</td>
+<td align="left">16</td>
+<td align="left">表示报文类型。对于ARP请求或应答，该字段为0x0806</td>
+</tr>
+<tr>
+<td align="left">Hardware Type</td>
+<td align="left">16</td>
+<td align="left">表示硬件地址的类型。对于以太网，该字段为1</td>
+</tr>
+<tr>
+<td align="left">Protocol Type</td>
+<td align="left">16</td>
+<td align="left">表示发送方要映射的协议地址类型。对于IP地址，该值为0x0800</td>
+</tr>
+<tr>
+<td align="left">Hardware Length</td>
+<td align="left">8</td>
+<td align="left">表示硬件地址的长度，单位是字节。对于ARP请求或应答来说，该值为6</td>
+</tr>
+<tr>
+<td align="left">Protocol Length</td>
+<td align="left">8</td>
+<td align="left">表示协议地址的长度，单位是字节。对于ARP请求或应答来说，该值为4</td>
+</tr>
+<tr>
+<td align="left">OP</td>
+<td align="left">16</td>
+<td align="left">表示操作类型。1 表示ARP请求，2 表示ARP应答，3表示RARP请求，4表示RARP应答</td>
+</tr>
+<tr>
+<td align="left">Ethernet Address of sneder</td>
+<td align="left">48</td>
+<td align="left">发送方以太网地址。这个字段和ARP报文首部的源以太网地址字段是重复信息</td>
+</tr>
+<tr>
+<td align="left">IP Address of sender</td>
+<td align="left">32</td>
+<td align="left">发送方IP地址</td>
+</tr>
+<tr>
+<td align="left">Ethernet Address of destination</td>
+<td align="left">48</td>
+<td align="left">接收方以太网地址，发送ARP请求时，该处填充全0</td>
+</tr>
+<tr>
+<td align="left">IP Address of destination</td>
+<td align="left">32</td>
+<td align="left">接收方IP地址</td>
+</tr>
+</tbody></table>
+<p>在Linux上可以通过tcpdump工具抓取ARP包</p>
+<p><img src="https://rancho333.gitee.io/pictures/arp_data_raw.png"><br>使用wireshark工具可以更为方便的查看报文中的各个字段：</p>
+<p><img src="https://rancho333.gitee.io/pictures/arp_data.png"> </p>
+<h2 id="ARP地址解析过程"><a href="#ARP地址解析过程" class="headerlink" title="ARP地址解析过程"></a>ARP地址解析过程</h2><p>假设主机A和B在同一个网段，主机A要向主机B发送信息，解析过程如下：</p>
+<ul>
+<li>主机A查看自己的ARP表，找到则直接使用</li>
+<li>如果A在ARP表中没有找到B，则<ul>
+<li>缓存IP数据报文</li>
+<li>发送ARP请求报文，请求B的MAC地址</li>
+</ul>
+</li>
+<li>主机B比较自己的IP地址与ARP请求报文中的IP地址，两者相同则：<ul>
+<li>将A的IP与MAC地址缓存到自己的ARP表中</li>
+<li>单播发送ARP应答报文给主机A，其中包含自己的MAC地址</li>
+</ul>
+</li>
+<li>主机A收到ARP响应后，缓存B的MAC到ARP表中，之后发送IP数据报文</li>
+</ul>
+<p>当主机A和B不在同一网段时，主机A会向网关发送ARP请求。如果网关有主机B的ARP表项，则直接应答A；否则网关广播ARP请求，目标IP地址为主机B的IP地址，网关收到响应报文之后再应答B。</p>
+<h2 id="ARP表"><a href="#ARP表" class="headerlink" title="ARP表"></a>ARP表</h2><p>ARP表分为动态ARP表和静态ARP表。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Address                  HWtype  HWaddress           Flags Mask            Iface</span><br><span class="line">10.204.113.138           ether   00:00:00:00:00:01   C                     ens160</span><br><span class="line">10.204.113.151                   (incomplete)                              ens160</span><br><span class="line">172.17.0.7               ether   02:42:ac:11:00:07   C                     docker0</span><br><span class="line">10.204.112.11            ether   00:e0:ec:47:33:1a   C                     ens160</span><br><span class="line">openbmc-develop.asia.ad  ether   00:e0:4c:06:00:95   C                     ens160</span><br><span class="line">10.204.112.44            ether   6c:b3:11:32:7f:12   C                     ens160</span><br><span class="line">172.17.0.2               ether   02:42:ac:11:00:02   C                     docker0</span><br><span class="line">sonic.asia.ad.celestica  ether   aa:ad:40:03:ba:19   C                     ens160</span><br></pre></td></tr></table></figure>
+
+<h3 id="动态ARP表"><a href="#动态ARP表" class="headerlink" title="动态ARP表"></a>动态ARP表</h3><p>动态ARP表由ARP协议通过ARP报文自动生成与维护，可以被老化，可以被新的ARP报文更新，可以被静态ARP表项覆盖。当到达老化时间、接口down时会删除相应的动态ARP表项。</p>
+<h3 id="静态ARP表项"><a href="#静态ARP表项" class="headerlink" title="静态ARP表项"></a>静态ARP表项</h3><p>静态ARP表项通过手工配置和维护，不会被老化，不会被动态ARP表项覆盖。</p>
+<p>配置静态ARP表项可以增加通信的安全性。静态ARP表项可以限制和指定IP地址的设备通信时使用指定的MAC地址，此时攻击报文无法修改此表项的IP地址和MAC地址的映射关系，<br>从而保护了本设备和指定设备间的正常通信。</p>
+<p>静态ARP表项分为短静态ARP表项和长静态ARP表项。</p>
+<ul>
+<li>长静态ARP表项必须配置IP地址、MAC地址、所在VLAN和出接口。长静态ARP表项可直接用于报文转发。</li>
+<li>短静态ARP表项只需要配置IP地址和MAC地址。<ul>
+<li>如果出接口是三层口，直接用于报文转发</li>
+<li>如果出接口是VLAN虚接口，短静态ARP表项不能直接用于报文转发，当要发送IP数据包时，先发送ARP请求报文，如果收到的response中的<br>源IP和源MAC与所配置的相同，则将收到response的接口加入该静态ARP中，之后用于IP数据包转发。</li>
+</ul>
+</li>
+</ul>
+<p>当希望设备和指定用户只能使用某个固定的IP地址和MAC地址通信时，可以配置短静态ARP表项，当进一步希望这个用户只在某个VLAN内的某个特定接口上连接时就可以配置长静态ARP表项</p>
+<h2 id="免费ARP"><a href="#免费ARP" class="headerlink" title="免费ARP"></a>免费ARP</h2><p>免费ARP是一种特殊的ARP报文，该报文中携带的发送端与目的端IP都是本机IP，发送端MAC是本机MAC，接收端MAC是全f。其本质是keep alive保活/心跳报文的应用。<br>免费ARP报文有以下功能:</p>
+<ul>
+<li>IP地址冲突检测。如果有冲突，冲突设备会给本机发送一个ARP应答，告知IP地址冲突</li>
+<li>设备改变MAC地址，发送免费ARP更新其它设备中的ARP表项</li>
+</ul>
+<p>定时发送免费ARP的应用场景：</p>
+<ul>
+<li>防止仿冒网关的ARP攻击（ARP欺骗）<ul>
+<li>如果攻击者仿冒网关发送免费ARP报文，可以将原本发送到网关的流量重定向到一个错误的MAC地址，导致用户无法正常访问网络。网关接口上使能免费ARP功能后，主机可以学习到正确的网关。</li>
+</ul>
+</li>
+<li>防止ARP表项老化</li>
+<li>防止VRRP虚拟IP地址冲突</li>
+<li>及时更新模糊终结VLAN内设备的MAC地址表</li>
+</ul>
+<h1 id="ARP协议应用"><a href="#ARP协议应用" class="headerlink" title="ARP协议应用"></a>ARP协议应用</h1><p>ARP协议的状态机比较简单，但是应用起来是比较有意思的，一些基础网络问题也是值得思考的。</p>
+<h2 id="二层通信与三层通信中ARP的应用"><a href="#二层通信与三层通信中ARP的应用" class="headerlink" title="二层通信与三层通信中ARP的应用"></a>二层通信与三层通信中ARP的应用</h2><p>二三层设备互通中arp是怎样工作的？</p>
+<p><img src="https://rancho333.gitee.io/pictures/ping_arp.png"><br>如图所示，两个vlan通过interface vlan路由接口实现互通。下文说明中，交换机和终端设备均为初始状态，不含有arp表项。</p>
+<h3 id="A和B之间的互通-二层"><a href="#A和B之间的互通-二层" class="headerlink" title="A和B之间的互通(二层)"></a>A和B之间的互通(二层)</h3><p>以A向B发起ping请求为例。</p>
+<ol>
+<li>A检查报文的目的IP地址发现和自己在同一个网段；</li>
+<li>A—-&gt;B ARP请求报文，该报文在VLAN1内广播<ol>
+<li>报文的dst mac是广播mac，src mac是A mac</li>
+<li>报文的sender MAC是A mac, sender ip是A ip; target mac是全0，target ip是B ip</li>
+</ol>
+</li>
+<li>B—-&gt;A  ARP回应报文<ol>
+<li>报文的dst mac是A mac, src mac是B mac</li>
+<li>报文的sender MAC是B mac(A请求的mac), sender ip是B ip; target mac是A mac，taaget ip是A ip</li>
+</ol>
+</li>
+<li>A—-&gt;B  icmp request</li>
+<li>B—-&gt;A  icmp reply</li>
+</ol>
+<h3 id="A和C之间的互通-三层"><a href="#A和C之间的互通-三层" class="headerlink" title="A和C之间的互通(三层)"></a>A和C之间的互通(三层)</h3><p>以A向C发起ping请求为例。</p>
+<ol>
+<li>A检查报文的目的IP地址，发现和自己不在同一个网段</li>
+<li>A—-&gt;switch(int vlan 1) ARP请求报文，该报文在vlan1内广播<ol>
+<li>报文的dst mac是广播mac，src mac是A mac</li>
+<li>报文的sender MAC是A mac, sender ip是A ip; target mac是全0，target ip是int vlan 1 ip</li>
+</ol>
+</li>
+<li>网关—-&gt; A ARP回应报文<ol>
+<li>报文的dst mac是A mac, src mac是int vlan 1 mac</li>
+<li>报文的sender MAC是int vlan 1 mac(A请求的mac), sender ip是int vlan 1 ip; target mac是A mac，taaget ip是A ip</li>
+</ol>
+</li>
+<li>A—-&gt;C icmp request<ol>
+<li>报文dst mac是int vlan 1的mac，src mac是A的mac; dst ip是C ip，src ip是A ip</li>
+</ol>
+</li>
+<li>switch收到报文后判断出是三层报文，检查报文的目的IP地址，发现是在自己的直连网段</li>
+<li>switch(int vlan 2)—-&gt;C ARP请求报文，该报文在vlan2内广播</li>
+<li>C—-&gt;switch(int vlan 2) ARP回应报文</li>
+<li>switch(int vlan 2)—-&gt;C icmp request<ol>
+<li>报文的dst mac是C的mac, src mac是int vlan 2的mac; dst ip是C ip, src ip是A ip</li>
+</ol>
+</li>
+<li>C—-&gt;A icmp reply, 这以后的处理同前面icmp request的过程基本相同。</li>
+</ol>
+<p>对报文路由，会对报文的MAC头进行重新封装，而IP层以上的字段基本不变。通过说明报文dst/src MAC的变化，注意ARP在二三层通信中起的作用。后续设备中ARP表有了相应的条目之后，则不会给对方发送ARP请求报文。</p>
+<h2 id="ARP代理"><a href="#ARP代理" class="headerlink" title="ARP代理"></a>ARP代理</h2><p>如果ARP请求是从一个网络的主机发往同一网段却不在同一物理网络上的另一台主机，那么连接它们的具有代理ARP功能的设备就可以回答该请求，这个过程称作代理ARP（Proxy ARP）<br>代理ARP功能屏蔽分离的物理网络这一事实，使用户使用起来，好像在同一物理网络上。<br>代理ARP分为普通代理ARP和本地代理ARP，二者的应用场景有所区别。</p>
+<ul>
+<li>普通代理ARP的应用场景：想要互通的主机分别连接到设备的不同的三层接口上，且这些主机不在同一个广播域中</li>
+<li>本地代理ARP的应用环境为：想要互通的主机连接到设备的同一个三层接口在，且这些主机不在同一个广播域中</li>
+</ul>
+<h3 id="普通代理ARP"><a href="#普通代理ARP" class="headerlink" title="普通代理ARP"></a>普通代理ARP</h3><p>处于同一网段内的主机，当连接到设备的不同三层接口时，可以利用设备的代理ARP功能，通过三层转发实现互通。<br>拓扑如下图所示。设备Router通过两个三层接口Eth1/1和Eth1/2连接两个网络，两个三层接口的IP地址不在同一个网段，但是两个网络内的主机Host A和Host B的地址通过掩码的控制，既与相连设备的接口地址在同一网段，同时二者也处于同一个网段。<br><img src="https://rancho333.gitee.io/pictures/general_arp_agent.png"><br>这种组网场景下，当Host A需要与Host B通信时，由于dst ip与src ip在同一网段，因此Host A会直接对Host B进行ARP请求。但是，两台主机不在同一个广播域中，Host B无法收到Host A的ARP请求报文，当然也就无法应答。<br>通过在Router上启用代理ARP功能，可以解决此问题。启用代理ARP后,Router可以应答Host A的ARP请求。同时，Router相当于Host B的代理，把从其它主机发送过来的报文转发给它。<br>代理ARP的优点是，它可以只被应用在一个设备上（此时设备的作用相当于网关），不会影响到网络中其它设备的路由表。代理ARP功能可以在IP主机没有配置缺省网关或者IP主机没有任何路由能力的情况下使用。</p>
+<h3 id="本地代理ARP"><a href="#本地代理ARP" class="headerlink" title="本地代理ARP"></a>本地代理ARP</h3><p>拓扑如图所示。Host A与Host B属于同一个VLAN 2,但他们分别连接到被二层隔离的端口Eth1/3和Eth1/1上，通过在Router上启用本地代理ARP功能，可以实现Host A和Host B的三层互通。<br><img src="https://rancho333.gitee.io/pictures/local_arp_agent.png"></p>
+<p>本地代理ARP可以在下列三种情况下实现主机之间的三层互通：</p>
+<ul>
+<li>想要互通的主机分别连接到同一个VLAN中的不同的二层隔离端口下</li>
+<li>使能Super VLAN功能后，想要互通的主机属于不同的Sub VLAN</li>
+<li>使能Lsolate-user-vlan功能后，想要互通的主机属于不同的Secondary VLAN</li>
+</ul>
+<h2 id="ARP-Snooping"><a href="#ARP-Snooping" class="headerlink" title="ARP Snooping"></a>ARP Snooping</h2><p>ARP snooping功能是一个用于二层交换网络环境的特性，通过侦听ARP报文建立ARP Snooping表项，从而提供给ARP快速应答和MFF手动方式等使用。<br>设备上的一个VLAN使能ARP Snooping后，该VLAN内所有端口接收的ARP报文会被重定向到CPu。CPU对重定向上送的ARP报文进行分析，获取ARP报文的src ip, src mac, src vlan和入端口信息，建立记录用户信息的ARP Snooping表项。</p>
+<h2 id="ARP快速应答"><a href="#ARP快速应答" class="headerlink" title="ARP快速应答"></a>ARP快速应答</h2><p>在无线产品组网中，AC与AP会建立隧道连接，Client通过AP连接到AC，通过AC，client可以与网关建立连接。当Client发起ARP广播请求时，需要通过AC向所有的AP复制ARP请求，这样会导致ARP广播占用隧道的大量资源，导致性能下降。为了减少ARP广播占用的隧道资源，可以在AC上启用ARP快速应答功能，减少ARP广播报文的影响。</p>
+<p>ARP快速应答功能就是根据AC设备收集的用户信息（DHCP Snooping表项或者ARP Snooping表项），在指定的VLAN内，尽可能的对ARP请求进行应答，从而减少ARP广播报文。</p>
+<h3 id="ARP快速应答工作机制"><a href="#ARP快速应答工作机制" class="headerlink" title="ARP快速应答工作机制"></a>ARP快速应答工作机制</h3><p>ARP快速应答的工作机制如下：</p>
+<ol>
+<li>设备接收到ARP请求报文时，如果请求报文的目的IP地址是设备的VLAN虚接口的IP地址，则由ARP特性进行处理</li>
+<li>如果不是，则根据报文中的目的IP地址查找DHCP Snooping表项<ol>
+<li>如果查找成功，但是查找到的表项的接口和收到请求报文的接口一致，并且接口是以太网接口，则不进行应答，否则立即进行应答</li>
+<li>如果查找失败，则继续查找ARP Snooping表项。如果查找成功，但是查找到的表项的接口和收到请求报文的接口一致，并且接口是以太网接口，则不进行应答，否则立即进行应答。</li>
+<li>如果两个表项均查找失败，则直接转发请求报文或将报文交于其它特性处理。</li>
+</ol>
+</li>
+</ol>
+<h2 id="ARP防御攻击"><a href="#ARP防御攻击" class="headerlink" title="ARP防御攻击"></a>ARP防御攻击</h2><p>ARP协议有简单、易用的优点，但是也因为没有任何安全机制而容易被攻击发起者利用。</p>
+<ul>
+<li>攻击者可以仿冒用户、仿冒网关发送伪造的ARP报文，使网关或主机的ARP表项不正确，从而对网络进行攻击</li>
+<li>攻击者通过向设备发送大量目标IP地址不能解析的IP报文，使得设备试图反复地对目标IP地址进行解析，导致CPU负荷过重及网络流量过大</li>
+<li>攻击者向设备发送大量的ARP报文，对设备的CPU形成冲击。<br>目前ARP攻击和ARP病毒已经成为局域网安全的一大威胁。下面简单说明一下ARP攻防原理。</li>
+</ul>
+<h3 id="ARP防止IP报文攻击功能简介"><a href="#ARP防止IP报文攻击功能简介" class="headerlink" title="ARP防止IP报文攻击功能简介"></a>ARP防止IP报文攻击功能简介</h3><p>如果网络中有主机通过向设备发送大量目标IP地址不能解析的IP报文来攻击设备，则会造成下面的危害：</p>
+<ul>
+<li>设备向目的网段发送大量的ARP请求报文，加重目的网段的负载</li>
+<li>设备会试图反复地对目标IP地址进行解析，增加了CPU的负担</li>
+</ul>
+<p>为了避免这种IP报文攻击所带来的危害，设备提供了下列两个功能：</p>
+<ul>
+<li>如果发送攻击报文的源是固定的，可以采用ARP源抑制功能。开启该功能后，如果网络中某主机向设备某端口连续发送目标IP地址不能解析的IP报文，当每5秒内此主机发出IP报文出发ARP请求报文的流量超过设置的阈值，那么对于由此主机发出的IP报文，设备不允许其触发ARP请求，直至5秒后再处理，从而避免了恶意攻击所造成的危害。</li>
+<li>如果发送攻击报文的源不固定，设备立即产生一个黑洞路由，使得设备在一段时间内将去往该地址的报文直接丢弃。等待黑洞路由老化时间过后，如有报文触发则再次发起解析，如果解析成功则进行转发，否则仍然产生一个黑洞路由将去往改地址的报文丢弃。这种方式能够有效的防止IP报文的攻击，减轻CPU的负担。</li>
+</ul>
+<h3 id="ARP报文限速功能"><a href="#ARP报文限速功能" class="headerlink" title="ARP报文限速功能"></a>ARP报文限速功能</h3><p>ARP报文限速功能是指对上送CPU的ARP报文进行限速，可以防止大量ARP报文对CPU进行冲击。例如，在配置了ARP Detection功能后，设备会将收到的ARP报文重定向到CPU进行检查，这样会引入新的问题：如果攻击者恶意构造大量ARP报文发往设备，会导致设备的CPU负担过重，从而造成其它功能无法正常运行甚至设备瘫痪，这个时候可以启用ARP报文限速功能来控制上送CPU的ARP报文的速率。</p>
+<p>推荐用户在配置了ARP Detection、ARP Snooping、ARP快速应答、MFF，或者发现有ARP泛洪攻击的情况下，使用ARP报文限速功能。</p>
+<h3 id="源MAC地址固定的ARP攻击检测功能"><a href="#源MAC地址固定的ARP攻击检测功能" class="headerlink" title="源MAC地址固定的ARP攻击检测功能"></a>源MAC地址固定的ARP攻击检测功能</h3><p>本特性根据ARP报文的源MAC地址进行统计，在5秒内，如果收到同一源MAC地址的ARP报文超过一定的阈值，则认为存在攻击，系统会将此MAC地址添加到攻击检测表项中。在该攻击检测表项老化之前，如果设置的检查模式为过滤模式，则会打印告警信息并将该源MAC地址发送的ARP报文过滤掉。如果设置为监控模式，则只打印告警信息，不会将源MAC地址发送的ARP报文过滤掉。<br>对于网关或一些重要的服务器，可能会发送大量的ARP报文，为了使这些ARP报文不被过滤掉，可以将这类设备的MAC地址配置成保护MAC，这样，即使该MAC存在攻击也不会被检测过滤。只对上送CPU的ARP报文进行统计。</p>
+<h3 id="ARP报文源MAC一致性检查功能简介"><a href="#ARP报文源MAC一致性检查功能简介" class="headerlink" title="ARP报文源MAC一致性检查功能简介"></a>ARP报文源MAC一致性检查功能简介</h3><p>ARP报文源MAC一致性检查功能主要应用于网关设备上，防御以太网数据帧首部中的源MAC地址和ARP报文中sender mac地址不同的ARP攻击。</p>
+<p>在配置被特性后，网关设备在进行ARP学习前将对ARP报文进行检查。如果以太网数据帧首部中的源MAC地址和ARP报文中sender mac地址不同，则认为是攻击报文，将其丢弃，否则，继续进行ARP学习。</p>
+<h3 id="ARP主动确认功能"><a href="#ARP主动确认功能" class="headerlink" title="ARP主动确认功能"></a>ARP主动确认功能</h3><p>ARP的主动确认功能主要应用于网关设备上，防止攻击者仿冒用户欺骗网关设备。</p>
+<p>启用ARP主动确认功能后，设备在新建或更新ARP表项前需进行主动确认，防止产生错误的ARP表项。</p>
+<h2 id="MLAG结合VARP实现VRRP"><a href="#MLAG结合VARP实现VRRP" class="headerlink" title="MLAG结合VARP实现VRRP"></a>MLAG结合VARP实现VRRP</h2><p>VRRP(virtual router redundancy protocol，虚拟路由器冗余协议)将可以承担网关功能的一组路由器加入到备份组中，形成一台虚拟路由器，局域网内的终端设备只需将虚拟路由器配置为缺省网关即可。VRRP有两个版本，VRRPv2基于IPv4, VRRPv3基于IPv6。正统的VRRP实现起来可能有些复杂，通过MLAG结合VARP可以较为简单的实现VRRP的功能。拓扑如下。<br><img src="https://rancho333.gitee.io/pictures/varp_mlag_vrrp.png"></p>
+<p>原理说明：device作为leaf switch, 下行接host，上行通过mlag连接到两台网关。策略配置之后，host发往网关的流量只会通过mlag中的一个端口发往switch A或switch B, 当mlag中一条线路down掉时，通过另一条线路通信，在switch A和switch B上运行VARP协议，通过配置相同的VIP和VMAC实现网关虚拟化。这里面有两个关键点。</p>
+<ul>
+<li>主机流量同一时间只会发往一台物理网关</li>
+<li>物理网关上配置相同的VIP和VMAC实现网关虚拟化</li>
+</ul>
+<p>对于VARP说明，可以通过ip地址/mac地址确定唯一三层接口，但是三层接口可以被多个ip地址/mac地址定位到。对于虚拟网关，物理网关除了正常配置的ip与mac地址，还会配置一组相同的vip/vmac，主机将vip作为网关ip。对于物理网关：</p>
+<ul>
+<li>只有当主机请求vip时才回复vmac</li>
+<li>主动发送arp或者转发三层报文时，src mac使用的都是自己真实的router mac</li>
+</ul>
+<p>对于主机而言，网关是虚拟的，所以使用虚拟网关ip进行通信<br>对于交换机而言，自己与外界通信需要使用自己真实的ip和mac, 这样对方才能根据真实的ip和mac定位到自己。</p>
+<p>当MLAG交换机配置了VARP之后，host通过arp去请求VARP虚拟网关ip的mac地址，则MLAG-VARP交换机回应的自然是虚拟网关的mac;host发送icmp request给虚拟网关，虚拟网关使用真实的router-mac去回复。</p>
+
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Rancho
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://rancho333.github.io/2020/12/25/ARP%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0%E5%8F%8A%E5%BA%94%E7%94%A8/" title="ARP协议简述及应用">https://rancho333.github.io/2020/12/25/ARP协议简述及应用/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E9%80%9A%E4%BF%A1%E5%8D%8F%E8%AE%AE/" rel="tag"># 通信协议</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/12/21/%E5%8A%A0%E5%BC%98%E8%B7%91%E5%9B%A2/" rel="prev" title="加弘跑团">
+      <i class="fa fa-chevron-left"></i> 加弘跑团
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/12/31/SONiC%E6%B7%BB%E5%8A%A0%E6%96%B0%E7%9A%84device/" rel="next" title="SONiC添加新的device">
+      SONiC添加新的device <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="nav-number">1.</span> <span class="nav-text">写在前面</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ARP%E5%8D%8F%E8%AE%AE%E7%AE%80%E4%BB%8B"><span class="nav-number">2.</span> <span class="nav-text">ARP协议简介</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ARP%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="nav-number">2.1.</span> <span class="nav-text">ARP的作用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ARP%E6%8A%A5%E6%96%87%E7%9A%84%E7%BB%93%E6%9E%84"><span class="nav-number">2.2.</span> <span class="nav-text">ARP报文的结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ARP%E5%9C%B0%E5%9D%80%E8%A7%A3%E6%9E%90%E8%BF%87%E7%A8%8B"><span class="nav-number">2.3.</span> <span class="nav-text">ARP地址解析过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ARP%E8%A1%A8"><span class="nav-number">2.4.</span> <span class="nav-text">ARP表</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8A%A8%E6%80%81ARP%E8%A1%A8"><span class="nav-number">2.4.1.</span> <span class="nav-text">动态ARP表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9D%99%E6%80%81ARP%E8%A1%A8%E9%A1%B9"><span class="nav-number">2.4.2.</span> <span class="nav-text">静态ARP表项</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%8D%E8%B4%B9ARP"><span class="nav-number">2.5.</span> <span class="nav-text">免费ARP</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ARP%E5%8D%8F%E8%AE%AE%E5%BA%94%E7%94%A8"><span class="nav-number">3.</span> <span class="nav-text">ARP协议应用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E5%B1%82%E9%80%9A%E4%BF%A1%E4%B8%8E%E4%B8%89%E5%B1%82%E9%80%9A%E4%BF%A1%E4%B8%ADARP%E7%9A%84%E5%BA%94%E7%94%A8"><span class="nav-number">3.1.</span> <span class="nav-text">二层通信与三层通信中ARP的应用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#A%E5%92%8CB%E4%B9%8B%E9%97%B4%E7%9A%84%E4%BA%92%E9%80%9A-%E4%BA%8C%E5%B1%82"><span class="nav-number">3.1.1.</span> <span class="nav-text">A和B之间的互通(二层)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#A%E5%92%8CC%E4%B9%8B%E9%97%B4%E7%9A%84%E4%BA%92%E9%80%9A-%E4%B8%89%E5%B1%82"><span class="nav-number">3.1.2.</span> <span class="nav-text">A和C之间的互通(三层)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ARP%E4%BB%A3%E7%90%86"><span class="nav-number">3.2.</span> <span class="nav-text">ARP代理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%99%AE%E9%80%9A%E4%BB%A3%E7%90%86ARP"><span class="nav-number">3.2.1.</span> <span class="nav-text">普通代理ARP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%AC%E5%9C%B0%E4%BB%A3%E7%90%86ARP"><span class="nav-number">3.2.2.</span> <span class="nav-text">本地代理ARP</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ARP-Snooping"><span class="nav-number">3.3.</span> <span class="nav-text">ARP Snooping</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ARP%E5%BF%AB%E9%80%9F%E5%BA%94%E7%AD%94"><span class="nav-number">3.4.</span> <span class="nav-text">ARP快速应答</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ARP%E5%BF%AB%E9%80%9F%E5%BA%94%E7%AD%94%E5%B7%A5%E4%BD%9C%E6%9C%BA%E5%88%B6"><span class="nav-number">3.4.1.</span> <span class="nav-text">ARP快速应答工作机制</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ARP%E9%98%B2%E5%BE%A1%E6%94%BB%E5%87%BB"><span class="nav-number">3.5.</span> <span class="nav-text">ARP防御攻击</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ARP%E9%98%B2%E6%AD%A2IP%E6%8A%A5%E6%96%87%E6%94%BB%E5%87%BB%E5%8A%9F%E8%83%BD%E7%AE%80%E4%BB%8B"><span class="nav-number">3.5.1.</span> <span class="nav-text">ARP防止IP报文攻击功能简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ARP%E6%8A%A5%E6%96%87%E9%99%90%E9%80%9F%E5%8A%9F%E8%83%BD"><span class="nav-number">3.5.2.</span> <span class="nav-text">ARP报文限速功能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BA%90MAC%E5%9C%B0%E5%9D%80%E5%9B%BA%E5%AE%9A%E7%9A%84ARP%E6%94%BB%E5%87%BB%E6%A3%80%E6%B5%8B%E5%8A%9F%E8%83%BD"><span class="nav-number">3.5.3.</span> <span class="nav-text">源MAC地址固定的ARP攻击检测功能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ARP%E6%8A%A5%E6%96%87%E6%BA%90MAC%E4%B8%80%E8%87%B4%E6%80%A7%E6%A3%80%E6%9F%A5%E5%8A%9F%E8%83%BD%E7%AE%80%E4%BB%8B"><span class="nav-number">3.5.4.</span> <span class="nav-text">ARP报文源MAC一致性检查功能简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ARP%E4%B8%BB%E5%8A%A8%E7%A1%AE%E8%AE%A4%E5%8A%9F%E8%83%BD"><span class="nav-number">3.5.5.</span> <span class="nav-text">ARP主动确认功能</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MLAG%E7%BB%93%E5%90%88VARP%E5%AE%9E%E7%8E%B0VRRP"><span class="nav-number">3.6.</span> <span class="nav-text">MLAG结合VARP实现VRRP</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Rancho"
+      src="/pictures/R-W.png">
+  <p class="site-author-name" itemprop="name">Rancho</p>
+  <div class="site-description" itemprop="description">No pain, no gain!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">54</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">35</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Rancho333" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Rancho333" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Rancho</span>
+</div>
+
+<div class="theme-info">
+  <div class="powered-by"></div>
+  <span class="post-count">全站共 75.6k 字</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/ Relative)","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"left","width":100,"height":180},"mobile":{"show":false},"react":{"opacityDefault":0.7}});</script></body>
+</html>
