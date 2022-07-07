@@ -122,6 +122,13 @@ hexo-site@0.0.0 /home/rancho/workdir/blog
 ```
 3. 检查站点配置文件中blog部署的位置，注意将page发布的分支必须是master(代码默认分支是hexo).
 
+## 自动上传源码
+之前的工作流程是
+1. hexo g -d    生成静态网页并上传
+2. git add , commit, push     上传源码
+很多时候执行完1之后因为这样那样的原因没有执行2，导致源码没有提交。之前公司服务器挂掉，并且之前的源码没有上传，这样从github拉取的源码和网页就不同步，源码落后于网页
+
+现在使用脚本`hexo_g_d.sh "commit commnet"`, 里面会自动上传网页和源码(需要在本地设置github账号密码，不然会要手动输入)，参数`commit commnet`是`git commit -m`的参数
 
 **参考资料：**  
 [HEXO官方文档](https://hexo.io/zh-cn/docs/)

@@ -183,8 +183,13 @@ alpm模式下，broadcom TH4芯片在创建VRF时会创建一条默认路由(只
 
 # 参考资料
 [rfc2685](https://datatracker.ietf.org/doc/html/rfc2685)
+
 [rfc4364](https://datatracker.ietf.org/doc/html/rfc4364)
+
 [SONiC VRF support design spec draft](https://github.com/Azure/SONiC/blob/master/doc/vrf/sonic-vrf-hld.md)
+
 [VPN and VRF of cisco](https://www.cisco.com/c/en/us/td/docs/net_mgmt/prime/network/3-8/reference/guide/vrf.html)
+
 [Config vrf of cisco](https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst4500/12-2/15-02SG/configuration/guide/config/vrf.html#85589)
+
 [Vrf of linux kernel](https://www.kernel.org/doc/html/latest/networking/vrf.html)
