@@ -5,7 +5,6 @@ tags: STP
 ---
 
 # 写在前面
-
 `《STP(802.1d)简述》`中描述了STP协议实现loop-free的原理，举例说明了根桥及端口的选举规则，当发生链路故障时的收敛过程，最后列举了加快STP收敛的特性及安全特性。STP的最大收敛时间可达50秒左右，为了加快收敛时间，RSTP(rapid STP)诞生了。RSTP主要通过`P/A机制`减少端口状态切换时间，通过处理`inferior BPDU`减少BPDU老化时间，并且集成了portfast、uplinkfast、backbonefast机制。下面主要阐述两者之间的差异，以及RSTP实现快速收敛的一些细节。
 <!--more-->
 

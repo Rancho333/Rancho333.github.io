@@ -263,5 +263,9 @@ next 主题的博客文章都是不透明的，这样即使设置了背景图片
 使用方式`doctoc file.md`就会在文章顶层生成目录，需要手动调整位置。
 如果目录更新,`doctoc -u file.md`
 
+## 本地部署
+`hexo s`可以开启本地部署，这样可以快速验证一些feature.
+
+
 **参考资料：**
 [NexT官方](http://theme-next.iissnan.com/)  

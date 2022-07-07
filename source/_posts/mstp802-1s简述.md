@@ -3,6 +3,7 @@ title: mstp802.1s简述
 date: 2022-07-07 16:22:19
 tags: STP
 ---
+
 # 写在前面
 STP和RSTP无法实现负载均衡，cisco的PVST和PVRSTP虽然能够实现，但是每个vlan对应一个实例，在vlan较多的情况下，这对CPU以及内存资源会有极大的浪费。所以MSTP横空出世，其核心理念是：将一组vlan映射到一个实例中，每个实例运行一个stp树。MSTP的实现标准是802.1s.
 <!--more-->
