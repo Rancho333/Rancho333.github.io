@@ -256,5 +256,12 @@ next 主题的博客文章都是不透明的，这样即使设置了背景图片
   opacity: 0.9;
 }
 ```
+
+## 目录与跳转
+使用`doctoc`工具可以自动生成md的目录，并支持跳转，安装方式如下：
+`npm i doctoc -g`
+使用方式`doctoc file.md`就会在文章顶层生成目录，需要手动调整位置。
+如果目录更新,`doctoc -u file.md`
+
 **参考资料：**
 [NexT官方](http://theme-next.iissnan.com/)  
