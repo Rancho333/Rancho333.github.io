@@ -89,10 +89,38 @@ git checkout hexo
 1. 下载源码`git clone https://github.com/yourname/yourname.github.io.git`
 2. 安装依赖`npm install -g hexo-cli、npm install、npm install hexo-deployer-git`,注意不需要执行`hexo init`  
 
-## 迁移至gitee，工作环境打包
-2021年两会期间，github的访问可靠性大打折扣，项目中使用的SONiC编译也无法正常完成，鉴于当下的网络环境，现将blog的page放到[gitee](https://rancho333.gitee.io/)上去。
+## 重新部署的问题
+虽然之前将hexo的源码也备份到了远程仓库，但是一旦主机环境发生改变，得重新安装对应的依赖，这也带来一定的不稳定隐患，现在将开发环境打包到docker，发布到[docker hub](https://hub.docker.com/repository/docker/rancho123/ubuntu)中, 后续个人的工作环境会持续集成进去。一些Linux通用配置（vim, bash）则存放到[gitee](https://gitee.com/Rancho333/vim_cfg)上。
 
-除此之外，虽然之前将hexo的源码也备份到了远程仓库，但是一旦主机环境发生改变，得重新安装对应的依赖，这也带来一定的不稳定隐患，现在将开发环境打包到docker，发布到[docker hub](https://hub.docker.com/repository/docker/rancho123/ubuntu)中, 后续个人的工作环境会持续集成进去。一些Linux通用配置（vim, bash）则存放到[gitee](https://gitee.com/Rancho333/vim_cfg)上。
+之前主题文件`next`是用一个单独repository来进行管理，自己的修改可以提交，但是分成两个仓库不方便。所以现在将next主题源码也集成到hexo中。所以现在如果重新部署blog环境，需要做3件事：
+1. `https://github.com/Rancho333/Rancho333.github.io.git`下载源码(包含hexo+theme)
+2. 安装hexo依赖(见重新部署) 以及 下面插件，如果generate报错缺失插件，安装即可
+```
+[rancho blog]$ npm list --depth 0
+hexo-site@0.0.0 /home/rancho/workdir/blog
+├── eslint@7.23.0
+├── hexo@5.4.0
+├── hexo-deployer-git@3.0.0
+├── hexo-generator-archive@1.0.0
+├── hexo-generator-baidu-sitemap@0.1.9
+├── hexo-generator-category@1.0.0
+├── hexo-generator-feed@3.0.0
+├── hexo-generator-index@2.0.0
+├── hexo-generator-searchdb@1.3.3
+├── hexo-generator-sitemap@2.1.0
+├── hexo-generator-tag@1.0.0
+├── hexo-helper-live2d@3.1.1
+├── hexo-renderer-ejs@1.0.0
+├── hexo-renderer-marked@4.0.0
+├── hexo-renderer-stylus@2.0.1
+├── hexo-renderer-swig@1.1.0
+├── hexo-server@2.0.0
+├── hexo-theme-landscape@0.0.3
+├── hexo-wordcount@6.0.1
+├── live2d-widget-model-shizuku@1.0.5
+└── lodash@4.17.21
+```
+3. 检查站点配置文件中blog部署的位置，注意将page发布的分支必须是master(代码默认分支是hexo).
 
 
 **参考资料：**  
