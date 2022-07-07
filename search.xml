@@ -333,6 +333,7 @@
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;博客内容透明化</span><br><span class="line">&#x2F;&#x2F;文章内容的透明度设置</span><br><span class="line">.content-wrap &#123;</span><br><span class="line">  opacity: 0.9;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;侧边框的透明度设置</span><br><span class="line">.sidebar &#123;</span><br><span class="line">  opacity: 0.9;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;菜单栏的透明度设置</span><br><span class="line">.header-inner &#123;</span><br><span class="line">  background: rgba(255,255,255,0.9);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;搜索框（local-search）的透明度设置</span><br><span class="line">.popup &#123;</span><br><span class="line">  opacity: 0.9;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <h2 id="目录与跳转"><a href="#目录与跳转" class="headerlink" title="目录与跳转"></a>目录与跳转</h2><p>使用<code>doctoc</code>工具可以自动生成md的目录，并支持跳转，安装方式如下：<br><code>npm i doctoc -g</code><br>使用方式<code>doctoc file.md</code>就会在文章顶层生成目录，需要手动调整位置。<br>如果目录更新,<code>doctoc -u file.md</code></p>
+<h2 id="本地部署"><a href="#本地部署" class="headerlink" title="本地部署"></a>本地部署</h2><p><code>hexo s</code>可以开启本地部署，这样可以快速验证一些feature.</p>
 <p><strong>参考资料：</strong><br><a href="http://theme-next.iissnan.com/">NexT官方</a>  </p>
 ]]></content>
       <categories>
@@ -4043,5 +4044,261 @@
         <tag>通信协议</tag>
         <tag>vxlan</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>VRRP简述</title>
+    <url>/2022/07/07/VRRP%E7%AE%80%E8%BF%B0/</url>
+    <content><![CDATA[<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>VRRP(virtual router redundancy protocol)和<code>HSRP</code>非常相似，原理相同，只不过VRRP是公有的(RFC 3768)，HSRP是思科私有的。<code>《HSRP简述》</code>中对虚拟路由冗余协议做了基本的阐述和实验说明，这篇文章主要描述两者之间的差异，然后做个实验来验证下。</p>
+<span id="more"></span>
+
+<h1 id="VRRP与HSRP的差异"><a href="#VRRP与HSRP的差异" class="headerlink" title="VRRP与HSRP的差异"></a>VRRP与HSRP的差异</h1><table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="left">HSRP</th>
+<th align="left">VRRP</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">protocol</td>
+<td align="left">cisco proprietary</td>
+<td align="left">IETF-RFC3768</td>
+</tr>
+<tr>
+<td align="left">number of groups</td>
+<td align="left">0-255,0是默认</td>
+<td align="left">1-255</td>
+</tr>
+<tr>
+<td align="left">active/standby</td>
+<td align="left">一个active, 一个standby，多个候选者</td>
+<td align="left">术语叫法不同，一个master，多个backups</td>
+</tr>
+<tr>
+<td align="left">Vip</td>
+<td align="left">不能和三层接口ip相同</td>
+<td align="left">可以相同，如果相同，优先级直接变成最高</td>
+</tr>
+<tr>
+<td align="left">Vmac</td>
+<td align="left">v1，v2有差异，见hsrp简述</td>
+<td align="left">00:00:5e:00:01:xx, xx是group id</td>
+</tr>
+<tr>
+<td align="left">multicast address</td>
+<td align="left">224.0.0.2</td>
+<td align="left">224.0.0.18</td>
+</tr>
+<tr>
+<td align="left">tracking</td>
+<td align="left">interfaces or objects, 触发后降低优先级或退出组</td>
+<td align="left">objeects，触发后降低优先级，没有退出组</td>
+</tr>
+<tr>
+<td align="left">timers</td>
+<td align="left">hello timer 3秒，hold time 10秒</td>
+<td align="left">hello 1秒，holdtime 3秒</td>
+</tr>
+<tr>
+<td align="left">authentication</td>
+<td align="left">支持</td>
+<td align="left">rfc中不支持，厂家支持</td>
+</tr>
+<tr>
+<td align="left">preempt</td>
+<td align="left">默认不开启，可配置</td>
+<td align="left">默认开启抢占</td>
+</tr>
+<tr>
+<td align="left">报文封装</td>
+<td align="left">UDP 1985</td>
+<td align="left">基于IP</td>
+</tr>
+<tr>
+<td align="left">version</td>
+<td align="left">默认v1</td>
+<td align="left">v2,v3两个版本，默认v2，v3才支持ipv6</td>
+</tr>
+<tr>
+<td align="left">load balancing</td>
+<td align="left">支持不同组之间</td>
+<td align="left">支持不同组之间</td>
+</tr>
+<tr>
+<td align="left">priority</td>
+<td align="left">不支持辞职，优先级为0可以手动配置，没有特殊含义</td>
+<td align="left">优先级为0表示放弃master位置，优先级0不能手动配置</td>
+</tr>
+</tbody></table>
+<p>关于辞职，当master路由器接口shutdown时，会立即发送优先级为0的通告，vrrp中优先级为0表示不参与虚拟组计算，收到的backups之间会立即重新选举出新的master，否则就要等待3秒的报文超时再选举，这样可以加快收敛时间。优先级为0的报文如下：</p>
+<p><img src="!%5B%5D(https://github.com/Rancho333/pictures_hub/blob/master/non_auto/vrrp_packet_priority_0.png?raw=true"></p>
+<p>在HSRP中，tracking中触发支持shutdown，如果active路由器接口shutdown，那么standby只能等待10秒超时后变成active. VRRP tracking中不支持shutdown，嗯，也就是说只有路由接口手动shutdown或物理线路挂掉才会触发优先级为0的报文，而上行链路挂掉tracking无法触发？</p>
+<h1 id="实验说明"><a href="#实验说明" class="headerlink" title="实验说明"></a>实验说明</h1><p>实验拓扑图如下：</p>
+<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/vrrp_basic_topology.png?raw=true"></p>
+<p>S2、S3、S4的interface vlan1加入虚拟组组成虚拟路由器，虚拟组对外提供网关服务。基本配置如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S2</span><br><span class="line">    interface Vlan1</span><br><span class="line">        ip address 192.168.1.1 255.255.255.0        &#x2F;&#x2F; svi配置IP地址</span><br><span class="line">        vrrp 1 ip 192.168.1.254                     &#x2F;&#x2F; svi加入虚拟组1，虚拟ip为192.168.1.254</span><br><span class="line">S3</span><br><span class="line">    interface Vlan1</span><br><span class="line">        ip address 192.168.1.2 255.255.255.0</span><br><span class="line">        vrrp 1 ip 192.168.1.254</span><br><span class="line">S4</span><br><span class="line">    interface Vlan1</span><br><span class="line">        ip address 192.168.1.3 255.255.255.0</span><br><span class="line">        vrrp 1 ip 192.168.1.254</span><br></pre></td></tr></table></figure>
+
+<p><code>show vrrp brief</code>查看vrrp状态</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S4#show vrrp brief </span><br><span class="line">Interface          Grp Pri Time  Own Pre State   Master addr     Group addr</span><br><span class="line">Vl1                1   100 3609       Y  Master  192.168.1.3     192.168.1.254</span><br></pre></td></tr></table></figure>
+<p>vrrp的默认优先级也是100，超期时间单位是毫秒，有计算公式，是hello的三倍多点，<code>own</code>表示是否是虚拟组的拥有者，当物理接口ip和虚拟组ip一致时成为owner, 通过将优先级置位最大值255实，如将S3设置成owner</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S3(config-if)#ip address 192.168.1.254 255.255.255.0</span><br><span class="line">S3#show vrrp brief </span><br><span class="line">Interface          Grp Pri Time  Own Pre State   Master addr     Group addr</span><br><span class="line">Vl1                1   255 3003   Y   Y  Master  192.168.1.254   192.168.1.254</span><br></pre></td></tr></table></figure>
+<p>优先级为255的报文为：</p>
+<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/vrrp_packet_priority_255.png?raw=true"></p>
+<p>owner不能被配置优先级。 vrrp默认开启preempt，所以<code>pre</code>是<code>Y</code>。注意vrrp组中除master外，其余都是backup，即master挂掉后，会从backup中重新选举出新的master。而hsrp中master挂掉后，standby接替，之后在candidate中选举出新的standby。</p>
+<p><strong>所以VRRP中只有master发送announcement，backup监听。hsrp中active和backup都需要发送hello报文。</strong></p>
+<p>当然，FHRP中一般搞两台路由器做网关冗余就行了。</p>
+<h2 id="其它实验"><a href="#其它实验" class="headerlink" title="其它实验"></a>其它实验</h2><p>tracking上行链路故障，不同组之间的负载均衡，和HSRP没区别，这里就不重复了。</p>
+<h2 id="双活网关"><a href="#双活网关" class="headerlink" title="双活网关"></a>双活网关</h2><p>HSRP/VRRP只能实现单活网关，只有active进行arp应答和转发业务流量，standby则完全闲置。结合MLAG则可实现双活网关:</p>
+<ol>
+<li>active负责arp应答，standby会将arp中继给active</li>
+<li>控制面视角而言，依然是active/standby，数据面而言active/active转发</li>
+<li>接入交换机上mac地址表中vmac对应的端口是mlag聚合端口，所以active/standby都有可能收到报文，收到后按路由表正常转发即可。如果不是mlag场景，standby收到目的地址是vmac的报文。</li>
+<li>eveng中不支持vpc模拟，vpc的peer-link需要10G端口才能运行，不然会后各种问题。</li>
+</ol>
+<h2 id="为甚vip不会冲突"><a href="#为甚vip不会冲突" class="headerlink" title="为甚vip不会冲突"></a>为甚vip不会冲突</h2><p>在两台设备上部署了相同的vip+vmac，为什么不会冲突？<br>IP通信通过arp报文获取mac，主机请求网关vip时，只有active才会做出回应，所以除了active外，网络中并不会有其它设备感知到standby。<br>从另外一个角度来说？一般设备配置ip地址后会向外发送免费arp报文，一是避免ip冲突，而是主动告知其它设备自己arp信息。交换机变成active后也会主动发送免费arp，standby收到后也不会处理，所以就不冲突了。<br>从实际通信报文的角度来看，standby是收不到vmac的报文的，如果能收到，也能正常转发，这就是mlag+vrrp实现双活网关的原理。</p>
+]]></content>
+      <tags>
+        <tag>VRRP</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>hsrp简述</title>
+    <url>/2022/07/07/hsrp%E7%AE%80%E8%BF%B0/</url>
+    <content><![CDATA[<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>在介绍HSRP之前先简单说明一下FHRP(first hop redundancy protocol)，第一跳冗余协议。第一跳即网关，终端设备单网卡往往只能配置一个网关，所以会存在单点故障，传输网中则可以通过路由协议提供链路冗余。FHRP就是为了解决这一问题而出现的，需要注意的是FHRP更多的是一种场景的描述，并不是具体协议，真正的实现则是由HSRP、VRRP、GLBP、L3 mlag来完成的。类似于Ethernetchannel，其真正的实现则是由LACP、PAgP、static这些方式来完成。</p>
+<span id="more"></span>
+<p>HSRP(hot standby routing protocol)和GLBP(gateway load balancing protocol)是cisco的私有协议，vrrp(virtual router redundancy protocol)是公有的。这里主要介绍HSRP的基本原理，然后做一个HSRP+PVSTP的实验来说明不同网段的负载均衡。</p>
+<h1 id="原理介绍"><a href="#原理介绍" class="headerlink" title="原理介绍"></a>原理介绍</h1><p>一组交换机(实际上是交换机的三层接口)加入一个group中，这个group向外提供虚拟ip作为网关。这些交换机通过交换hsrp hello报文选举出active和standby，其它的交换机是candidates，active网关进行数据转发，当active挂掉之后，standby成为新的active，并从candidate中选举出新的standby。注意，HSRP是单活的。</p>
+<p>只有active才会对arp进行应答，standby忽略。选举出active后，active会立即向外发送免费ARP报文，在拓扑收敛场景下，这会立马环境中的arp缓存和旧的mac地址表。</p>
+<h2 id="简单配置说明"><a href="#简单配置说明" class="headerlink" title="简单配置说明"></a>简单配置说明</h2><p>拓扑图如下：</p>
+<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/hsrp_basic_topology.png?raw=true"></p>
+<p>S8做接入交换机，网关设置在汇聚层，由S7和S9形成的虚拟IP<code>192.168.1.254</code>承担。配置如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S7</span><br><span class="line">interface Vlan1</span><br><span class="line"> ip address 192.168.1.1 255.255.255.0          &#x2F;&#x2F; 配置三层接口地址，hsrp报文原地址</span><br><span class="line"> standby 1 ip 192.168.1.254                    &#x2F;&#x2F; 加入虚拟组1，虚拟ip为192.168.1.254</span><br><span class="line"></span><br><span class="line">S9</span><br><span class="line">interface Vlan1</span><br><span class="line"> ip address 192.168.1.2 255.255.255.0</span><br><span class="line"> standby 1 ip 192.168.1.254</span><br></pre></td></tr></table></figure>
+<p>通过<code>show standby brief</code>可以查看hsrp状态。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S7#show standby brief </span><br><span class="line">                     P indicates configured to preempt.</span><br><span class="line">                     |</span><br><span class="line">Interface   Grp  Pri P State   Active          Standby         Virtual IP</span><br><span class="line">Vl1         1    101 P Active  local           192.168.1.2     192.168.1.254</span><br></pre></td></tr></table></figure>
+
+<p>hsrp的配置非常简单，实际上就一条命令。注意standby命令的配置一定要加上group id，如果不加默认是给group 0做配置。如<code>standby ip 192.168.1.56</code>，表示端口加入虚拟组0，虚拟ip是192.168.1.56. 一个三层接口可以加入多个虚拟组。</p>
+<h2 id="HSRP报文说明"><a href="#HSRP报文说明" class="headerlink" title="HSRP报文说明"></a>HSRP报文说明</h2><p>HSRP hello报文格式如下</p>
+<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/hsrp_hello_packet.png?raw=true"></p>
+<ul>
+<li>version: 0表示HSRP v1, 1表示HSRP v2</li>
+<li>op code: 0表示hello报文，1表示coup报文，3表示advertise报文</li>
+<li>state：端口状态，见下表</li>
+<li>hellotime: active周期性发送hello报文，standby通过监听hello报文确定active的状态。默认3秒</li>
+<li>holdtime：active超时时间，standby在holdtime时间内没有收到active的hello报文，重新选举active。默认10秒</li>
+<li>priority：端口优先级，优先最大的选举成为active，如果优先级一致，IP地址越大越优</li>
+<li>group：虚拟组，三层接口加入相同虚拟组，之后选举出active/standby，虚拟组对外提供网关服务</li>
+<li>authentication: 认证方式，可以设置认证口令，如果group相同，认证不通过，那么不能参与到虚拟组中</li>
+<li>virtual ip add: 虚拟网关的ip. 虚拟组中的成员端口需要配置相同的vip。</li>
+</ul>
+<p>端口状态如下：</p>
+<table>
+<thead>
+<tr>
+<th align="left">状态</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">initial</td>
+<td align="left">HSRP启动的初始状态</td>
+</tr>
+<tr>
+<td align="left">listen</td>
+<td align="left">路由器知道了vip，开启侦听其它HSRP路由器发送的hello报文，candidates处于该状态</td>
+</tr>
+<tr>
+<td align="left">speak</td>
+<td align="left">发送hello报文，参与选举</td>
+</tr>
+<tr>
+<td align="left">standby</td>
+<td align="left">备用网关，继续发送hello报文，<strong>源mac是发送接口的mac</strong></td>
+</tr>
+<tr>
+<td align="left">active</td>
+<td align="left">作为网关转发数据流量，继续发送hello报文，<strong>源mac是虚拟MAC</strong></td>
+</tr>
+</tbody></table>
+<h2 id="Vip与Vmac"><a href="#Vip与Vmac" class="headerlink" title="Vip与Vmac"></a>Vip与Vmac</h2><p>加入同一个虚拟组的三层接口下配置相同的vip，这个ip作为终端的网关。<br>vmac是根据虚拟组ID构造出来的一个mac地址：</p>
+<ul>
+<li>在v1中是0000.0c07.acXX (XX = group number)</li>
+<li>在v2中是0000.0c9f.fxxx (XXX = group number)</li>
+</ul>
+<h2 id="preempt抢占"><a href="#preempt抢占" class="headerlink" title="preempt抢占"></a>preempt抢占</h2><p>HSRP默认不开启抢占机制，即active/standby角色确定后，即使改变优先级比active大，也不会发生抢占。可以通过<code>S3(config-if)#standby 10 preempt</code>命令开启抢占功能。</p>
+<p>状态稳定后，只有修改优先级才会发生抢占。不会根据IP地址的大小做出改变。</p>
+<h2 id="md5认证"><a href="#md5认证" class="headerlink" title="md5认证"></a>md5认证</h2><p>HSRP支持认证，可以选择明文或md5. md5配置方式如下：<br><code>S2(config-if)#standby 10 authentication md5 key-string rancho</code><br>这可以避免未经授权的交换机参与HSRP计算。</p>
+<h2 id="HSRP-Version-1-和-2"><a href="#HSRP-Version-1-和-2" class="headerlink" title="HSRP Version 1 和 2"></a>HSRP Version 1 和 2</h2><p>HSRP有两个版本，呃，貌似没什么太大区别，简单过下吧：<br>|| V1 | V2 |<br>| :— | :— | :— |<br>| group nums | 0-255 | 0-4096 |<br>| vmac | 0000.0c07.acXX (XX = group number) | 0000.0c9f.fxxx (XXX = group number)|<br>| multicast add | 224.0.0.2 | 224.0.0.102 |<br>注意两个版本是不兼容的，都同时支持ipv4和ipv6.</p>
+<h2 id="object-tracking"><a href="#object-tracking" class="headerlink" title="object tracking"></a>object tracking</h2><p>沿用<code>简单配置说明</code>中的拓扑图。当前环境下，S7是active，如果eth1链路故障或者S7挂掉或者interface vlan1挂掉，那么S9在10秒内没有收到active的hello报文后会成为新的active。但是如果是S7的eth2挂掉，即S7没有了上行链路，eth1依然会周期性发送hello，S9并不会感知到active网关不能正常工作。</p>
+<p>S7会向vpc发送<code>icmp redirect</code>报文让其修改默认网关，但更好的方式是让S9成为active网关。(实验时将S7上eth2 shutdown，vpc上ping R6的loopback1, 可以ping通，发现S7依然是active，S8发送的icmp报文依然是送到S7，S7将icmp的src mac改成自己mac，目的mac改成S9的mac，进而到达R6)</p>
+<p>这种场景下需要使用<code>object tracking</code>功能来追踪S7上eth2的状态，如果上行链路故障，就降低本地hsrp优先级，使standby转换成active工作。</p>
+<p>HSRP提供端口追踪的特性，我们可以选取一个端口进行追踪，如果挂了，就可以降低设备hsrp优先级，使其它的standby变成active。配置如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S7(config)#track 1 interface ethernet 0&#x2F;2 line-protocol    &#x2F;&#x2F; 创建track object 1, track内容是ethernet 0&#x2F;2的状态，如果down就触发</span><br><span class="line">S7(config-if)#standby 1 track 1 decrement 50    &#x2F;&#x2F; 在group 1上关联track object 1，如果触发将优先级降低50</span><br></pre></td></tr></table></figure>
+
+<p>将S7的eth2 shutdown之后，发现优先级降低，active变了。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S7#show standby brief </span><br><span class="line">                     P indicates configured to preempt.</span><br><span class="line">                     |</span><br><span class="line">Interface   Grp  Pri P State   Active          Standby         Virtual IP</span><br><span class="line">Vl1         1    50  P Speak   192.168.1.2     unknown         192.168.1.254</span><br></pre></td></tr></table></figure>
+
+<p>另外一种方式是关联<code>ip sla</code>. 配置如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S7(config)#ip sla 1                 &#x2F;&#x2F; 创建一条sla，id是1</span><br><span class="line">S7(config-ip-sla)#icmp-echo 192.168.4.1       &#x2F;&#x2F; 测试与192.168.4.1的连通性</span><br><span class="line">S7(config-ip-sla-echo)#frequency 5            &#x2F;&#x2F;每5秒ping一次</span><br><span class="line">S7(config)#ip sla schedule 1 start-time now life forever     &#x2F;&#x2F; sla 1从现在开始运行并且一直运行下去</span><br><span class="line"></span><br><span class="line">S7(config)#track 1 ip sla 1         &#x2F;&#x2F; 创建track object 1, 与ip sla 1关联</span><br><span class="line">S7(config-if)#standby 1 track 1 decrement 80     &#x2F;&#x2F; 将track 1与group 1关联</span><br></pre></td></tr></table></figure>
+<p>这种方式下发现S7 ping 192.168.4.1的吓一跳变成S9，因为他们之间跑了ospf。但是没关系，原理是这么个原理，把ospf关了就可以触发了。</p>
+<h3 id="track-list特性"><a href="#track-list特性" class="headerlink" title="track list特性"></a>track list特性</h3><p>当有多个track对象，最终的结果是依赖这些对象跟踪结果时，可以使用<code>track list</code>特性。<br>沿用<code>简单配置说明</code>中的图：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">track 2 interface Ethernet0&#x2F;1 line-protocol             &#x2F;&#x2F; 创建track object 2，跟踪eth1的链路状态</span><br><span class="line">!</span><br><span class="line">track 3 interface Ethernet0&#x2F;2 line-protocol             &#x2F;&#x2F; 创建track object 3，跟踪eth2的链路状态</span><br><span class="line">!</span><br><span class="line">track 4 list boolean and                                &#x2F;&#x2F; 创建track list 4, list中的对象逻辑与结果是track 4的最终结果</span><br><span class="line"> object 2                                               &#x2F;&#x2F; 给track list 4添加list监控对象2</span><br><span class="line"> object 3                                               &#x2F;&#x2F; 给track list 4添加list监控对象3</span><br><span class="line">&#x2F;&#x2F; 当eth2和eth3都是up的时候，track 4结果是up，否则down</span><br></pre></td></tr></table></figure>
+<p>结果如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S7#show track brief </span><br><span class="line">Track Type        Instance                   Parameter        State Last Change</span><br><span class="line">1     ip sla      1                          state            Down  00:09:17</span><br><span class="line">2     interface   Ethernet0&#x2F;1                line-protocol    Up    00:07:55</span><br><span class="line">3     interface   Ethernet0&#x2F;2                line-protocol    Up    00:06:38</span><br><span class="line">4     list                                   boolean          Up    00:05:08</span><br></pre></td></tr></table></figure>
+<p>当HSRP有两个上行链路时，track 2、3分别监控两个上行链路，只用在hsrp中关联track4就行，减少关联对象。</p>
+<h2 id="HSRP结合PVSTP做不同网段流量的负载均衡"><a href="#HSRP结合PVSTP做不同网段流量的负载均衡" class="headerlink" title="HSRP结合PVSTP做不同网段流量的负载均衡"></a>HSRP结合PVSTP做不同网段流量的负载均衡</h2><p>实验拓扑如下：</p>
+<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/hsrp_pvstp.png?raw=true"></p>
+<p>HSRP与PVSTP同时使用时，做不同网段的负载均衡，应注意该网段(vlan)HSRP的active与PVSTP的根桥应在同一设备上，不然流量会集中到某一台设备上，导致该设备负载过大，而另一台没有流量需要转发。配置思路如下：</p>
+<ol>
+<li>划分vlan，配置交换机互联trunk<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S1</span><br><span class="line">    vlan 10,20</span><br><span class="line">    interface Ethernet0&#x2F;0</span><br><span class="line">        switchport access vlan 10</span><br><span class="line">    interface Ethernet0&#x2F;1</span><br><span class="line">         switchport trunk encapsulation dot1q</span><br><span class="line">         switchport mode trunk</span><br><span class="line">    interface Ethernet0&#x2F;2</span><br><span class="line">         switchport trunk encapsulation dot1q</span><br><span class="line">         switchport mode trunk</span><br><span class="line">    interface Ethernet0&#x2F;3</span><br><span class="line">         switchport access vlan 20</span><br><span class="line">S2, S3做类似配置</span><br></pre></td></tr></table></figure></li>
+<li>设置vlan的根桥，S2是vlan10的根桥，S3是vlan20的根桥<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S2</span><br><span class="line">    spanning-tree vlan 10 priority 4096</span><br><span class="line">S3</span><br><span class="line">    spanning-tree vlan 20 priority 4096</span><br></pre></td></tr></table></figure></li>
+<li>创建interface vlan; 设置hsrp，S2是vlan10所在网段的active，S3是vlan20所在网段 的active<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S2</span><br><span class="line">    interface Vlan10</span><br><span class="line">        ip address 192.168.1.1 255.255.255.0</span><br><span class="line">        standby 10 ip 192.168.1.254</span><br><span class="line">        standby 10 priority 101</span><br><span class="line">        standby 10 preempt</span><br><span class="line">S3</span><br><span class="line">    interface Vlan10</span><br><span class="line">        ip address 192.168.1.3 255.255.255.0</span><br><span class="line">        standby 10 ip 192.168.1.254</span><br><span class="line">        standby 20 preempt</span><br><span class="line">&#x2F;&#x2F;S2作为vlan10网段的active</span><br><span class="line"></span><br><span class="line">S2</span><br><span class="line">    interface Vlan20</span><br><span class="line">       ip address 192.168.2.1 255.255.255.0</span><br><span class="line">       standby 20 ip 192.168.2.254</span><br><span class="line">       standby 10 preempt</span><br><span class="line">S3</span><br><span class="line">    interface Vlan20</span><br><span class="line">       ip address 192.168.2.3 255.255.255.0</span><br><span class="line">       standby 20 ip 192.168.2.254</span><br><span class="line">       standby 20 priority 101</span><br><span class="line">       standby 20 preempt</span><br><span class="line">&#x2F;&#x2F; S3作为vlan20网段的active</span><br></pre></td></tr></table></figure>
+完成后的流量路径如下图所示：</li>
+</ol>
+<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/hsrp_pvstp_1.png?raw=true"></p>
+<p>在多实例中我们将不同vlan的根桥放置在不同的设备上，这样可以让不同实例的流量路径不一致，从而最大限度的利用带宽，减少流量拥塞，避免带宽浪费，同时也避免单一设备负载过高。</p>
+<p>网关一般设置在汇聚层，我们假象下，如果vlan的根桥是S2，而active是S3，那么vpc4的流量需要经过S1到S2再转到S3(S3的eth2是block的)，无疑多了一次转发，这是不必要的，我们应当避免。</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>glbp简述</title>
+    <url>/2022/07/07/glbp%E7%AE%80%E8%BF%B0/</url>
+    <content><![CDATA[<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>GLBP(gateway load balancing protocol)是FHRP的一种实现，思科私有协议。HSRP和VRRP都只能做到单活网关，而GLBP可以实现多活网关。<br>VRRP/HSRP中的负载均衡是将不同网段的active放在不同的设备上，即互为对方网段的backup，这是一种伪负载均衡。而GLBP通过vip与多vmac的映射可以实现同一网段流量的负载均衡。</p>
+<span id="more"></span>
+<h2 id="几个概念"><a href="#几个概念" class="headerlink" title="几个概念"></a>几个概念</h2><p>AVG(active virtual gateway): 一个虚拟组中只有一个AVG，选举产生。AVG给虚拟组中其它交换机分配vmac。只有AVG响应ARP报文。选举和抢占规则和HSRP一致，高优先级或ip地址大的成为AVG，次优的成为standby，剩下的处于listen阶段，不同于hsrp只有active和standby发送hello，glbp中所有交换机都发送hello。</p>
+<p>AVF(active virtual forward)：相同的vip，不同的vmac，都作为网关转发流量。通过权值进行选举，最多有4个AVF，也就是5台路由器组成虚拟组，其中一台是闲置的，当然这样没必要，一般两三台就够了。</p>
+<p>AVG就是整个虚拟组的控制面，负责vmac的分配，avf是数据面，根据vmac进行转发。</p>
+<p>GLBAP虚拟组所有成员每隔3秒发送hello报文用以保活，目的地址是224.0.0.102。承载在UDP之后，端口号是3222(source和dest一样)。</p>
+<p>load balancing的三种模式：</p>
+<ul>
+<li>round-robin：根据收到arp的先后顺序，依次响应AVF1、AVF2、AVF3的vmac，然后再循环1,2,3</li>
+<li>host-dependent：基于arp中请求者的mac地址做分配，相同的请求者始终分配相同的vmac</li>
+<li>weighted：不同的avfs分配不同的权重值，基于此响应arp<br>AVG对ARP回应vmac的策略就是GLBP上负载均衡的策略。</li>
+</ul>
+<p>*GLBP的一个先决条件：一个物理端口支持配置多个mac地址(一般交换芯片都支持)*，hsrp、vrrp、glbp本质上都是一个三层接口可以配置多个ip/mac。通过ip/mac可以定位到唯一的端口，但是端口并不一定只能通过唯一的ip、mac找到。类似于一辆车上有多个车牌。</p>
+<h3 id="vmac分配"><a href="#vmac分配" class="headerlink" title="vmac分配"></a>vmac分配</h3><p>每个虚拟组最多有4个vmac. AVG负责虚拟组内vmac分配。组成员发现AVG后通过hello消息请求vmac。通过AVG分配vmac的成为primary virtual forwarder(即通过该vmac作为网关进行数据转发)。通过hello报文学到其它forwarder的vmac的称为secondary virtual forwarder(组内的任一forwarder会学到其它所有forwarder对应的vmac)。</p>
+<p><code>0007.b400.XXYY</code>是vmac的组成形式，XX是group id，YY是组内vmac的序列号，<code>show glbp brief</code>中<code>Fwd</code>字段可以看到。</p>
+<h3 id="glbp优先级"><a href="#glbp优先级" class="headerlink" title="glbp优先级"></a>glbp优先级</h3><p>优先级最高的成为AVG，次之的成为standby，其它的是listen状态。如果优先级一致，ip越大越优。<br>AVG抢占默认关闭，需要手动开启。</p>
+<h3 id="glbp权重"><a href="#glbp权重" class="headerlink" title="glbp权重"></a>glbp权重</h3><p>用权重来表示avf的数据转发能力。权重可以决定avf是否转发流量<br>可以设置一个权重阈值，当到该值值时不转发流量<br>也可以设置到指定值转发流量的阈值，可以和tracking进行联动。</p>
+<h3 id="AVG冗余"><a href="#AVG冗余" class="headerlink" title="AVG冗余"></a>AVG冗余</h3><p>AVG挂掉后，standby接替，然后从listen状态的交换机中选举出新的standby.</p>
+<h3 id="AVF冗余"><a href="#AVF冗余" class="headerlink" title="AVF冗余"></a>AVF冗余</h3><p>当AVF挂掉后，会从其它的secondary virtual forwarder中选出一个继续使用挂掉avf的vmac，这样用户的流量就不会中断。<br>AVF默认开启抢占。</p>
+<h3 id="GLBP存在的问题"><a href="#GLBP存在的问题" class="headerlink" title="GLBP存在的问题"></a>GLBP存在的问题</h3><p>GLBP原本是思科私有协议，现在开源了，但是用的人并不多，因为glbp天生与stp不对付，glbp中需要各avf链路才有LB的效果，但是stp却极有可能阻塞其中的一些链路。</p>
+<h2 id="实验说明"><a href="#实验说明" class="headerlink" title="实验说明"></a>实验说明</h2><p>实验拓扑图如下：</p>
+<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/glbp_basic_topology.png?raw=true"></p>
+<p>S2、S3、S4在一个虚拟组内，通过interface vlan1为vlan1所在网段提供网关服务，虚拟网关ip为<code>192.168.1.254</code>，VPC5、VPC6、VPC7都在vlan1中。</p>
+<p>配置如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S2:</span><br><span class="line">interface Vlan1</span><br><span class="line"> ip address 192.168.1.2 255.255.255.0</span><br><span class="line"> glbp 1 ip 192.168.1.254</span><br><span class="line"></span><br><span class="line">S3:</span><br><span class="line">interface Vlan1</span><br><span class="line"> ip address 192.168.1.3 255.255.255.0</span><br><span class="line"> glbp 1 ip 192.168.1.254</span><br><span class="line"></span><br><span class="line">S4:</span><br><span class="line">interface Vlan1</span><br><span class="line"> ip address 192.168.1.4 255.255.255.0</span><br><span class="line"> glbp 1 ip 192.168.1.254</span><br></pre></td></tr></table></figure>
+<p>通过<code>show glbp brief</code>查看glbp的状态：</p>
+<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/glbp_show_brief.png?raw=true"></p>
+<p>对show的状态做一个简单说明：</p>
+<ul>
+<li><code>Grp</code>表示接口所在的glbp组id</li>
+<li><code>Fwd</code>表示avf编号，注意第一行没有编号，显示的是AVG信息，图中可以看到AVG是S4，standby avg是S3，S2则出于listen状态。站在avf的视角下，每个avf都分配到一个vmac，对应一个fwd编号，那么他就是这个fwd编号的active，其它avf在这个编号中都是listen，当active挂掉后，从listen中选出一个继续为该fwd编号对应的vmac服务。forwarder恢复后，会收回该vmac的使用权。</li>
+</ul>
+<p>GLBP默认使用的LB方式是round-robin, 即根据收到arp报文的顺序，依次循环分配fwd1、2、3对应的vmac，在VPC5、6、7上依次ping网关，查看arp表项：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">VPC5&gt; show arp</span><br><span class="line"></span><br><span class="line">00:07:b4:00:01:01  192.168.1.254 expires in 37 seconds</span><br><span class="line"></span><br><span class="line">VPC6&gt; show arp</span><br><span class="line"></span><br><span class="line">00:07:b4:00:01:02  192.168.1.254 expires in 115 seconds</span><br><span class="line"></span><br><span class="line">VPC7&gt; show arp</span><br><span class="line"></span><br><span class="line">00:07:b4:00:01:03  192.168.1.254 expires in 113 seconds</span><br></pre></td></tr></table></figure>
+<p>在VPC7上清除arp信息，重新ping网关：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">VPC7&gt; clear arp</span><br><span class="line">VPC7&gt; show arp</span><br><span class="line">arp table is emptys</span><br><span class="line">VPC7&gt; ping 192.168.1.254</span><br><span class="line"></span><br><span class="line">84 bytes from 192.168.1.254 icmp_seq&#x3D;1 ttl&#x3D;255 time&#x3D;0.409 ms</span><br><span class="line">^C0</span><br><span class="line">VPC7&gt; show arp</span><br><span class="line"></span><br><span class="line">00:07:b4:00:01:01  192.168.1.254 expires in 116 seconds</span><br></pre></td></tr></table></figure>
+<p>和预期一致，重新分配fwd1的vmac。此外，LB还可以基于主机，基于avf权重。这里就不一一尝试了。</p>
+]]></content>
   </entry>
 </search>
