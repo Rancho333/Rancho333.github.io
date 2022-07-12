@@ -208,6 +208,89 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2022/07/12/%E8%B7%AF%E7%94%B1%E6%A0%87%E8%AE%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/pictures/R-W.png">
+      <meta itemprop="name" content="Rancho">
+      <meta itemprop="description" content="No pain, no gain!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rancho Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/07/12/%E8%B7%AF%E7%94%B1%E6%A0%87%E8%AE%B0/" class="post-title-link" itemprop="url">路由标记</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-07-12 14:59:07 / 修改时间：17:55:39" itemprop="dateCreated datePublished" datetime="2022-07-12T14:59:07+08:00">2022-07-12</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>路由标记其实就是路由的一个属性。有了tag属性，可以对具有相同tag属性的一组路由进行操作(过滤、修改路由类型，修改metric值等)。BGP中有个非常类似的属性：community属性。<br>一般情况下内部路由不打标记，外部路由打标记。</p>
+<h2 id="ospf打标记"><a href="#ospf打标记" class="headerlink" title="ospf打标记"></a>ospf打标记</h2><p>ospf将外部路由重分布进ospf时支持直接打标机（也可以使用路由策略route-map）。拓扑图如下：</p>
+<p><img src="https://rancho333.github.io/pictures/routing_tag.png"><br>R1,R2的eth0上运行ospf，R2上创建lp0接口，将lp0重分布到ospf中，并打上标记，使R1学到。配置如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">R1</span><br><span class="line">interface Ethernet0&#x2F;0</span><br><span class="line"> ip address 12.1.1.1 255.255.255.0</span><br><span class="line"> ip ospf 110 area 0</span><br><span class="line">！</span><br><span class="line">router ospf 110</span><br><span class="line"></span><br><span class="line">R2</span><br><span class="line">!</span><br><span class="line">interface Loopback0</span><br><span class="line"> ip address 2.2.2.2 255.255.255.255</span><br><span class="line">!</span><br><span class="line">interface Ethernet0&#x2F;0</span><br><span class="line"> ip address 12.1.1.12 255.255.255.0</span><br><span class="line"> ip ospf 110 area 0</span><br><span class="line">!</span><br><span class="line">router ospf 110</span><br><span class="line"> redistribute connected subnets tag 12                  &#x2F;&#x2F; 重分布直连路由进ospf，并打上tag：12</span><br></pre></td></tr></table></figure>
+<p>在R1上查看2.2.2.2的ospf database信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">R1#show ip ospf database                  </span><br><span class="line">		Type-5 AS External Link States</span><br><span class="line"></span><br><span class="line">Link ID         ADV Router      Age         Seq#       Checksum Tag</span><br><span class="line">2.2.2.2         12.1.1.12       609         0x80000002 0x009ED2 12</span><br></pre></td></tr></table></figure>
+<p>发现已经打上tag：12的标记。之后就可以创建route-map，match这个tag，之后就可以set各种操作。</p>
+<p>此外，还可以通过<code>route-map</code>来打tag.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">R2(config)#route-map tag permit 10           &#x2F;&#x2F; 创建一个route-map，名字叫tag</span><br><span class="line">R2(config-route-map)#set tag 20              &#x2F;&#x2F; 动作时设置tag20</span><br><span class="line">R2(config-router)#redistribute connected route-map tag          &#x2F;&#x2F; 重分布时使能该route-map</span><br></pre></td></tr></table></figure>
+<p>在R1上查看ospf的database信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">R1#show ip ospf database </span><br><span class="line">		Type-5 AS External Link States</span><br><span class="line"></span><br><span class="line">Link ID         ADV Router      Age         Seq#       Checksum Tag</span><br><span class="line">2.2.2.2         12.1.1.12       4           0x80000001 0x003139 20</span><br></pre></td></tr></table></figure>
+<p>ospf和eigrp都支持tag，两者在重分布时会携带tag到对方的路由域。</p>
+<h2 id="eigrp打标记"><a href="#eigrp打标记" class="headerlink" title="eigrp打标记"></a>eigrp打标记</h2><p>eigrp中不能直接打tag，只能通过route-map方式打标记。命令和ospf一样。eigrp上查看标记：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">R1#show ip eigrp topology </span><br><span class="line">P 2.2.2.2&#x2F;32, 1 successors, FD is 409600, tag is 20         &#x2F;&#x2F; tag是上面route-map定义的</span><br><span class="line">        via 12.1.1.12 (409600&#x2F;128256), Ethernet0&#x2F;0</span><br></pre></td></tr></table></figure>
+
+<p>eigrp在命名模式下可以给内部路由打标记，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">R2(config-router)#eigrp upgrade-cli rancho              &#x2F;&#x2F; 可以直接从经典模式升级到命名模式，好处是邻居状态不会发生变化</span><br><span class="line">R2(config-router)#address-family ipv4 autonomous-system 90</span><br><span class="line">R2(config-router-af)#eigrp default-route-tag 45</span><br><span class="line"></span><br><span class="line">R2(config-router-af)#eigrp default-route-tag 10.10.10.10        &#x2F;&#x2F; 如果是使用点分十进制打tag，那么对端显示的是十进制数字</span><br><span class="line">R1(config)#route-tag notation dotted-decimal                    &#x2F;&#x2F; 需要修改route tag的显示方式</span><br></pre></td></tr></table></figure>
+
+<h2 id="tag结合distribute-list过滤路由"><a href="#tag结合distribute-list过滤路由" class="headerlink" title="tag结合distribute-list过滤路由"></a>tag结合distribute-list过滤路由</h2><p>在R1上创建route-map，匹配R2上打的tag，分发列表中调用该route-map</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">R1(config)#route-map deny-tag deny 10           &#x2F;&#x2F; 创建route-map</span><br><span class="line">R1(config-route-map)#match tag 20               &#x2F;&#x2F; 匹配tag 20</span><br><span class="line">R1(config)#router eigrp 90</span><br><span class="line">R1(config-router)#distribute-list route-map deny-tag in     &#x2F;&#x2F;使能分发列表</span><br><span class="line"></span><br><span class="line">R1(config)#route-map deny-tag permit 20         &#x2F;&#x2F; 创建deny-tag的permit语句，否则分发列表会隐式过滤所有路由</span><br><span class="line"></span><br><span class="line">R2(config)#interface loopback 1</span><br><span class="line">R2(config-if)#ip address 3.3.3.3 255.255.255.255</span><br><span class="line">R2(config)#router eigrp 90</span><br><span class="line">R2(config-router)#network 3.3.3.3</span><br></pre></td></tr></table></figure>
+
+<p>查看R1上路由表：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">R1#show ip route          </span><br><span class="line">      3.0.0.0&#x2F;32 is subnetted, 1 subnets</span><br><span class="line">D        3.3.3.3 [90&#x2F;409600] via 12.1.1.12, 00:00:06, Ethernet0&#x2F;0</span><br><span class="line">      12.0.0.0&#x2F;8 is variably subnetted, 2 subnets, 2 masks</span><br><span class="line">C        12.1.1.0&#x2F;24 is directly connected, Ethernet0&#x2F;0</span><br><span class="line">L        12.1.1.1&#x2F;32 is directly connected, Ethernet0&#x2F;0</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>可以看到<code>2.2.2.2</code>的路由已经被过滤了，没有路由tag的3.3.3.3可以正常看到。</p>
+<h2 id="rip打tag"><a href="#rip打tag" class="headerlink" title="rip打tag"></a>rip打tag</h2><p>rip只能在version2上打标记，方法和eigrp相同。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2022/07/12/%E5%8F%8C%E7%82%B9%E5%8F%8C%E5%90%91%E9%87%8D%E5%88%86%E5%B8%83/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -233,7 +316,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-07-12 09:58:53 / 修改时间：13:34:05" itemprop="dateCreated datePublished" datetime="2022-07-12T09:58:53+08:00">2022-07-12</time>
+              <time title="创建时间：2022-07-12 09:58:53 / 修改时间：16:26:32" itemprop="dateCreated datePublished" datetime="2022-07-12T09:58:53+08:00">2022-07-12</time>
             </span>
 
           
@@ -829,88 +912,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/09/29/NAT%E7%AE%80%E8%BF%B0%E5%8F%8A%E4%BB%BF%E7%9C%9F%E5%AE%9E%E9%AA%8C/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/pictures/R-W.png">
-      <meta itemprop="name" content="Rancho">
-      <meta itemprop="description" content="No pain, no gain!">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Rancho Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/09/29/NAT%E7%AE%80%E8%BF%B0%E5%8F%8A%E4%BB%BF%E7%9C%9F%E5%AE%9E%E9%AA%8C/" class="post-title-link" itemprop="url">NAT简述及仿真实验</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-09-29 13:52:24" itemprop="dateCreated datePublished" datetime="2021-09-29T13:52:24+08:00">2021-09-29</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-07-07 12:13:48" itemprop="dateModified" datetime="2022-07-07T12:13:48+08:00">2022-07-07</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
-<ul>
-<li><a href="#%E5%85%B3%E4%BA%8Enat%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E6%9C%AC%E9%97%AE%E9%A2%98">关于NAT的一些基本问题</a><ul>
-<li><a href="#%E4%BB%80%E4%B9%88%E6%98%AFnat">什么是NAT?</a></li>
-<li><a href="#nat%E7%9A%84%E5%B7%A5%E4%BD%9C%E6%96%B9%E5%BC%8F">NAT的工作方式</a></li>
-<li><a href="#nat%E7%9A%84%E5%BC%8A%E7%AB%AF%E5%8F%8A%E5%A4%84%E7%90%86%E6%96%B9%E5%BC%8F">NAT的弊端及处理方式</a><ul>
-<li><a href="#alg">ALG</a></li>
-<li><a href="#icmp%E6%8A%A5%E6%96%87%E7%9A%84%E7%89%B9%E6%AE%8A%E5%A4%84%E7%90%86">ICMP报文的特殊处理</a></li>
-<li><a href="#ip%E5%88%86%E7%89%87%E7%9A%84%E7%89%B9%E6%AE%8A%E5%A4%84%E7%90%86">IP分片的特殊处理</a>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/09/29/NAT%E7%AE%80%E8%BF%B0%E5%8F%8A%E4%BB%BF%E7%9C%9F%E5%AE%9E%E9%AA%8C/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -982,7 +983,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">61</span>
+          <span class="site-state-item-count">62</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -995,7 +996,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">38</span>
+        <span class="site-state-item-count">39</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -1036,7 +1037,7 @@
 
 <div class="theme-info">
   <div class="powered-by"></div>
-  <span class="post-count">全站共 90.4k 字</span>
+  <span class="post-count">全站共 91.4k 字</span>
 </div>
 
         
