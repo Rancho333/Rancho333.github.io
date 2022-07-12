@@ -1,6 +1,6 @@
 #!/bin/bash
 if [[ -z $1 ]];then
-    COMMNET="default comment info"
+    COMMENT="default comment info"
 else
     COMMENT=$1
 fi
@@ -8,5 +8,5 @@ fi
 hexo g -d
 
 git add .
-git commit -m $COMMENT
+git commit -m "$COMMENT"
 git push
