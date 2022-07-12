@@ -2054,7 +2054,8 @@
 <span id="more"></span>
 
 <h1 id="Tips-amp-Tricks"><a href="#Tips-amp-Tricks" class="headerlink" title="Tips &amp; Tricks"></a>Tips &amp; Tricks</h1><h2 id="获取shell脚本所在的目录"><a href="#获取shell脚本所在的目录" class="headerlink" title="获取shell脚本所在的目录"></a>获取shell脚本所在的目录</h2><p><code>dirname &quot;$(realpath &quot;$(BASH_SOURC[0])&quot;)&quot;</code><br>$0或者$(BASH_SOURC[0])表示当前脚本，<code>realpath</code>获取脚本的绝对路径，<code>dirname</code>将文件名的最后一个组件去掉。</p>
-]]></content>
+<h2 id="关于"><a href="#关于" class="headerlink" title="关于 [[]]"></a>关于 [[]]</h2><p>[[]]中没有文件扩展和<code>单词分离</code>，但是会发生参数扩展和命令替换。<br>如果字符串中有空格，那么只能用[[]]惊醒判断。如：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">str&#x3D;“abc def”</span><br><span class="line">[[ -z $str ]]           &#x2F;&#x2F; 判断str是否为空，如果使用[ -z str ] 则会报数组错误，因为&#96;[]&#96;会将str分割成abc、def两个字符串</span><br></pre></td></tr></table></figure>]]></content>
       <tags>
         <tag>shell</tag>
       </tags>
