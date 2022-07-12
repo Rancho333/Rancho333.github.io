@@ -4305,6 +4305,8 @@
     <title>双点双向重分布</title>
     <url>/2022/07/12/%E5%8F%8C%E7%82%B9%E5%8F%8C%E5%90%91%E9%87%8D%E5%88%86%E5%B8%83/</url>
     <content><![CDATA[<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>不同的路由网络之间互联的时候，需要相互导入对方的路由完成路由重分布。进行双向重分布的路由器就显得格外重要，存在单点故障隐患，可通过双点双向重分布来解决这个问题。</p>
+<span id="more"></span>
+
 <h1 id="拓扑描述"><a href="#拓扑描述" class="headerlink" title="拓扑描述"></a>拓扑描述</h1><p>双点双向重分布拓扑如下:</p>
 <p><img src="https://rancho333.github.io/pictures/double_point_double_redistribute.png"></p>
 <p>左边的区域运行rip，右边的区域运行ospf，在R2、R4上做双向重分布，最终效果：在R1上到3.3.3.3有两个下一跳，在R3上到1.1.1.1上有两个下一跳。</p>
