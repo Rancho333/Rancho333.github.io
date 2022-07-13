@@ -30,8 +30,10 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://rancho333.github.io/pictures/double_point_double_redistribute.png">
 <meta property="og:image" content="https://rancho333.github.io/pictures/inferior_path.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/routing_backward.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/routing_backward_fix.png">
 <meta property="article:published_time" content="2022-07-12T01:58:53.000Z">
-<meta property="article:modified_time" content="2022-07-12T08:26:32.786Z">
+<meta property="article:modified_time" content="2022-07-13T06:49:13.253Z">
 <meta property="article:author" content="Rancho">
 <meta property="article:tag" content="路由">
 <meta property="article:tag" content="AD">
@@ -237,10 +239,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2022-07-12 09:58:53 / 修改时间：16:26:32" itemprop="dateCreated datePublished" datetime="2022-07-12T09:58:53+08:00">2022-07-12</time>
+              <time title="创建时间：2022-07-12 09:58:53" itemprop="dateCreated datePublished" datetime="2022-07-12T09:58:53+08:00">2022-07-12</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-07-13 14:49:13" itemprop="dateModified" datetime="2022-07-13T14:49:13+08:00">2022-07-13</time>
+              </span>
 
           
             <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
@@ -251,7 +259,7 @@
               <span id="busuanzi_value_page_pv"></span>
             </span>
             <span class="post-meta-divider">|</span>
-<span title="post.wordcount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span>字数： 2.3k</span>
+<span title="post.wordcount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span>字数： 2.8k</span>
 
         </div>
       </header>
@@ -304,6 +312,23 @@
 <p>需要注意的是，现在R2也会遇到之前R4的次优路径的问题，因为现在R2也会从rip和ospf两个域收到1.1.1.1的路由，所以同样需要在ospf中修改外部路由ad值。分别查看R1和R3上的路由：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">R1#show ip route | begin 3.3.3.3</span><br><span class="line">R        3.3.3.3 [120&#x2F;3] via 14.1.1.4, 00:00:22, Ethernet0&#x2F;1</span><br><span class="line">                 [120&#x2F;3] via 12.1.1.2, 00:00:26, Ethernet0&#x2F;0</span><br><span class="line">&#x2F;&#x2F; R1分别学到从R2、R4重分布过来的3.3.3.3的路由，形成ecmp</span><br><span class="line"></span><br><span class="line">R3#show ip route | begin 1.1.1.1</span><br><span class="line">O E2     1.1.1.1 [110&#x2F;20] via 34.1.1.4, 00:06:13, Ethernet0&#x2F;1</span><br><span class="line">                 [110&#x2F;20] via 23.1.1.2, 00:04:31, Ethernet0&#x2F;0</span><br><span class="line">&#x2F;&#x2F; R3上分别学到从R2、R4重分布过来的1.1.1.1的路由，形成ecmp</span><br></pre></td></tr></table></figure>
 <p>完全符合预期。</p>
+<h2 id="路由标记解决路由回馈的问题"><a href="#路由标记解决路由回馈的问题" class="headerlink" title="路由标记解决路由回馈的问题"></a>路由标记解决路由回馈的问题</h2><p>以本实验为例，R2上在ospf中引入的rip路由，某些情况下，R4上会将这部分路由从重分布到rip。rip中没有邻居的概念，将R1的eth1 shutdown之后，在R4上：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">R4#clear ip route *                &#x2F;&#x2F; 刷新R4上的路由表</span><br><span class="line"></span><br><span class="line">R4#show ip route | include 1.1.1.1</span><br><span class="line">O E2     1.1.1.1 [121&#x2F;20] via 34.1.1.3, 00:04:34, Ethernet0&#x2F;1     &#x2F;&#x2F; 此时1.1.1.1的路由是从ospf学到的(R2上rip重分布到ospf中)</span><br></pre></td></tr></table></figure>
+<p>在R2的eth1上抓包如下：<br><img src="https://rancho333.github.io/pictures/routing_backward.png"></p>
+<p>可以发现R4将本属于rip路由域中<code>1.1.1.1</code>和<code>12.1.1.0</code>这两条路由重新发回到了rip，这会<em>引起路由环路的风险</em>。</p>
+<p>通过路由标记可以解决这个问题。本质是本路由域从别的路由域中学到的路由不会再重新分发回去(自己发出的自己不再接收)。实际操作是：</p>
+<ol>
+<li>当从别的路由域引入路由的时候，给这些路由打上标记</li>
+<li>将本路由域中的路由重分布出去的时候，不分布这些有标记的路由</li>
+</ol>
+<p>接着上面的实验，R2上ospf中引入的rip路由打上标记</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">R2(config)#router ospf 110</span><br><span class="line">R2(config-router)#redistribute rip subnets tag 120</span><br></pre></td></tr></table></figure>
+<p>在R4上查看ospf中带有tag的路由：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">R4#show ip ospf database | include 120</span><br><span class="line">1.1.1.1         2.2.2.2         704         0x80000003 0x00F128 120</span><br><span class="line">12.1.1.0        2.2.2.2         704         0x80000003 0x006CA3 120</span><br></pre></td></tr></table></figure>
+<p>R4上在rip中引入ospf路由时过滤这些带有tag的路由：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">route-map otr deny 5                      &#x2F;&#x2F; 常见route-map ospf two rip，deny</span><br><span class="line"> match tag 120                            &#x2F;&#x2F; tag为120的路由全部deny</span><br><span class="line">!</span><br><span class="line">route-map otr permit 10                   &#x2F;&#x2F;允许不带tag 120的路由通过</span><br><span class="line"></span><br><span class="line">router rip</span><br><span class="line"> redistribute ospf 110 metric 3 route-map otr               &#x2F;&#x2F; 在rip中引入ospf的路由时使能该route-map</span><br></pre></td></tr></table></figure>
+<p>等待拓扑收敛后再次抓包查看：<br><img src="https://rancho333.github.io/pictures/routing_backward_fix.png"></p>
+<p>由于是双点双向重分布，所以需要在4个redistribute的点上分别打tag和使能对应的route-map，这里不做重复操作。</p>
 <h1 id="简单总结"><a href="#简单总结" class="headerlink" title="简单总结"></a>简单总结</h1><p>本实验的关键是AD值的理解。双点双向重分布中有以下几个关键点：</p>
 <ol>
 <li>次优路径。高AD向低AD重分布时产生次优路径。R2重分布后，R4到1.1.1.1是次优路径。</li>
@@ -412,7 +437,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="nav-number">1.</span> <span class="nav-text">写在前面</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8B%93%E6%89%91%E6%8F%8F%E8%BF%B0"><span class="nav-number">2.</span> <span class="nav-text">拓扑描述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE"><span class="nav-number">3.</span> <span class="nav-text">配置</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%A5%E5%8F%A3ip%E5%8F%8A%E5%8A%A8%E6%80%81%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E9%85%8D%E7%BD%AE"><span class="nav-number">3.1.</span> <span class="nav-text">接口ip及动态路由协议配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%8D%E5%88%86%E5%B8%83%E9%85%8D%E7%BD%AE"><span class="nav-number">3.2.</span> <span class="nav-text">重分布配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%8C%E7%82%B9%E5%8F%8C%E5%90%91%E9%87%8D%E5%88%86%E5%B8%83"><span class="nav-number">3.2.1.</span> <span class="nav-text">双点双向重分布</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">简单总结</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="nav-number">1.</span> <span class="nav-text">写在前面</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8B%93%E6%89%91%E6%8F%8F%E8%BF%B0"><span class="nav-number">2.</span> <span class="nav-text">拓扑描述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE"><span class="nav-number">3.</span> <span class="nav-text">配置</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%A5%E5%8F%A3ip%E5%8F%8A%E5%8A%A8%E6%80%81%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E9%85%8D%E7%BD%AE"><span class="nav-number">3.1.</span> <span class="nav-text">接口ip及动态路由协议配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%8D%E5%88%86%E5%B8%83%E9%85%8D%E7%BD%AE"><span class="nav-number">3.2.</span> <span class="nav-text">重分布配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%8C%E7%82%B9%E5%8F%8C%E5%90%91%E9%87%8D%E5%88%86%E5%B8%83"><span class="nav-number">3.2.1.</span> <span class="nav-text">双点双向重分布</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B7%AF%E7%94%B1%E6%A0%87%E8%AE%B0%E8%A7%A3%E5%86%B3%E8%B7%AF%E7%94%B1%E5%9B%9E%E9%A6%88%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">3.3.</span> <span class="nav-text">路由标记解决路由回馈的问题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">简单总结</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -482,7 +507,7 @@
 
 <div class="theme-info">
   <div class="powered-by"></div>
-  <span class="post-count">全站共 91.4k 字</span>
+  <span class="post-count">全站共 91.9k 字</span>
 </div>
 
         
