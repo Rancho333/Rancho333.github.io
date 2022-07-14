@@ -266,6 +266,43 @@ next 主题的博客文章都是不透明的，这样即使设置了背景图片
 ## 本地部署
 `hexo s`可以开启本地部署，这样可以快速验证一些feature.
 
+## code标签页使能
+在做交换机配置的时候往往要配置多台交换机，把所有配置贴出来长度太长，使用标签页每一台交换机占用一个标签。配置主题tabs项然后用相应的语法书写即可实现，主题配置如下：
+```
+# Tabs tag
+tabs:
+  enable: true 
+  transition:
+    tabs: true 
+    labels: true 
+  border_radius: 0
+```
+语法如下：
+```
+{% tabs tab,1 %}      // 默认显示标签1
+<!-- tab R1-->        // 标签1名字是R1
+*R1 infor*
+<!-- endtab -->
+<!-- tab R2-->       // 标签2名字是R2
+*R2 infor*
+<!-- endtab -->
+<!-- tab R3-->       // 标签3名字是R3
+*R3 infor*
+<!-- endtab -->
+{% endtabs %}
+```
+效果如下：
+{% tabs tab,1 %}
+<!-- tab R1-->
+*R1 infor*
+<!-- endtab -->
+<!-- tab R2-->
+*R2 infor*
+<!-- endtab -->
+<!-- tab R3-->
+*R3 infor*
+<!-- endtab -->
+{% endtabs %}
 
 **参考资料：**
 [NexT官方](http://theme-next.iissnan.com/)  
