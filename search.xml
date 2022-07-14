@@ -334,6 +334,13 @@
 
 <h2 id="目录与跳转"><a href="#目录与跳转" class="headerlink" title="目录与跳转"></a>目录与跳转</h2><p>使用<code>doctoc</code>工具可以自动生成md的目录，并支持跳转，安装方式如下：<br><code>npm i doctoc -g</code><br>使用方式<code>doctoc file.md</code>就会在文章顶层生成目录，需要手动调整位置。<br>如果目录更新,<code>doctoc -u file.md</code></p>
 <h2 id="本地部署"><a href="#本地部署" class="headerlink" title="本地部署"></a>本地部署</h2><p><code>hexo s</code>可以开启本地部署，这样可以快速验证一些feature.</p>
+<h2 id="code标签页使能"><a href="#code标签页使能" class="headerlink" title="code标签页使能"></a>code标签页使能</h2><p>在做交换机配置的时候往往要配置多台交换机，把所有配置贴出来长度太长，使用标签页每一台交换机占用一个标签。配置主题tabs项然后用相应的语法书写即可实现，主题配置如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"># Tabs tag</span><br><span class="line">tabs:</span><br><span class="line">  enable: true </span><br><span class="line">  transition:</span><br><span class="line">    tabs: true </span><br><span class="line">    labels: true </span><br><span class="line">  border_radius: 0</span><br></pre></td></tr></table></figure>
+<p>语法如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#123;% tabs tab,1 %&#125;      &#x2F;&#x2F; 默认显示标签1</span><br><span class="line">&lt;!-- tab R1--&gt;        &#x2F;&#x2F; 标签1名字是R1</span><br><span class="line">*R1 infor*</span><br><span class="line">&lt;!-- endtab --&gt;</span><br><span class="line">&lt;!-- tab R2--&gt;       &#x2F;&#x2F; 标签2名字是R2</span><br><span class="line">*R2 infor*</span><br><span class="line">&lt;!-- endtab --&gt;</span><br><span class="line">&lt;!-- tab R3--&gt;       &#x2F;&#x2F; 标签3名字是R3</span><br><span class="line">*R3 infor*</span><br><span class="line">&lt;!-- endtab --&gt;</span><br><span class="line">&#123;% endtabs %&#125;</span><br></pre></td></tr></table></figure>
+<p>效果如下：</p>
+<div class="tabs" id="tab"><ul class="nav-tabs"><li class="tab active"><a href="#tab-1">R1</a></li><li class="tab"><a href="#tab-2">R2</a></li><li class="tab"><a href="#tab-3">R3</a></li></ul><div class="tab-content"><div class="tab-pane active" id="tab-1"><p><em>R1 infor</em></p></div><div class="tab-pane" id="tab-2"><p><em>R2 infor</em></p></div><div class="tab-pane" id="tab-3"><p><em>R3 infor</em></p></div></div></div>
+
 <p><strong>参考资料：</strong><br><a href="http://theme-next.iissnan.com/">NexT官方</a>  </p>
 ]]></content>
       <categories>
