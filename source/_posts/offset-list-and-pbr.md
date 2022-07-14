@@ -6,6 +6,7 @@ tags: routing
 
 # 写在前面
 路由控制的方式有很多，比如route-map，distribute-list。今天主要了解下offset-list(偏移列表)和pbr(policy based routing, 策略路由).
+<!--more-->
 
 # offset-list简述
 offset-list非常简单，理论特点可以概括为下面几条：
@@ -47,7 +48,7 @@ router eigrp 90
  network 12.1.1.0 0.0.0.255
 ```
 <!-- endtab -->
-<!-- tab R1-->
+<!-- tab R3-->
 interface Loopback0
  ip address 4.4.4.4 255.255.255.255
 !
