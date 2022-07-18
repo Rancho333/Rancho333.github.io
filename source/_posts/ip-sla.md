@@ -155,7 +155,7 @@ interface Vlan10
  vrrp 1 priority 150            // 增加s2的vrrp优先级，使其成为master
 ```
 <!-- endtab -->
-<!-- tab R1-->
+<!-- tab S3-->
 ```
 interface Vlan10
  vrrp 1 ip 192.168.1.1          // S3上面配置vrrp，使其成为backup
