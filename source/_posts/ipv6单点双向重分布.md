@@ -70,7 +70,7 @@ router ospfv3 110
  exit-address-family
 ```
 <!-- endtab -->
-<!-- tab R1-->
+<!-- tab R3-->
 ```
 ipv6 unicast-routing
 !
