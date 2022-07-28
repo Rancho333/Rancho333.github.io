@@ -29,7 +29,7 @@
 <meta property="og:description" content="写在前面无论是访问外网资源(google，youtube等)，还是居家办公访问公司内网，我们都需要使用到vpn这个东东。VPN(virtual private network)是指在公用网络上建立一个私有的、专用的虚拟通信网络。本质就是建立隧道传递原有的业务流量，在隧道两端进行业务流量的封装与解封装，隧道两端则是需要互通的两个子网。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-07-28T08:11:52.000Z">
-<meta property="article:modified_time" content="2022-07-28T09:11:03.609Z">
+<meta property="article:modified_time" content="2022-07-28T09:23:51.131Z">
 <meta property="article:author" content="Rancho">
 <meta property="article:tag" content="vpn">
 <meta name="twitter:card" content="summary">
@@ -235,7 +235,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2022-07-28 16:11:52 / 修改时间：17:11:03" itemprop="dateCreated datePublished" datetime="2022-07-28T16:11:52+08:00">2022-07-28</time>
+              <time title="创建时间：2022-07-28 16:11:52 / 修改时间：17:23:51" itemprop="dateCreated datePublished" datetime="2022-07-28T16:11:52+08:00">2022-07-28</time>
             </span>
 
           
@@ -266,16 +266,16 @@
 <li>租用运营商VPN专线搭建企业VPN网络：主要是MPLS VPN, 相较于传统的专线(E1、SDH专线)更便宜</li>
 <li>用户企业自建VPN网络：基于internet建立企业vpn网络，具体技术包括GRE、L2TP、IPSec、SSLVPN等。</li>
 </ul>
-<p>根据组网方式的不同：<br>本质就是隧道端点的不同。</p>
+<p>根据组网方式的不同：<br>本质就是隧道端点位置的不同。</p>
 <ul>
-<li>远程访问VPn（access VPN）：适合居家办公场景，一般在PC上安装客户端即可</li>
-<li>局域网到局域网的vpn(也称网关到网关的vpn)：适用于异地机构的互联</li>
+<li>远程访问VPn（access VPN）：适合居家办公场景，一般在PC上安装客户端即可，隧道端点位于PC上</li>
+<li>局域网到局域网的vpn(也称网关到网关的vpn)：适用于异地机构的互联，隧道端点位于网络设备上</li>
 </ul>
 <p>按照vpn技术实现的网络层次进行分类：</p>
 <ul>
 <li>基于数据链路层的VPN：L2TP、L2F、PPTP。其中L2F和PPTP已经基本上被L2TP替代了</li>
 <li>基于网络层的VPN：IPSec、GRE</li>
-<li>基于应用层的VPN：SSL</li>
+<li>基于应用层的VPN：SSL VPN</li>
 </ul>
 <p>基于internet的VPN技术有一个共同的特点就是必须解决网络安全的问题。</p>
 <h1 id="VPN关键技术点"><a href="#VPN关键技术点" class="headerlink" title="VPN关键技术点"></a>VPN关键技术点</h1><h2 id="隧道技术"><a href="#隧道技术" class="headerlink" title="隧道技术"></a>隧道技术</h2><p>隧道技术是VPN的基本技术，类似于点到点的连接技术。它的基本过程就是在数据进入源VPN网关后，将数据封装后通过internet传输到目的vpn网关后再对数据进行解封装。可初略认为vpn网关之间是直连的，是一条隧道，封装的报文不关心具体传输路径。封装后的报文src ip是源vpn网关，dest ip是目的vpn网关。</p>
@@ -299,7 +299,60 @@
 <li>IPSec: 支持对数据进行完整性验证和数据源验证。在IPSec中验证和加密通常一起使用，对加密后的报文HMAC(keyed-hash message authentication code)生成摘要</li>
 <li>SSL VPN：支持对数据进行完整性验证和数据源验证。SSL VPN采用公钥体质，利用Hash算法生成摘要，再用私钥加密摘要生成数字签名，利用公钥进行解密。利用公钥和私钥的一一关系可以对数据源进行认证。</li>
 </ul>
-<p>总结一下这几种vpn技术的应用场景：<br>|| GRE | L2TP | IPSec | SSL VPN |<br>| :— | :— | :— | :— | :— |<br>| 作用范围 | IP层及以上数据 | IP层及以上数据 | IP层及以上数据 | 应用层特定数据 |<br>| 适用场景 | internet VPN | access vpn | internet vpn; accese | access vpn |<br>| 身份认证 | 不支持 | 支持，基于PPP的chap、pap、eap认证| 支持，采用IP或ID+口令或证书进行数据源认证；IKEv2拨号方式采用EAP认证进行用户身份认证 | 支持，用户名+口令+证书对服务器进行认证，也可进行双向认证 |<br>| 加密技术 | 不支持 | 不支持 | 支持 | 支持 |<br>| 数据验证 | 支持，校验和验证、关键字验证 | 不支持 | 支持 | 支持 |<br>| 如何使用 | GRE over IPSec | L2TP over IPSec | 单独使用 | SSL VPN |</p>
+<p>总结一下这几种vpn技术的应用场景：</p>
+<table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="left">GRE</th>
+<th align="left">L2TP</th>
+<th align="left">IPSec</th>
+<th align="left">SSL VPN</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">作用范围</td>
+<td align="left">IP层及以上数据</td>
+<td align="left">IP层及以上数据</td>
+<td align="left">IP层及以上数据</td>
+<td align="left">应用层特定数据</td>
+</tr>
+<tr>
+<td align="left">适用场景</td>
+<td align="left">internet VPN</td>
+<td align="left">access vpn</td>
+<td align="left">internet vpn; accese</td>
+<td align="left">access vpn</td>
+</tr>
+<tr>
+<td align="left">身份认证</td>
+<td align="left">不支持</td>
+<td align="left">支持，基于PPP的chap、pap、eap认证</td>
+<td align="left">支持，采用IP或ID+口令或证书进行数据源认证；IKEv2拨号方式采用EAP认证进行用户身份认证</td>
+<td align="left">支持，用户名+口令+证书对服务器进行认证，也可进行双向认证</td>
+</tr>
+<tr>
+<td align="left">加密技术</td>
+<td align="left">不支持</td>
+<td align="left">不支持</td>
+<td align="left">支持</td>
+<td align="left">支持</td>
+</tr>
+<tr>
+<td align="left">数据验证</td>
+<td align="left">支持，校验和验证、关键字验证</td>
+<td align="left">不支持</td>
+<td align="left">支持</td>
+<td align="left">支持</td>
+</tr>
+<tr>
+<td align="left">如何使用</td>
+<td align="left">GRE over IPSec</td>
+<td align="left">L2TP over IPSec</td>
+<td align="left">单独使用</td>
+<td align="left">SSL VPN</td>
+</tr>
+</tbody></table>
 
     </div>
 
