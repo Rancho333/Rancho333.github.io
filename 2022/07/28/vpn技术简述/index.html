@@ -21,18 +21,20 @@
     var CONFIG = {"hostname":"rancho333.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="No pain, no gain!">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Rancho Blog">
-<meta property="og:url" content="https://rancho333.github.io/archives/2022/07/index.html">
+  <meta name="description" content="写在前面无论是访问外网资源(google，youtube等)，还是居家办公访问公司内网，我们都需要使用到vpn这个东东。VPN(virtual private network)是指在公用网络上建立一个私有的、专用的虚拟通信网络。本质就是建立隧道传递原有的业务流量，在隧道两端进行业务流量的封装与解封装，隧道两端则是需要互通的两个子网。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="vpn技术简述">
+<meta property="og:url" content="https://rancho333.github.io/2022/07/28/vpn%E6%8A%80%E6%9C%AF%E7%AE%80%E8%BF%B0/index.html">
 <meta property="og:site_name" content="Rancho Blog">
-<meta property="og:description" content="No pain, no gain!">
+<meta property="og:description" content="写在前面无论是访问外网资源(google，youtube等)，还是居家办公访问公司内网，我们都需要使用到vpn这个东东。VPN(virtual private network)是指在公用网络上建立一个私有的、专用的虚拟通信网络。本质就是建立隧道传递原有的业务流量，在隧道两端进行业务流量的封装与解封装，隧道两端则是需要互通的两个子网。">
 <meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-07-28T08:11:52.000Z">
+<meta property="article:modified_time" content="2022-07-28T09:11:03.609Z">
 <meta property="article:author" content="Rancho">
-<meta property="article:tag" content="Racncho, Rancho Blog, 嵌入式">
+<meta property="article:tag" content="vpn">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="https://rancho333.github.io/archives/2022/07/">
+<link rel="canonical" href="https://rancho333.github.io/2022/07/28/vpn%E6%8A%80%E6%9C%AF%E7%AE%80%E8%BF%B0/">
 
 
 <script id="page-configurations">
@@ -40,12 +42,12 @@
   CONFIG.page = {
     sidebar: "",
     isHome : false,
-    isPost : false,
+    isPost : true,
     lang   : 'zh-CN'
   };
 </script>
 
-  <title>归档 | Rancho Blog</title>
+  <title>vpn技术简述 | Rancho Blog</title>
   
 
 
@@ -202,235 +204,148 @@
         <div class="content-wrap">
           
 
-          <div class="content archive">
+          <div class="content post posts-expand">
             
 
+    
   
   
-  
-  <div class="post-block">
-    <div class="posts-collapse">
-      <div class="collection-title">
-        
-        <span class="collection-header">不错! 目前共计 67 篇日志。 继续努力。</span>
-      </div>
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2022/07/28/vpn%E6%8A%80%E6%9C%AF%E7%AE%80%E8%BF%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/pictures/R-W.png">
+      <meta itemprop="name" content="Rancho">
+      <meta itemprop="description" content="No pain, no gain!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rancho Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          vpn技术简述
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-07-28 16:11:52 / 修改时间：17:11:03" itemprop="dateCreated datePublished" datetime="2022-07-28T16:11:52+08:00">2022-07-28</time>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+            <span class="post-meta-divider">|</span>
+<span title="post.wordcount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span>字数： 1.3k</span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
-    <div class="collection-year">
-      <span class="collection-header">2022</span>
-    </div>
+        <h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>无论是访问外网资源(google，youtube等)，还是居家办公访问公司内网，我们都需要使用到vpn这个东东。VPN(virtual private network)是指在公用网络上建立一个私有的、专用的虚拟通信网络。本质就是建立隧道传递原有的业务流量，在隧道两端进行业务流量的封装与解封装，隧道两端则是需要互通的两个子网。</p>
+<span id="more"></span>
 
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2022-07-28T16:11:52+08:00"
-              content="2022-07-28">
-          07-28
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2022/07/28/vpn%E6%8A%80%E6%9C%AF%E7%AE%80%E8%BF%B0/" itemprop="url">
-            <span itemprop="name">vpn技术简述</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2022-07-26T10:35:28+08:00"
-              content="2022-07-26">
-          07-26
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2022/07/26/sonic%E5%85%A5%E9%97%A8%E5%AE%9E%E6%88%98%E5%9F%B9%E8%AE%AD/" itemprop="url">
-            <span itemprop="name">sonic入门实战培训</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2022-07-22T10:41:42+08:00"
-              content="2022-07-22">
-          07-22
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2022/07/22/ipv6%E5%8D%95%E7%82%B9%E5%8F%8C%E5%90%91%E9%87%8D%E5%88%86%E5%B8%83/" itemprop="url">
-            <span itemprop="name">ipv6单点双向重分布</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2022-07-14T17:08:32+08:00"
-              content="2022-07-14">
-          07-14
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2022/07/14/ip-sla/" itemprop="url">
-            <span itemprop="name">ip_sla</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2022-07-14T14:06:00+08:00"
-              content="2022-07-14">
-          07-14
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2022/07/14/offset-list-and-pbr/" itemprop="url">
-            <span itemprop="name">offset_list_and_pbr</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2022-07-12T14:59:07+08:00"
-              content="2022-07-12">
-          07-12
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2022/07/12/%E8%B7%AF%E7%94%B1%E6%A0%87%E8%AE%B0/" itemprop="url">
-            <span itemprop="name">路由标记</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2022-07-12T09:58:53+08:00"
-              content="2022-07-12">
-          07-12
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2022/07/12/%E5%8F%8C%E7%82%B9%E5%8F%8C%E5%90%91%E9%87%8D%E5%88%86%E5%B8%83/" itemprop="url">
-            <span itemprop="name">双点双向重分布</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2022-07-07T17:09:31+08:00"
-              content="2022-07-07">
-          07-07
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2022/07/07/glbp%E7%AE%80%E8%BF%B0/" itemprop="url">
-            <span itemprop="name">glbp简述</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2022-07-07T17:09:02+08:00"
-              content="2022-07-07">
-          07-07
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2022/07/07/hsrp%E7%AE%80%E8%BF%B0/" itemprop="url">
-            <span itemprop="name">hsrp简述</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2022-07-07T17:07:29+08:00"
-              content="2022-07-07">
-          07-07
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2022/07/07/VRRP%E7%AE%80%E8%BF%B0/" itemprop="url">
-            <span itemprop="name">VRRP简述</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
+<h1 id="vpn技术的一些分类"><a href="#vpn技术的一些分类" class="headerlink" title="vpn技术的一些分类"></a>vpn技术的一些分类</h1><p>有几种角度的分类方式，其一是根据建设单位(运营商还是企业自身)来分类：</p>
+<ul>
+<li>租用运营商VPN专线搭建企业VPN网络：主要是MPLS VPN, 相较于传统的专线(E1、SDH专线)更便宜</li>
+<li>用户企业自建VPN网络：基于internet建立企业vpn网络，具体技术包括GRE、L2TP、IPSec、SSLVPN等。</li>
+</ul>
+<p>根据组网方式的不同：<br>本质就是隧道端点的不同。</p>
+<ul>
+<li>远程访问VPn（access VPN）：适合居家办公场景，一般在PC上安装客户端即可</li>
+<li>局域网到局域网的vpn(也称网关到网关的vpn)：适用于异地机构的互联</li>
+</ul>
+<p>按照vpn技术实现的网络层次进行分类：</p>
+<ul>
+<li>基于数据链路层的VPN：L2TP、L2F、PPTP。其中L2F和PPTP已经基本上被L2TP替代了</li>
+<li>基于网络层的VPN：IPSec、GRE</li>
+<li>基于应用层的VPN：SSL</li>
+</ul>
+<p>基于internet的VPN技术有一个共同的特点就是必须解决网络安全的问题。</p>
+<h1 id="VPN关键技术点"><a href="#VPN关键技术点" class="headerlink" title="VPN关键技术点"></a>VPN关键技术点</h1><h2 id="隧道技术"><a href="#隧道技术" class="headerlink" title="隧道技术"></a>隧道技术</h2><p>隧道技术是VPN的基本技术，类似于点到点的连接技术。它的基本过程就是在数据进入源VPN网关后，将数据封装后通过internet传输到目的vpn网关后再对数据进行解封装。可初略认为vpn网关之间是直连的，是一条隧道，封装的报文不关心具体传输路径。封装后的报文src ip是源vpn网关，dest ip是目的vpn网关。</p>
+<h2 id="认证"><a href="#认证" class="headerlink" title="认证"></a>认证</h2><p>移动办公等场景下，需要对用户的身份进行验证。</p>
+<ul>
+<li>GRE不支持认证</li>
+<li>L2TP依赖于PPP提供的认证技术。</li>
+<li>IPSec：通过IKEv2拨号时，支持进行EAP认证。接入用户的用户名和密码可以本地认证，也可以通过RADIUS服务器认证。认证通过后再给用户分配内部的IP地址，通过此IP地址对用户进行授权和管理。另外IPSec还支持数据源认证</li>
+<li>SSL VPN: 支持本地认证，证书认证和服务器认证。主要是对服务器进行身份认证，确认web网页的合法性。</li>
+</ul>
+<h2 id="加密技术"><a href="#加密技术" class="headerlink" title="加密技术"></a>加密技术</h2><p>internet上传输的报文如果不做加密处理，都是处于裸奔状态，比如我们通过wireshark抓包就可以直接读取到报文内容。加密对象有数据报文和协议报文之分，能够实现协议报文和数据报文都加密的协议安全系数更高。</p>
+<ul>
+<li>GRE和L2TP本身不提供加密技术，所以通常结合IPSec协议一起使用，而IPSec只支持单播封装，很好互补</li>
+<li>IPSec：支持数据报文和协议报文加密。IPSec一般采用对称密钥算法加密数据。</li>
+<li>SSL VPN: 支持数据报文和协议报文加密。SSL VPN采用非对称密钥算法加密数据(公钥加密，私钥解密)。</li>
+</ul>
+<h2 id="数据验证技术"><a href="#数据验证技术" class="headerlink" title="数据验证技术"></a>数据验证技术</h2><p>数据验证就是对收到的报文进行验货。比如常用MD5验证文件的完整性。在收发两端都对报文进行验证，只有摘要一致的报文才被认可。</p>
+<ul>
+<li>GRE：本身只提供简单的校验和验证及关键字验证。</li>
+<li>L2TP：不提供数据验证技术</li>
+<li>IPSec: 支持对数据进行完整性验证和数据源验证。在IPSec中验证和加密通常一起使用，对加密后的报文HMAC(keyed-hash message authentication code)生成摘要</li>
+<li>SSL VPN：支持对数据进行完整性验证和数据源验证。SSL VPN采用公钥体质，利用Hash算法生成摘要，再用私钥加密摘要生成数字签名，利用公钥进行解密。利用公钥和私钥的一一关系可以对数据源进行认证。</li>
+</ul>
+<p>总结一下这几种vpn技术的应用场景：<br>|| GRE | L2TP | IPSec | SSL VPN |<br>| :— | :— | :— | :— | :— |<br>| 作用范围 | IP层及以上数据 | IP层及以上数据 | IP层及以上数据 | 应用层特定数据 |<br>| 适用场景 | internet VPN | access vpn | internet vpn; accese | access vpn |<br>| 身份认证 | 不支持 | 支持，基于PPP的chap、pap、eap认证| 支持，采用IP或ID+口令或证书进行数据源认证；IKEv2拨号方式采用EAP认证进行用户身份认证 | 支持，用户名+口令+证书对服务器进行认证，也可进行双向认证 |<br>| 加密技术 | 不支持 | 不支持 | 支持 | 支持 |<br>| 数据验证 | 支持，校验和验证、关键字验证 | 不支持 | 支持 | 支持 |<br>| 如何使用 | GRE over IPSec | L2TP over IPSec | 单独使用 | SSL VPN |</p>
 
     </div>
-  </div>
-  
-  
-  
 
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Rancho
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://rancho333.github.io/2022/07/28/vpn%E6%8A%80%E6%9C%AF%E7%AE%80%E8%BF%B0/" title="vpn技术简述">https://rancho333.github.io/2022/07/28/vpn技术简述/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/vpn/" rel="tag"># vpn</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/07/26/sonic%E5%85%A5%E9%97%A8%E5%AE%9E%E6%88%98%E5%9F%B9%E8%AE%AD/" rel="prev" title="sonic入门实战培训">
+      <i class="fa fa-chevron-left"></i> sonic入门实战培训
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
   
-  <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/archives/2022/07/page/2/">2</a><a class="extend next" rel="next" href="/archives/2022/07/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
-  </nav>
+  
+  
 
 
 
@@ -482,6 +397,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="nav-number">1.</span> <span class="nav-text">写在前面</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#vpn%E6%8A%80%E6%9C%AF%E7%9A%84%E4%B8%80%E4%BA%9B%E5%88%86%E7%B1%BB"><span class="nav-number">2.</span> <span class="nav-text">vpn技术的一些分类</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#VPN%E5%85%B3%E9%94%AE%E6%8A%80%E6%9C%AF%E7%82%B9"><span class="nav-number">3.</span> <span class="nav-text">VPN关键技术点</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9A%A7%E9%81%93%E6%8A%80%E6%9C%AF"><span class="nav-number">3.1.</span> <span class="nav-text">隧道技术</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%A4%E8%AF%81"><span class="nav-number">3.2.</span> <span class="nav-text">认证</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A0%E5%AF%86%E6%8A%80%E6%9C%AF"><span class="nav-number">3.3.</span> <span class="nav-text">加密技术</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E9%AA%8C%E8%AF%81%E6%8A%80%E6%9C%AF"><span class="nav-number">3.4.</span> <span class="nav-text">数据验证技术</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 

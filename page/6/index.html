@@ -208,6 +208,78 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2020/03/11/kernel%E7%BC%96%E8%AF%91%E7%AE%80%E8%BF%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/pictures/R-W.png">
+      <meta itemprop="name" content="Rancho">
+      <meta itemprop="description" content="No pain, no gain!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rancho Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/03/11/kernel%E7%BC%96%E8%AF%91%E7%AE%80%E8%BF%B0/" class="post-title-link" itemprop="url">kernel编译简述</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-03-11 15:48:46" itemprop="dateCreated datePublished" datetime="2020-03-11T15:48:46+08:00">2020-03-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-07-07 12:13:48" itemprop="dateModified" datetime="2022-07-07T12:13:48+08:00">2022-07-07</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>在ENOS系统移植的过程中，对于Linux kernel，涉及到kernel的配置，编译，以及二进制镜像uImage的生成。这篇文章分为两块：</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/03/11/kernel%E7%BC%96%E8%AF%91%E7%AE%80%E8%BF%B0/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2020/03/10/%E4%B8%AD%E6%96%AD%E5%AD%A6%E4%B9%A0/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -861,78 +933,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2019/08/26/Makefile%E5%AD%A6%E4%B9%A0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/pictures/R-W.png">
-      <meta itemprop="name" content="Rancho">
-      <meta itemprop="description" content="No pain, no gain!">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Rancho Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/08/26/Makefile%E5%AD%A6%E4%B9%A0/" class="post-title-link" itemprop="url">Makefile学习</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-08-26 10:51:37" itemprop="dateCreated datePublished" datetime="2019-08-26T10:51:37+08:00">2019-08-26</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-07-07 12:13:48" itemprop="dateModified" datetime="2022-07-07T12:13:48+08:00">2022-07-07</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>学软件的时候接触过一些makefile，但是之后的工作中一直没怎么用上。最近在做白盒交换机SONiC以及ONL的编译工作，里面用makefile和python完成整个工程的编译，有些宏大与震撼，关键很多地方看不懂哇。系统的学习一下，这里作为笔记，参考的是陈皓的《跟我一起写Makefile》。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2019/08/26/Makefile%E5%AD%A6%E4%B9%A0/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1004,7 +1004,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">66</span>
+          <span class="site-state-item-count">67</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1017,7 +1017,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">40</span>
+        <span class="site-state-item-count">41</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -1058,7 +1058,7 @@
 
 <div class="theme-info">
   <div class="powered-by"></div>
-  <span class="post-count">全站共 96.8k 字</span>
+  <span class="post-count">全站共 98.1k 字</span>
 </div>
 
         
