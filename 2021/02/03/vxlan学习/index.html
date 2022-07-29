@@ -28,26 +28,26 @@
 <meta property="og:site_name" content="Rancho Blog">
 <meta property="og:description" content="写在前面vxlan是overlay层的应用，vlan是underlay层的应用。这篇文档是vxlan的学习文档，在学习vxlan之前，会简单介绍下vlan，之后进入vxlan学习。学习完成后，应该搞明白以下的几个问题：">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/vlan_frame.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/vxlan_tag.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/vxlan_network_module.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/vxlan_l3_gateway.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/vxlan_l2_gateway.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/vxlan_gateway.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/vxlan_gateway_2.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/vxlan_l2_ct.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/vxlan_l2_arp_request.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/vxlan_l2_arp_reply.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/vxlan_l3_ct.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/vxlan_l3_arp.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/vxlan_network_module_2.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/vlan_frame.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/vxlan_tag.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/vxlan_network_module.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/vxlan_l3_gateway.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/vxlan_l2_gateway.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/vxlan_gateway.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/vxlan_gateway_2.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/vxlan_l2_ct.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/vxlan_l2_arp_request.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/vxlan_l2_arp_reply.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/vxlan_l3_ct.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/vxlan_l3_arp.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/vxlan_network_module_2.png">
 <meta property="article:published_time" content="2021-02-03T02:24:44.000Z">
-<meta property="article:modified_time" content="2022-07-07T04:13:49.024Z">
+<meta property="article:modified_time" content="2022-07-29T07:27:31.705Z">
 <meta property="article:author" content="Rancho">
 <meta property="article:tag" content="通信协议">
 <meta property="article:tag" content="vxlan">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://rancho333.gitee.io/pictures/vlan_frame.png">
+<meta name="twitter:image" content="https://rancho333.github.io/pictures/vlan_frame.png">
 
 <link rel="canonical" href="https://rancho333.github.io/2021/02/03/vxlan%E5%AD%A6%E4%B9%A0/">
 
@@ -256,7 +256,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-07-07 12:13:49" itemprop="dateModified" datetime="2022-07-07T12:13:49+08:00">2022-07-07</time>
+                <time title="修改时间：2022-07-29 15:27:31" itemprop="dateModified" datetime="2022-07-29T15:27:31+08:00">2022-07-29</time>
               </span>
 
           
@@ -307,7 +307,7 @@
 </li>
 </ul>
 <h1 id="vlan介绍"><a href="#vlan介绍" class="headerlink" title="vlan介绍"></a>vlan介绍</h1><p>VLAN(virtual local area network)即虚拟局域网，是将一个物理的LAN在逻辑上划分多个广播域的通信技术。根据IEEE 802.1Q协议规定，在以太网数据帧的目的MAC地址和源MAC地址字段之后、协议字段之前加入4个字节的VLAN tag，用以标识VLAN信息，VLAN数据帧格式如下图所示。</p>
-<p><img src="https://rancho333.gitee.io/pictures/vlan_frame.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vlan_frame.png"></p>
 <p>对于交换机而言，其内部处理的数据帧都带有VLAN tag，现网中交换机连接的设备只会接收Untagged帧。交换机需要有识别Untagged帧并在收发时给帧添加、剥离VLAN标签的能力，交换机间的接口需要有同时识别和发送多个vlan数据帧的能力。</p>
 <p>根据接口对象和收发数据帧处理的不同，下面介绍4中链路类型，用以适应不同的连接和组网：</p>
 <ul>
@@ -353,7 +353,7 @@
 </tbody></table>
 <p>两个概念，vlan的透传和终结，vlan的透传就是某个vlan不仅在一台交换机上有效，它还要通过某种方式延伸到别的以太网交换机上，在别的设备上照样有效，vlan的透传可以使用802.1Q协议，trunk链路上使用。vlan的终结意思相对，某个vlan的有效域不能再延伸到别的设备，或者不能通过某条链路延伸到别的设备，可以使用pvlan技术实现，主要在vlan数据出端口到终端设备，或者上三层转发时剥离。这两者的本质就是保留vlan tag和去除vlan tag。</p>
 <h1 id="vxlan学习"><a href="#vxlan学习" class="headerlink" title="vxlan学习"></a>vxlan学习</h1><h2 id="什么是vxlan"><a href="#什么是vxlan" class="headerlink" title="什么是vxlan"></a>什么是vxlan</h2><p>vxlan(virtual extensible local area network)虚拟扩展局域网，是有IETF定义的NVO3(network virtualization over layer 3)标准技术之一。vxlan的本质是一种隧道技术，将L2的以太帧封装到UDP报文中在L3网络中传输。虽然从名字上看，vxlan是vlan的一种扩展协议，但是vxlan构建虚拟隧道的本领已经和vlan迥然不同了。vxlan报文格式如下图所示。</p>
-<p><img src="https://rancho333.gitee.io/pictures/vxlan_tag.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vxlan_tag.png"></p>
 <p>如上图所示，VTEP对VM发送的原始以太帧（original L2 frame）进行了如下的封装：</p>
 <table>
 <thead>
@@ -388,7 +388,7 @@
 <p>对于虚拟机动态迁移，不仅虚拟机的IP地址不变，而且虚拟机的运行状态也必须保持原状（如TCP会话状态），所以虚拟机动态迁移只能在一个二层域中进行。vxlan可以将整个数据中心基础网络虚拟化成一台巨大的“二层交换机”，所有的服务器都连结在这台二层交换机上。underlay网路具体如何转发，服务器完全无需关心。将虚拟机从“二层交换机”的一个端口换到另一个端口，完全无需变更IP地址。<br>使用这种理念的技术协议，除了vxlan外，还有NVGRE、STT等。</p>
 <p>传统网络中，vlan数量只有4000个左右，vxlan理论上可以支持16M的vxlan段，从而满足大规模不同网络之间的标识、隔离需求。</p>
 <h2 id="vxlan的隧道是如何建立的"><a href="#vxlan的隧道是如何建立的" class="headerlink" title="vxlan的隧道是如何建立的"></a>vxlan的隧道是如何建立的</h2><h3 id="vxlan中的VTEP和VNI"><a href="#vxlan中的VTEP和VNI" class="headerlink" title="vxlan中的VTEP和VNI"></a>vxlan中的VTEP和VNI</h3><p>下面了解一下vxlan网络模型以及一些常见的概念，如下图所示，两台服务器之间通过vxlan的网络进行通信。</p>
-<p><img src="https://rancho333.gitee.io/pictures/vxlan_network_module.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vxlan_network_module.png"></p>
 <p>如上图所示，vxlan报文在vtep两端有一个封装和解封装的操作。</p>
 <p>VTEP(vxlan tunnel endpoints, vxlan隧道端点)是vxlan网络的边缘设备，是vxlan隧道的起点个终点，vxlan对用户原始数据帧的封装和解封装均在VTEP上进行。VTEP既可以是一台独立的网络设备，也可以是服务器中的虚拟交换机。</p>
 <p>VNI(vxlan network identifier, vxlan网络标识符)是一种类似VLAN ID的用户标识，一个VNI代表了一个租户，属于不同的VNI虚拟机之间不能直接进行二层通信。在分布式网关的部署场景下，VNI可以分为二层VNI和三层VNI：</p>
@@ -435,11 +435,11 @@
 <li>二层网关：用于终端接入vxlan网络，也可用于同一vxlan网络的子网通信</li>
 <li>三层网关：用于vxlan网络中跨子网通信以及访问外部网络</li>
 </ul>
-<p>具体说明下。<br>vxlan三层网关。用于终结vxlan网络，将vxlan报文转换成传统三层报文发送至IP网络，适用于vxlan网络内服务器与远端之间的三层互访；同时也作不同vxlan网络互通，如下图所示.当服务器访问外部网络时，vxlan三层网关剥离对应vxlan报文封装，送入IP网络；当外部终端访问vxlan内的服务器时，vxlan根据目的IP地址所属vxlan及所属的VTEP，加上对应的vxlan报文头封装进入vxlan网络。vxlan之间的互访流量与此类似，vxlan网关剥离vxlan报文头，并基于目的IP地址所属vxlan及所属的VTEP，重新封装后送入另外的vxlan网络。<br><img src="https://rancho333.gitee.io/pictures/vxlan_l3_gateway.png"></p>
+<p>具体说明下。<br>vxlan三层网关。用于终结vxlan网络，将vxlan报文转换成传统三层报文发送至IP网络，适用于vxlan网络内服务器与远端之间的三层互访；同时也作不同vxlan网络互通，如下图所示.当服务器访问外部网络时，vxlan三层网关剥离对应vxlan报文封装，送入IP网络；当外部终端访问vxlan内的服务器时，vxlan根据目的IP地址所属vxlan及所属的VTEP，加上对应的vxlan报文头封装进入vxlan网络。vxlan之间的互访流量与此类似，vxlan网关剥离vxlan报文头，并基于目的IP地址所属vxlan及所属的VTEP，重新封装后送入另外的vxlan网络。<br><img src="https://rancho333.github.io/pictures/vxlan_l3_gateway.png"></p>
 <p>vxlan二层网关。用于终结vxlan网络。将vxlan报文转换成对应的传统二层网络送到传统以太网路，适用于vxlan网络内服务器与远端终端或远端服务器的二层互联。如在不同网络中做虚拟机迁移时，当业务需要传统网络中服务器与vxlan网络中服务器在同一个二层中，此时需要使用vxlan二层网关打通vxlan网络和二层网络。如下图所示。vxlan10网络中的服务器要和IP网络中vlan100的业务二层互通，此时就需要通过vxlan的二层网关进行互联。vxlan10的报文进入IP网络的流量，剥离vxlan报文头，根据vxlan的标签查询对应的vlan网络，并据此在二层报文中加入vlan的802.1Q报文送入IP网络；相反vlan100的业务流量进入vxlan也需要根据vlan获知对应的vxlan的vni，根据目的mac地址获知远端vtep的IP地址，基于以上信息进行vxlan封装后送入对应的vxlan网络。</p>
-<p><img src="https://rancho333.gitee.io/pictures/vxlan_l2_gateway.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vxlan_l2_gateway.png"></p>
 <h3 id="vxlan集中式网关与分布式网关"><a href="#vxlan集中式网关与分布式网关" class="headerlink" title="vxlan集中式网关与分布式网关"></a>vxlan集中式网关与分布式网关</h3><p>集中式网关指将三层网关集中部署在一台设备上,如下图所示，所有跨子网的流量都经过这个三层网关转发，实现流量的集中管理。</p>
-<p><img src="https://rancho333.gitee.io/pictures/vxlan_gateway.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vxlan_gateway.png"></p>
 <p>集中式网关的优点和缺点如下：</p>
 <ul>
 <li>优点：对跨子网流量进行集中管理，网关部署和管理比较简单</li>
@@ -450,7 +450,7 @@
 </li>
 </ul>
 <p>vxlan分布式网关是指在典型的”spine-leaf”组网结构下，将leaf节点作为vxlan隧道断点VTEP，每个leaf节点都可作为vxlan三层网关(同时也是vxlan二层网关)，spine节点不感知vxlan隧道，只作为vxlan报文的转发节点。如下图所示</p>
-<p><img src="https://rancho333.gitee.io/pictures/vxlan_gateway_2.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vxlan_gateway_2.png"></p>
 <p>部署分布式网关时：</p>
 <ul>
 <li>spine节点：关注于高速IP转发，强调的是设备的高速转发能力</li>
@@ -466,9 +466,9 @@
 <li>leaf节点只需要学习自身连接服务器的ARP表项，而不必像集中三层网关一样，需要学习所有服务器的ARP表项，解决了集中式三层网关带来的ARP表项瓶颈问题，网络规模扩展能力强</li>
 </ul>
 <h2 id="vxlan网络中报文时如何转发的"><a href="#vxlan网络中报文时如何转发的" class="headerlink" title="vxlan网络中报文时如何转发的"></a>vxlan网络中报文时如何转发的</h2><p>这里介绍集中式vxlan中相同子网内、不同子网间是如何进行通信的。对于分布式vxlan网络，在EVPN中介绍。<br>对于二三层转发通信细节不是很清楚的同学，建议学习下二层与三层ping中arp与icmp报文的交互细节。</p>
-<h3 id="集中式vxlan中同子网互通流程"><a href="#集中式vxlan中同子网互通流程" class="headerlink" title="集中式vxlan中同子网互通流程"></a>集中式vxlan中同子网互通流程</h3><p><img src="https://rancho333.gitee.io/pictures/vxlan_l2_ct.png"></p>
+<h3 id="集中式vxlan中同子网互通流程"><a href="#集中式vxlan中同子网互通流程" class="headerlink" title="集中式vxlan中同子网互通流程"></a>集中式vxlan中同子网互通流程</h3><p><img src="https://rancho333.github.io/pictures/vxlan_l2_ct.png"></p>
 <p>如上图所示，VM_A、VM_B、VM_C属于相同网段，且同属VNI 5000。C要与A进行通信，对于首次通信，需要通过ARP获取对方MAC。在vlan子网通信中，arp报文在vlan内广播。在vxlan相同子网中，ARP请求报文转发流程见下图</p>
-<p><img src="https://rancho333.gitee.io/pictures/vxlan_l2_arp_request.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vxlan_l2_arp_request.png"></p>
 <p>A向C进行MAC请求的过程如下：</p>
 <ol>
 <li>A发送ARP请求报文请求C的MAC</li>
@@ -491,7 +491,7 @@
 <li>B和C收到arp报文后，按照arp报文处理方式进行丢弃或应答。这里C向A发送ARP应答。</li>
 </ol>
 <p>ARP应答报文转发流程见下图</p>
-<p><img src="https://rancho333.gitee.io/pictures/vxlan_l2_arp_reply.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vxlan_l2_arp_reply.png"></p>
 <p>C向A发送ARP 应答报文的过程如下：</p>
 <ol>
 <li>A向C发送ARP应答报文</li>
@@ -513,11 +513,11 @@
 </li>
 </ol>
 <p>至此，A和C均已学习到了对方的MAC地址。</p>
-<h3 id="集中式vxlan不同子网互通流程"><a href="#集中式vxlan不同子网互通流程" class="headerlink" title="集中式vxlan不同子网互通流程"></a>集中式vxlan不同子网互通流程</h3><p><img src="https://rancho333.gitee.io/pictures/vxlan_l3_ct.png"></p>
+<h3 id="集中式vxlan不同子网互通流程"><a href="#集中式vxlan不同子网互通流程" class="headerlink" title="集中式vxlan不同子网互通流程"></a>集中式vxlan不同子网互通流程</h3><p><img src="https://rancho333.github.io/pictures/vxlan_l3_ct.png"></p>
 <p>A、B分属不同网段，且分别属于VNI 5000和VNI 6000。A、B对应的三层网关分别是VTEP_3上的BDIF 10和BDIF 20的IP地址。VTEP_3上存在到两个网段的路由。</p>
 <p>BDIF接口的功能与VLAN IF接口类似，是基于BD创建的三层逻辑接口，用以实现不同子网之间的通信，或vxlan网络与非vxlan网络之间的通信。</p>
 <p>对于首次通信，类比与underlay网络中跨网段通信。A请求网关BDIF 10 MAC，然后将数据包发送给网关BDIF 10，BDIF 10将数据包路由至BDIF 20，BDIF 20请求B的MAC，然后将数据包发送给B。具体流程如下：</p>
-<p><img src="https://rancho333.gitee.io/pictures/vxlan_l3_arp.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vxlan_l3_arp.png"></p>
 <p>数据报文转发流程如下：</p>
 <ol>
 <li>A将数据报文发送给网关。报文的源MAC是A MAC，目的MAC是网管BDIF 10的MAC；报文的源IP是A的IP，目的IP是B的IP</li>
@@ -542,7 +542,7 @@
 </ol>
 <p>vxlan网络与非vxlan网络之间的互通，也需要借助三层网关，但是不同在于：报文在vxlan网络侧会进行封装，而在非vxlan网络侧不需要进行封装。报文从vxlan侧进入网关并解封后，就按照普通单播报文的发送方式进行转发。</p>
 <h2 id="overlay网络的三种构建模式"><a href="#overlay网络的三种构建模式" class="headerlink" title="overlay网络的三种构建模式"></a>overlay网络的三种构建模式</h2><p>在数据中心，部分业务不适合进行虚拟化(如小机服务器，高性能数据库服务器),这些服务器会直接与物理交换机互联；对于服务器(虚拟机)，接入的可以是虚拟交换机(OpenvSwitch),也可以是物理交换机，因此存在如下图所示的三种接入模型。</p>
-<p><img src="https://rancho333.gitee.io/pictures/vxlan_network_module_2.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vxlan_network_module_2.png"></p>
 <p>以上，在network overlay方案中，所有终端均采用物理交换机作为VTEP节点；host overlay方案中，所有终端均采用虚拟交换机作为VTEP节点；hybird overlay方案中，既有物理交换机接入，又有虚拟交换机接入，且软件VTEP和硬件VTEP之间可以基于标准协议互通。</p>
 <h2 id="vxlan与SDN"><a href="#vxlan与SDN" class="headerlink" title="vxlan与SDN"></a>vxlan与SDN</h2><p>vxlan只定义了转发平面的流程，对于控制平面还没有规范，一般采取三种方式：</p>
 <ol>

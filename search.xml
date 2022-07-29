@@ -233,9 +233,9 @@
 <h3 id="strong-c"><a href="#strong-c" class="headerlink" title="strong.c"></a>strong.c</h3><p><code>strong.c</code>中重复定义了这两个函数，不做声明。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;两个函数都[不]声明为弱符号</span><br><span class="line">&#x2F;&#x2F;#pragma weak weak0</span><br><span class="line">&#x2F;&#x2F;void __attribute__((weak)) weak1(void);</span><br><span class="line"></span><br><span class="line">static char *label &#x3D; &quot;strong&quot;;</span><br><span class="line"></span><br><span class="line">void weak0(void)&#123;</span><br><span class="line">    printf(&quot;[%s]%s is called\n&quot;, label, __FUNCTION__);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void weak1(void)&#123;</span><br><span class="line">    printf(&quot;[%s]%s is called\n&quot;, label, __FUNCTION__);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h2 id="不同编译组合及其输出情况"><a href="#不同编译组合及其输出情况" class="headerlink" title="不同编译组合及其输出情况"></a>不同编译组合及其输出情况</h2><h3 id="单独编译main-c"><a href="#单独编译main-c" class="headerlink" title="单独编译main.c"></a>单独编译main.c</h3><p>此处弱符号函数链接不成功，但是不会报编译错误，函数名所代表的地址为<code>nil</code><br><img src="https://rancho333.gitee.io/pictures/main.png"><br>如果这里依然调用它，那么便会如前面文章中提到的一样产生段错。<br><img src="https://rancho333.gitee.io/pictures/segmentation_fault.png"></p>
-<h3 id="编译main-c-weak-c"><a href="#编译main-c-weak-c" class="headerlink" title="编译main.c+weak.c"></a>编译main.c+weak.c</h3><p>弱符号链接成功，可以正常调用。<br><img src="https://rancho333.gitee.io/pictures/weak.png"></p>
-<h3 id="编译main-c-weak-c-strong-c"><a href="#编译main-c-weak-c-strong-c" class="headerlink" title="编译main.c+weak.c+strong.c"></a>编译main.c+weak.c+strong.c</h3><p>当出现强符号定义时，弱符号定义不起作用<br><img src="https://rancho333.gitee.io/pictures/strong.png"></p>
+<h2 id="不同编译组合及其输出情况"><a href="#不同编译组合及其输出情况" class="headerlink" title="不同编译组合及其输出情况"></a>不同编译组合及其输出情况</h2><h3 id="单独编译main-c"><a href="#单独编译main-c" class="headerlink" title="单独编译main.c"></a>单独编译main.c</h3><p>此处弱符号函数链接不成功，但是不会报编译错误，函数名所代表的地址为<code>nil</code><br><img src="https://rancho333.github.io/pictures/main.png"><br>如果这里依然调用它，那么便会如前面文章中提到的一样产生段错。<br><img src="https://rancho333.github.io/pictures/segmentation_fault.png"></p>
+<h3 id="编译main-c-weak-c"><a href="#编译main-c-weak-c" class="headerlink" title="编译main.c+weak.c"></a>编译main.c+weak.c</h3><p>弱符号链接成功，可以正常调用。<br><img src="https://rancho333.github.io/pictures/weak.png"></p>
+<h3 id="编译main-c-weak-c-strong-c"><a href="#编译main-c-weak-c-strong-c" class="headerlink" title="编译main.c+weak.c+strong.c"></a>编译main.c+weak.c+strong.c</h3><p>当出现强符号定义时，弱符号定义不起作用<br><img src="https://rancho333.github.io/pictures/strong.png"></p>
 ]]></content>
       <tags>
         <tag>弱符号</tag>
@@ -246,12 +246,12 @@
     <url>/2020/03/02/ENOS%E4%B8%8A%E6%AE%B5%E9%94%99%E8%B0%83%E8%AF%95%E8%AE%B0%E5%BD%95/</url>
     <content><![CDATA[<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>移植ENOS过程中发现某些系统编译生成的命令运行过程中报<code>segmentation fault</code>,报错信息如下。这里记录一下调试过程中遇到的问题，涉及到<code>weak</code>属性，<code>-pthread</code>，<code>strace</code>等。</p>
 <span id="more"></span>
-<p><img src="https://rancho333.gitee.io/pictures/fault.png"></p>
-<h2 id="段错调试手段记录"><a href="#段错调试手段记录" class="headerlink" title="段错调试手段记录"></a>段错调试手段记录</h2><p>产生段错首先想到的自然是通过<code>gdb</code>进行错误分析，由于toolchain中并没有提供，所以自行下载了一个gdb源码，通过经典<code>configure, make, make install</code>三部曲后移到板子上，gdb调试信息如下：<br><img src="https://rancho333.gitee.io/pictures/gdb.png"></p>
-<p>gdb中并不能看出什么有效的信息，但看起来函数栈的调用还没有到ccs的main函数中（没有与ccs相关的打印），上一篇文章《关于动态库以及constructor属性的使用》中有提到。<br>通过<code>dmesg</code>查看内核报错信息：<br><img src="https://rancho333.gitee.io/pictures/dmesg.png"><br>可以看到<code>pc</code>寄存器取址的地址为全0 ，这一般是因为空指针导致，我们知道cpu指令的执行顺序为取址，分析，执行三个步骤，没取到指令后续自然是啥都没有了。</p>
-<p>通过<code>strace ccs</code>命令来查看ccs的详细调用过程关于动态库的调用过程就不表了，这里直接看报错的位置：<br><img src="https://rancho333.gitee.io/pictures/strace.png"><br>发现执行完write指令之后就挂了，经过一番曲折之后定位到代码中：<br><img src="https://rancho333.gitee.io/pictures/iv_signal.png"><br><code>iv_fd_set_cloexec</code>中有两次<code>fnctl</code>的调用，与strace中的4次fnctl调用刚好对上，而函数<code>iv_signal_init</code>被<code>constructor</code>属性修饰，而该函数所在模块（libtask）是被编译成so供其它模块调用的，即所有调用该动态库的模块在执行main函数之前都会执行一遍<code>iv_signal_init</code>，进一步追查Makefile发现报错的命令全部都依赖与该动态库，一切都说通了，没有玄学。</p>
-<p>在进一步排查，init中最可疑的就是<code>pthr_atfork</code>这个函数了，查看该函数定义，发现一个从没见过的用法<code>#pragma weak pthread_atfork</code>：<br><img src="https://rancho333.gitee.io/pictures/atfork.png"><br>后面会再写一篇关于这个属性的用法，简单说就是被<code>weak</code>修饰的符号即使不存在编译也不会报错。</p>
-<h2 id="weak之后的调试"><a href="#weak之后的调试" class="headerlink" title="weak之后的调试"></a>weak之后的调试</h2><p>这里发现libtask中既没有自己实现<code>pthread_atfork</code>,也没有在Makefile中链接<code>-pthread</code>，而是使用<code>ifdef HAVE_PRAGMA_WEAK</code>(后来我改成ifndef了)来进行屏蔽，在运行过程中自然会报错，在调用之前打印该函数的地址，不出意料的是<code>NULL</code>，维护人员最初的用意已经不可考证了，直接去掉<code>HAVE_PRAGMA_WEAK</code>,编译中加上<code>-pthread</code>。<br><img src="https://rancho333.gitee.io/pictures/zhw_test.png"></p>
+<p><img src="https://rancho333.github.io/pictures/fault.png"></p>
+<h2 id="段错调试手段记录"><a href="#段错调试手段记录" class="headerlink" title="段错调试手段记录"></a>段错调试手段记录</h2><p>产生段错首先想到的自然是通过<code>gdb</code>进行错误分析，由于toolchain中并没有提供，所以自行下载了一个gdb源码，通过经典<code>configure, make, make install</code>三部曲后移到板子上，gdb调试信息如下：<br><img src="https://rancho333.github.io/pictures/gdb.png"></p>
+<p>gdb中并不能看出什么有效的信息，但看起来函数栈的调用还没有到ccs的main函数中（没有与ccs相关的打印），上一篇文章《关于动态库以及constructor属性的使用》中有提到。<br>通过<code>dmesg</code>查看内核报错信息：<br><img src="https://rancho333.github.io/pictures/dmesg.png"><br>可以看到<code>pc</code>寄存器取址的地址为全0 ，这一般是因为空指针导致，我们知道cpu指令的执行顺序为取址，分析，执行三个步骤，没取到指令后续自然是啥都没有了。</p>
+<p>通过<code>strace ccs</code>命令来查看ccs的详细调用过程关于动态库的调用过程就不表了，这里直接看报错的位置：<br><img src="https://rancho333.github.io/pictures/strace.png"><br>发现执行完write指令之后就挂了，经过一番曲折之后定位到代码中：<br><img src="https://rancho333.github.io/pictures/iv_signal.png"><br><code>iv_fd_set_cloexec</code>中有两次<code>fnctl</code>的调用，与strace中的4次fnctl调用刚好对上，而函数<code>iv_signal_init</code>被<code>constructor</code>属性修饰，而该函数所在模块（libtask）是被编译成so供其它模块调用的，即所有调用该动态库的模块在执行main函数之前都会执行一遍<code>iv_signal_init</code>，进一步追查Makefile发现报错的命令全部都依赖与该动态库，一切都说通了，没有玄学。</p>
+<p>在进一步排查，init中最可疑的就是<code>pthr_atfork</code>这个函数了，查看该函数定义，发现一个从没见过的用法<code>#pragma weak pthread_atfork</code>：<br><img src="https://rancho333.github.io/pictures/atfork.png"><br>后面会再写一篇关于这个属性的用法，简单说就是被<code>weak</code>修饰的符号即使不存在编译也不会报错。</p>
+<h2 id="weak之后的调试"><a href="#weak之后的调试" class="headerlink" title="weak之后的调试"></a>weak之后的调试</h2><p>这里发现libtask中既没有自己实现<code>pthread_atfork</code>,也没有在Makefile中链接<code>-pthread</code>，而是使用<code>ifdef HAVE_PRAGMA_WEAK</code>(后来我改成ifndef了)来进行屏蔽，在运行过程中自然会报错，在调用之前打印该函数的地址，不出意料的是<code>NULL</code>，维护人员最初的用意已经不可考证了，直接去掉<code>HAVE_PRAGMA_WEAK</code>,编译中加上<code>-pthread</code>。<br><img src="https://rancho333.github.io/pictures/zhw_test.png"></p>
 <p>这里有必要顺嘴提一下<code>-lpthread</code>和<code>-pthread</code>，如果使用<code>-lpthread</code>的时候会报一些<code>undefined reference to</code>的错误，错误原因可以自行百度，换成<code>-pthread</code>即可。</p>
 ]]></content>
       <tags>
@@ -270,7 +270,7 @@
 <li>放在<code>source</code>下所有不以下划线开头的文件，在<code>hexo g</code>的时候会拷贝到<code>public</code>下面</li>
 <li>hexo默认渲染所有的html和markdown文件 </li>
 </ol>
-<h2 id="使用next主题"><a href="#使用next主题" class="headerlink" title="使用next主题"></a>使用next主题</h2><p>网上一搜大部分都是Hexo+next的使用，本着站在前人的肩膀上原则，使用next主题。<br>主题下载：<code>git clone https://gitee.com/Rancho333/hexo-theme-next.git themes/next</code><br>启用主题，打开站点配置文件，找到<code>theme</code>字段，修改为如下：  </p>
+<h2 id="使用next主题"><a href="#使用next主题" class="headerlink" title="使用next主题"></a>使用next主题</h2><p>网上一搜大部分都是Hexo+next的使用，本着站在前人的肩膀上原则，使用next主题。<br>主题下载：<code>git clone https://github.com/Rancho333/hexo-theme-next.git themes/next</code><br>启用主题，打开站点配置文件，找到<code>theme</code>字段，修改为如下：  </p>
 <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">theme: next</span><br></pre></td></tr></table></figure>
 
 <h3 id="选择scheme"><a href="#选择scheme" class="headerlink" title="选择scheme"></a>选择scheme</h3><p>next提供4种不同外观，找到<code>scheme</code>字段，启用其中一种scheme，这里我选择Gemini.  </p>
@@ -302,7 +302,7 @@
 <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">hexo new page tags</span><br></pre></td></tr></table></figure>
 
 <p>后面的操作与添加<code>categories</code>属性类似，一篇文章可以添加多个<code>tags</code>  </p>
-<h1 id="关于图片"><a href="#关于图片" class="headerlink" title="关于图片"></a>关于图片</h1><p>有时候会分享md文件给别人，这时候要求图片的标识是因特网可达的，而不能使用资源文件夹这种方式。可以将图片放在<code>public/pictures</code>文件夹中，<code>hexo clean</code>命令会删除该文件夹。图片调用：<code>![](https://rancho333.gitee.io/pictures/arp_protocol.png) </code></p>
+<h1 id="关于图片"><a href="#关于图片" class="headerlink" title="关于图片"></a>关于图片</h1><p>有时候会分享md文件给别人，这时候要求图片的标识是因特网可达的，而不能使用资源文件夹这种方式。可以将图片放在<code>public/pictures</code>文件夹中，<code>hexo clean</code>命令会删除该文件夹。图片调用：<code>![](https://rancho333.github.io/pictures/arp_protocol.png) </code></p>
 <ol>
 <li>将图片源文件放到<code>source/pictures</code>路径下（源码可以备份，<code>hexo clean</code>命令会删除public文件夹）</li>
 <li><code>hexo g</code>会将<code>source</code>下面非下划线开头的文件或文件夹拷贝到<code>public</code>下面</li>
@@ -355,7 +355,7 @@
     <url>/2020/08/05/Linux%E4%B8%8B%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95%E6%96%B9%E6%B3%95%E7%AE%80%E8%BF%B0/</url>
     <content><![CDATA[<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>本文旨在综合性的描述Linux下程序调试的方法和思路，不会过于细节的描述某种工具的使用，如gdb，这些方法通过man以及google都能找到答案。包含知识点：strip, addr2line, strace, gdb, readelf。</p>
 <span id="more"></span>
-<h2 id="strip相关"><a href="#strip相关" class="headerlink" title="strip相关"></a>strip相关</h2><p>嵌入式系统要求小巧精简，最大限度去除冗余数据。Linux下编译出来elf文件是带有符号表的，通过<code>nm</code>命令可以查看，如：<br><img src="https://rancho333.gitee.io/pictures/nm.png"><br>这些符号表是进行程序调试的关键，例如通过<code>addr2line</code>进行地址和文件名或行数的转换，例如在<code>gdb</code>中通过<code>bt</code>显示函数调用栈信息，没有符号表这些工具都无法提供有价值信息。<br><code>strip</code>命令可以去掉这些符号信息，进而减小文件大小，同时不会影响elf的正常执行。<br><img src="https://rancho333.gitee.io/pictures/compare.png"><br>可以看到，<code>strip app</code>之后，app中没有符号表相关信息了。<br>在进行rootfs制作时，对于发行版本，我们进行<code>strip</code>操作，对于开发人员调试版本，我们保留符号表信息。<br><img src="https://rancho333.gitee.io/pictures/strip.png"></p>
+<h2 id="strip相关"><a href="#strip相关" class="headerlink" title="strip相关"></a>strip相关</h2><p>嵌入式系统要求小巧精简，最大限度去除冗余数据。Linux下编译出来elf文件是带有符号表的，通过<code>nm</code>命令可以查看，如：<br><img src="https://rancho333.github.io/pictures/nm.png"><br>这些符号表是进行程序调试的关键，例如通过<code>addr2line</code>进行地址和文件名或行数的转换，例如在<code>gdb</code>中通过<code>bt</code>显示函数调用栈信息，没有符号表这些工具都无法提供有价值信息。<br><code>strip</code>命令可以去掉这些符号信息，进而减小文件大小，同时不会影响elf的正常执行。<br><img src="https://rancho333.github.io/pictures/compare.png"><br>可以看到，<code>strip app</code>之后，app中没有符号表相关信息了。<br>在进行rootfs制作时，对于发行版本，我们进行<code>strip</code>操作，对于开发人员调试版本，我们保留符号表信息。<br><img src="https://rancho333.github.io/pictures/strip.png"></p>
 <h2 id="gdb简述"><a href="#gdb简述" class="headerlink" title="gdb简述"></a>gdb简述</h2><p>遇到<code>core dump</code>最常使用的就是<code>gdb</code>了，<code>gdb</code>的一般使用方法<code>gdb app core</code>。常见子命令如下：</p>
 <table>
 <thead>
@@ -389,7 +389,7 @@
 <td align="left">设置断点</td>
 </tr>
 </tbody></table>
-<p>gdb一般使用<em>断点</em>和<em>堆栈</em>进行程序调试，注意调试的程序一定要是<code>not stripped</code>的。<br>简单示例如下：<br><img src="https://rancho333.gitee.io/pictures/gdb.png"></p>
+<p>gdb一般使用<em>断点</em>和<em>堆栈</em>进行程序调试，注意调试的程序一定要是<code>not stripped</code>的。<br>简单示例如下：<br><img src="https://rancho333.github.io/pictures/gdb.png"></p>
 <h2 id="strace介绍"><a href="#strace介绍" class="headerlink" title="strace介绍"></a>strace介绍</h2><p>strace可以跟踪app的<code>system call</code>和<code>signals</code>，一般使用方法<code>strace app</code>，常见参数如下：</p>
 <table>
 <thead>
@@ -435,9 +435,9 @@
 <td align="left">在打印系统调用同时打印指令指针</td>
 </tr>
 </tbody></table>
-<p>举个之前在ENOS飞腾移植过程中的一个例子，先使用gdb做一个基本的错误定位<br><img src="https://rancho333.gitee.io/pictures/strace1.png"><br>看起来像是没有进入main函数就已经挂了。<br>使用strace查看命令执行过程中的系统调用和信号：<br><img src="https://rancho333.gitee.io/pictures/strace2.png"><br>找到源码中的对应位置：<br><img src="https://rancho333.gitee.io/pictures/strace3.png"><br>iv_signal_init在main函数之前会执行并挂掉，将之注释掉测试通过。</p>
-<h2 id="so库相关"><a href="#so库相关" class="headerlink" title="so库相关"></a>so库相关</h2><p>使用<code>ldd</code>命令可以查看app的依赖库，<code>readelf</code>命令可以获取到更多的内容<br><img src="https://rancho333.gitee.io/pictures/so.png"></p>
-<p>如果app的依赖库找不到，报错格式一般如下：<br><img src="https://rancho333.gitee.io/pictures/so.png"></p>
+<p>举个之前在ENOS飞腾移植过程中的一个例子，先使用gdb做一个基本的错误定位<br><img src="https://rancho333.github.io/pictures/strace1.png"><br>看起来像是没有进入main函数就已经挂了。<br>使用strace查看命令执行过程中的系统调用和信号：<br><img src="https://rancho333.github.io/pictures/strace2.png"><br>找到源码中的对应位置：<br><img src="https://rancho333.github.io/pictures/strace3.png"><br>iv_signal_init在main函数之前会执行并挂掉，将之注释掉测试通过。</p>
+<h2 id="so库相关"><a href="#so库相关" class="headerlink" title="so库相关"></a>so库相关</h2><p>使用<code>ldd</code>命令可以查看app的依赖库，<code>readelf</code>命令可以获取到更多的内容<br><img src="https://rancho333.github.io/pictures/so.png"></p>
+<p>如果app的依赖库找不到，报错格式一般如下：<br><img src="https://rancho333.github.io/pictures/so.png"></p>
 <p>这里面缺少一些动态库，二进制可执行文件，分3种情况：</p>
 <ol>
 <li>文件不存在</li>
@@ -478,16 +478,16 @@
     <url>/2020/03/09/Linux%E5%AF%86%E7%A0%81%E4%BF%AE%E6%94%B9/</url>
     <content><![CDATA[<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>在做交换机Linux系统移植的过程中，发现进入shell的密码还是上一家的默认密码，还是改改吧。简单交代一下，ENOS上kernel加载完成之后应用的启动顺序如下如：</p>
 <span id="more"></span>
-<p><img src="https://rancho333.gitee.io/pictures/inittab.png"></p>
-<p>这里是不进入shell的，而是直接进入klish作为交换机的命令行交互界面，类似于quagga的vtysh。之后在<code>configure</code>视图下面执行<code>start shell</code>进入linux shell的。<br><img src="https://rancho333.gitee.io/pictures/shell.png"><br>在fnconvert里面会获取用户<code>root</code>的密码，其实就是使用<code>getspnam</code>获取<code>passwd或者shadow</code>的口令。既然这玩意使用的是Linux的账户和密码，那就是修改<code>/etc/passwd</code>文件了。<br><img src="https://rancho333.gitee.io/pictures/spnam.png"></p>
+<p><img src="https://rancho333.github.io/pictures/inittab.png"></p>
+<p>这里是不进入shell的，而是直接进入klish作为交换机的命令行交互界面，类似于quagga的vtysh。之后在<code>configure</code>视图下面执行<code>start shell</code>进入linux shell的。<br><img src="https://rancho333.github.io/pictures/shell.png"><br>在fnconvert里面会获取用户<code>root</code>的密码，其实就是使用<code>getspnam</code>获取<code>passwd或者shadow</code>的口令。既然这玩意使用的是Linux的账户和密码，那就是修改<code>/etc/passwd</code>文件了。<br><img src="https://rancho333.github.io/pictures/spnam.png"></p>
 <h1 id="passwd文件简介"><a href="#passwd文件简介" class="headerlink" title="passwd文件简介"></a>passwd文件简介</h1><p>Linux中每个用户在/etc/passwd文件中都有一个对应的记录行，每一行被冒号<code>:</code>分隔为7个字段，具体含义如下：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">用户名：口令：用户标识号：组标识号：注释性描述：主目录：登陆shell</span><br></pre></td></tr></table></figure>
-<p>发行版中口令字段一般是<code>*或x</code>，<code>*</code>表示账号锁定, <code>x</code>表示密码存放在<code>/etc/shadown</code>文件中（访问需要sudo权限，而passwd文件不需要），当然我们的嵌入式系统密文是直接放在passwd中，如下：<br><img src="https://rancho333.gitee.io/pictures/passwd.png"></p>
-<p>其它字段除了<code>登陆shell</code>就没啥好玩的了，有些账号出于安全限制，并不会允许登陆进shell，而采用<code>nologin</code>的方式可以让这些用户使用部分系统功能。<br><img src="https://rancho333.gitee.io/pictures/nologin.png"></p>
+<p>发行版中口令字段一般是<code>*或x</code>，<code>*</code>表示账号锁定, <code>x</code>表示密码存放在<code>/etc/shadown</code>文件中（访问需要sudo权限，而passwd文件不需要），当然我们的嵌入式系统密文是直接放在passwd中，如下：<br><img src="https://rancho333.github.io/pictures/passwd.png"></p>
+<p>其它字段除了<code>登陆shell</code>就没啥好玩的了，有些账号出于安全限制，并不会允许登陆进shell，而采用<code>nologin</code>的方式可以让这些用户使用部分系统功能。<br><img src="https://rancho333.github.io/pictures/nologin.png"></p>
 <h2 id="修改用户密码"><a href="#修改用户密码" class="headerlink" title="修改用户密码"></a>修改用户密码</h2><p>常规的在linux命令行下面修改密码没啥好说的，直接敲<code>passwd</code>然后输入新密码就行了，之后你会发现<code>passwd或者shadow</code>中的口令发生变化了。这里介绍一下口令了列的组成，不同的特殊字符表示不同的特殊意义：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1. 该列留空，即&quot;::&quot;，表示该用户没有密码。</span><br><span class="line">2. 该列为&quot;!&quot;，即&quot;:!:&quot;，表示该用户被锁，被锁将无法登陆，但是可能其他的登录方式是不受限制的，如ssh公钥认证的方式，su的方式。</span><br><span class="line">3. 该列为&quot;*&quot;，即&quot;:*:&quot;，也表示该用户被锁，和&quot;!&quot;效果是一样的。</span><br><span class="line">4. 该列以&quot;!&quot;或&quot;!!&quot;开头，则也表示该用户被锁。</span><br><span class="line">5. 该列为&quot;!!&quot;，即&quot;:!!:&quot;，表示该用户从来没设置过密码。</span><br><span class="line">6. 如果格式为&quot;$id$salt$hashed&quot;，则表示该用户密码正常。其中$id$的id表示密码的加密算法，$1$表示使用MD5算法，$2a$表示使用Blowfish算法，&quot;$2y$&quot;是另一算法长度的Blowfish,&quot;$5$&quot;表示SHA-256算法，而&quot;$6$&quot;表示SHA-512算法。加密算法会根据salt进行特定的加密，hashed是生成的密文</span><br></pre></td></tr></table></figure>
-<p>我看自己的linux服务器上面都是使用SHA-512加密的，而嵌入式系统上面用的是MD5，使用命令<br><img src="https://rancho333.gitee.io/pictures/openssl.png"><br>就可以生成密码了，将原来的口令字段替换掉即可完成密码的修改。</p>
-<p>有个小问题，实验过程中，发现在嵌入式系统上直接在命令行中修改密码不是按照<code>$id$salt$hashed</code>模式生成的口令，而是：<br><img src="https://rancho333.gitee.io/pictures/abnormal.png"><br>但是在发行版Linux上面是符合预期的，有可能是嵌入式系统的某些差异吧，这里留个记录！</p>
+<p>我看自己的linux服务器上面都是使用SHA-512加密的，而嵌入式系统上面用的是MD5，使用命令<br><img src="https://rancho333.github.io/pictures/openssl.png"><br>就可以生成密码了，将原来的口令字段替换掉即可完成密码的修改。</p>
+<p>有个小问题，实验过程中，发现在嵌入式系统上直接在命令行中修改密码不是按照<code>$id$salt$hashed</code>模式生成的口令，而是：<br><img src="https://rancho333.github.io/pictures/abnormal.png"><br>但是在发行版Linux上面是符合预期的，有可能是嵌入式系统的某些差异吧，这里留个记录！</p>
 ]]></content>
       <tags>
         <tag>passwd</tag>
@@ -498,11 +498,11 @@
     <url>/2019/07/14/Linux%E6%9F%A5%E6%89%BEso%E6%96%87%E4%BB%B6%E6%89%80%E5%9C%A8pkg/</url>
     <content><![CDATA[<h2 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h2><p>在Ubuntu16.04 server上安装typora时报错：<code>Typora: error while loading shared libraries: libnss3.so</code>  </p>
 <span id="more"></span>
-<p><img src="https://rancho333.gitee.io/pictures/error.png"><br>使用find在机器上的确没有找到该so文件，一般情况下对于name.so，安装一个name包就行了(so文件与pkg文件名相同)，但有的时候是不相同的，这时需要利用apt-file查找so文件所属的pkg.<br><img src="https://rancho333.gitee.io/pictures/diff.png"></p>
-<h2 id="安装apt-file"><a href="#安装apt-file" class="headerlink" title="安装apt-file"></a>安装apt-file</h2><p>安装命令：<code>sudo apt-get install apt-file</code><br>update：<code>apt-file update</code>,当/etc/apt/source.list文件发生变化时，需要重新update<br><img src="https://rancho333.gitee.io/pictures/update.png"></p>
-<h2 id="查找软件所依赖的so文件并安装依赖包"><a href="#查找软件所依赖的so文件并安装依赖包" class="headerlink" title="查找软件所依赖的so文件并安装依赖包"></a>查找软件所依赖的so文件并安装依赖包</h2><p>查看软件位置：<code>whereis typora</code><br><img src="https://rancho333.gitee.io/pictures/where.png"></p>
-<p>查找软件依赖so：<code>ldd /usr/bin/typora</code><br><img src="https://rancho333.gitee.io/pictures/not_found.png"></p>
-<p>对每一个标有<code>not found</code>的so文件执行如下：<br><img src="https://rancho333.gitee.io/pictures/search.png"></p>
+<p><img src="https://rancho333.github.io/pictures/error.png"><br>使用find在机器上的确没有找到该so文件，一般情况下对于name.so，安装一个name包就行了(so文件与pkg文件名相同)，但有的时候是不相同的，这时需要利用apt-file查找so文件所属的pkg.<br><img src="https://rancho333.github.io/pictures/diff.png"></p>
+<h2 id="安装apt-file"><a href="#安装apt-file" class="headerlink" title="安装apt-file"></a>安装apt-file</h2><p>安装命令：<code>sudo apt-get install apt-file</code><br>update：<code>apt-file update</code>,当/etc/apt/source.list文件发生变化时，需要重新update<br><img src="https://rancho333.github.io/pictures/update.png"></p>
+<h2 id="查找软件所依赖的so文件并安装依赖包"><a href="#查找软件所依赖的so文件并安装依赖包" class="headerlink" title="查找软件所依赖的so文件并安装依赖包"></a>查找软件所依赖的so文件并安装依赖包</h2><p>查看软件位置：<code>whereis typora</code><br><img src="https://rancho333.github.io/pictures/where.png"></p>
+<p>查找软件依赖so：<code>ldd /usr/bin/typora</code><br><img src="https://rancho333.github.io/pictures/not_found.png"></p>
+<p>对每一个标有<code>not found</code>的so文件执行如下：<br><img src="https://rancho333.github.io/pictures/search.png"></p>
 <p>找到pkg名称后，使用<code>sudo apt-get install pkg-name</code>安装即可。</p>
 ]]></content>
       <categories>
@@ -572,7 +572,7 @@
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">vim  ~&#x2F;.docker&#x2F;config.json</span><br><span class="line">&#123;                  </span><br><span class="line">&quot;proxies&quot;:</span><br><span class="line">&#123;</span><br><span class="line">   &quot;default&quot;:</span><br><span class="line">   &#123;</span><br><span class="line">     &quot;httpProxy&quot;: &quot;http:&#x2F;&#x2F;localhost:8118&quot;,</span><br><span class="line">     &quot;httpsProxy&quot;: &quot;http:&#x2F;&#x2F;localhost:8118&quot;,</span><br><span class="line">     &quot;noProxy&quot;: &quot;localhost&quot;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>或者使用<code>docker run -e &quot;http_proxy=http://localhost:8118&quot; -e &quot;https_proxy=http://localhost:8118&quot;</code></p>
 <p>docker默认是bridge的网络模式，端口是需要做转发映射的。为了直接用宿主机的ip和端口，我们换成用host的网络模式，让她和宿主机可以用同一个Network Namespace<br>也就是使用<code>docker run -e &quot;http_proxy=http://localhost:8118&quot; -e &quot;https_proxy=http://localhost:8118&quot; --net host</code>来启动一个container</p>
-<p>注意到上面<code>https_proxy</code>使用的代理和<code>http_proxy</code>是一样的，这是因为我在使用中发现有如下报错：<br><img src="https://rancho333.gitee.io/pictures/timeout.png"><br>更改完之后就好了，原理暂时不清楚，看机缘更新吧！</p>
+<p>注意到上面<code>https_proxy</code>使用的代理和<code>http_proxy</code>是一样的，这是因为我在使用中发现有如下报错：<br><img src="https://rancho333.github.io/pictures/timeout.png"><br>更改完之后就好了，原理暂时不清楚，看机缘更新吧！</p>
 <p>参考资料：</p>
 <p><a href="https://huangweitong.com/229.html">Linux 使用 ShadowSocks + Privoxy 实现 PAC 代理</a></p>
 <p><a href="https://blog.diosfun.com/2018/09/21/Ubuntu18-04%E5%AE%89%E8%A3%85shadowsocks%E5%AE%A2%E6%88%B7%E7%AB%AF/">Ubuntu18.04安装shadowsocks客户端</a></p>
@@ -620,12 +620,12 @@
 <h1 id="移植总述"><a href="#移植总述" class="headerlink" title="移植总述"></a>移植总述</h1><p>嵌入式系统移植分为四个大块，分别是构建交叉编译工具，rootfs的制作，kernel的配置、编译、移植，BootLoader的移植。需要移植的系统可以在MIPS上跑起来，我只需要顺着原有的编译框架完成ARM64的编译，之后再上板子做具体的调试。</p>
 <h2 id="构建交叉编译工具"><a href="#构建交叉编译工具" class="headerlink" title="构建交叉编译工具"></a>构建交叉编译工具</h2><p>toolchain一般芯片厂家会提供，当然自己通过buildroot构建也是可以的。<br>使用buildroot构建交叉编译工具，下载buildroot2015</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">wget http:&#x2F;&#x2F;buildroot.uclibc.org&#x2F;downloads&#x2F;buildroot-2015.08.tar.gz</span><br></pre></td></tr></table></figure>
-<p><code>make menuconfig ARCH=arm64</code>配置buildroot，将target和toolchain两项配置成如下所示<br><img src="https://rancho333.gitee.io/pictures/buildroot.png"><br>之后<code>make</code>等待完成即可，buildroot有些源码下载速度很慢，下载网站也不尽相同，比较麻烦，不像Linux发行版可以改成国内镜像软件源，有的可能会等待比较长的时间。<br>将生成的toolchain打包，释放到服务器docker编译环境中，如下所示：<br><img src="https://rancho333.gitee.io/pictures/toolchain.png"><br>之后可以根据container构建image将编译环境发布出去，大家就可以直接使用了。</p>
-<h2 id="kernel的配置、编译、移植"><a href="#kernel的配置、编译、移植" class="headerlink" title="kernel的配置、编译、移植"></a>kernel的配置、编译、移植</h2><p>kernel的配置结果保存在<code>.config</code>文件中，根据实际的需求会选配一些内核选项，如开启nat以及veth相关的配置<br><img src="https://rancho333.gitee.io/pictures/nat.png"><br><img src="https://rancho333.gitee.io/pictures/veth.png"><br>这些配置实际上是系统构建完成后跑起来报错才知道需要的，只需要在<code>make menuconfig</code>中搜索对应关键字即可找到编译选项。<br>关于内核编译的一些说明，可以参考这篇文章<br><a href="https://rancho333.gitee.io/2020/03/11/kernel%E7%BC%96%E8%AF%91%E7%AE%80%E8%BF%B0/">kernel编译简述</a></p>
-<h2 id="rootfs的制作"><a href="#rootfs的制作" class="headerlink" title="rootfs的制作"></a>rootfs的制作</h2><p>在这一步其实花的时间是最多的，因为这里涉及到大量的上层应用模块的编译，然后这些模块的依赖库在交叉工具链中是不存在的，还有部分是需要编译一些独立的Linux命令。解决办法很简单，下载源码，编译出库，之后放到交叉工具链和文件系统中即可。<br>这里说下开源代码交叉编译的经典三部曲<code>configure, make, make install</code>，在configure中会指定交叉编译工具，编译生成文件的install路径,关于动态库的一些理解可以查看这篇文章<br><a href="https://rancho333.gitee.io/2020/02/26/%E5%85%B3%E4%BA%8E%E5%8A%A8%E6%80%81%E5%BA%93%E4%BB%A5%E5%8F%8Aconstructor%E5%B1%9E%E6%80%A7%E7%9A%84%E4%BD%BF%E7%94%A8/">关于动态库以及constructor属性的使用</a><br>嗯，rootfs以前一直用buildroot来制作，这里发现一个不一样的方式</p>
+<p><code>make menuconfig ARCH=arm64</code>配置buildroot，将target和toolchain两项配置成如下所示<br><img src="https://rancho333.github.io/pictures/buildroot.png"><br>之后<code>make</code>等待完成即可，buildroot有些源码下载速度很慢，下载网站也不尽相同，比较麻烦，不像Linux发行版可以改成国内镜像软件源，有的可能会等待比较长的时间。<br>将生成的toolchain打包，释放到服务器docker编译环境中，如下所示：<br><img src="https://rancho333.github.io/pictures/toolchain.png"><br>之后可以根据container构建image将编译环境发布出去，大家就可以直接使用了。</p>
+<h2 id="kernel的配置、编译、移植"><a href="#kernel的配置、编译、移植" class="headerlink" title="kernel的配置、编译、移植"></a>kernel的配置、编译、移植</h2><p>kernel的配置结果保存在<code>.config</code>文件中，根据实际的需求会选配一些内核选项，如开启nat以及veth相关的配置<br><img src="https://rancho333.github.io/pictures/nat.png"><br><img src="https://rancho333.github.io/pictures/veth.png"><br>这些配置实际上是系统构建完成后跑起来报错才知道需要的，只需要在<code>make menuconfig</code>中搜索对应关键字即可找到编译选项。<br>关于内核编译的一些说明，可以参考这篇文章<br><a href="https://rancho333.github.io/2020/03/11/kernel%E7%BC%96%E8%AF%91%E7%AE%80%E8%BF%B0/">kernel编译简述</a></p>
+<h2 id="rootfs的制作"><a href="#rootfs的制作" class="headerlink" title="rootfs的制作"></a>rootfs的制作</h2><p>在这一步其实花的时间是最多的，因为这里涉及到大量的上层应用模块的编译，然后这些模块的依赖库在交叉工具链中是不存在的，还有部分是需要编译一些独立的Linux命令。解决办法很简单，下载源码，编译出库，之后放到交叉工具链和文件系统中即可。<br>这里说下开源代码交叉编译的经典三部曲<code>configure, make, make install</code>，在configure中会指定交叉编译工具，编译生成文件的install路径,关于动态库的一些理解可以查看这篇文章<br><a href="https://rancho333.github.io/2020/02/26/%E5%85%B3%E4%BA%8E%E5%8A%A8%E6%80%81%E5%BA%93%E4%BB%A5%E5%8F%8Aconstructor%E5%B1%9E%E6%80%A7%E7%9A%84%E4%BD%BF%E7%94%A8/">关于动态库以及constructor属性的使用</a><br>嗯，rootfs以前一直用buildroot来制作，这里发现一个不一样的方式</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1. 使用mktemp命令创建一个临时文件</span><br><span class="line">2. 使用shell命令构建文件系统，就是echo命令然后重定向到临时文件</span><br><span class="line">3. 使用gen_init_cpio和压缩软件构建cpio格式的压缩包</span><br><span class="line">4. 删除临时文件</span><br></pre></td></tr></table></figure>
-<p><img src="https://rancho333.gitee.io/pictures/rootfs.png"></p>
-<h2 id="BootLoader的移植"><a href="#BootLoader的移植" class="headerlink" title="BootLoader的移植"></a>BootLoader的移植</h2><p>给的开发板上直接烧有uboot，所以这里不涉及自己构建bootloader了。在bring up的过程中遇到一个问题卡了很久：<br><img src="https://rancho333.gitee.io/pictures/panic.png"><br>返回错误8的含义<code>文件没有可执行权限</code>,确认过busybox的执行权限，并且是静态编译，并且可以在同平台的其它机器上执行。<br>真实的错误是kernel在rootfs中没有找到文件系统，比较详细的描述见上文提到的<code>kernel编译简述</code>。</p>
+<p><img src="https://rancho333.github.io/pictures/rootfs.png"></p>
+<h2 id="BootLoader的移植"><a href="#BootLoader的移植" class="headerlink" title="BootLoader的移植"></a>BootLoader的移植</h2><p>给的开发板上直接烧有uboot，所以这里不涉及自己构建bootloader了。在bring up的过程中遇到一个问题卡了很久：<br><img src="https://rancho333.github.io/pictures/panic.png"><br>返回错误8的含义<code>文件没有可执行权限</code>,确认过busybox的执行权限，并且是静态编译，并且可以在同平台的其它机器上执行。<br>真实的错误是kernel在rootfs中没有找到文件系统，比较详细的描述见上文提到的<code>kernel编译简述</code>。</p>
 <p>参考资料：<br><a href="https://www.cnblogs.com/kernel-style/p/3397705.html">linux init启动分析</a></p>
 ]]></content>
       <tags>
@@ -708,8 +708,8 @@
 </blockquote>
 </blockquote>
 <h2 id="Markdown代码块"><a href="#Markdown代码块" class="headerlink" title="Markdown代码块"></a>Markdown代码块</h2>使用```包裹一段代码，并指定一种语言(也可以不指定)<br>对于单行的代码块，用`包裹即可，代码块中的数据不会被md语法所解释。  <h2 id="Markdown链接"><a href="#Markdown链接" class="headerlink" title="Markdown链接"></a>Markdown链接</h2>使用方法如下:    <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">[链接名称](链接地址)    </span><br><span class="line">或者    </span><br><span class="line">&lt;链接地址&gt;  </span><br></pre></td></tr></table></figure>
-如：<br>这是我的Blog <a href="https://rancho333.gitee.io/">Rancho</a>    <h2 id="Markdown图片"><a href="#Markdown图片" class="headerlink" title="Markdown图片"></a>Markdown图片</h2>使用方法如下:    <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">![](https:&#x2F;&#x2F;rancho333.gitee.io&#x2F;pictures&#x2F;Rancho.png)  </span><br></pre></td></tr></table></figure>
-<img src="https://rancho333.gitee.io/pictures/Rancho.png"><br>md没法指定图片的高度与宽度，可以使用<code>&lt;image&gt;</code>标签  </li>
+如：<br>这是我的Blog <a href="https://rancho333.github.io/">Rancho</a>    <h2 id="Markdown图片"><a href="#Markdown图片" class="headerlink" title="Markdown图片"></a>Markdown图片</h2>使用方法如下:    <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">![](https:&#x2F;&#x2F;rancho333.github.io&#x2F;pictures&#x2F;Rancho.png)  </span><br></pre></td></tr></table></figure>
+<img src="https://rancho333.github.io/pictures/Rancho.png"><br>md没法指定图片的高度与宽度，可以使用<code>&lt;image&gt;</code>标签  </li>
 </ol>
 </li>
 </ol>
@@ -755,7 +755,7 @@
   <entry>
     <title>OSPF学习</title>
     <url>/2021/04/19/OSPF%E5%AD%A6%E4%B9%A0/</url>
-    <content><![CDATA[<h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>跟着上文<a href="https://rancho333.gitee.io/2021/04/08/SONiC%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/">SONiC路由协议简述</a>, 这篇文章记录一下OSPF协议的学习内容。</p>
+    <content><![CDATA[<h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>跟着上文<a href="https://rancho333.github.io/2021/04/08/SONiC%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/">SONiC路由协议简述</a>, 这篇文章记录一下OSPF协议的学习内容。</p>
 <span id="more"></span>
 
 <p>这篇文档应当回答以下几个问题。</p>
@@ -864,13 +864,13 @@
 </tr>
 </tbody></table>
 <p>究其原因，RSTP中通过P/A机制主动协商可以直接将端口从discarding状态转换到forwarding，而不是STP中通过定时器机制经过forward_delay后再切换状态。</p>
-<h2 id="端口角色"><a href="#端口角色" class="headerlink" title="端口角色"></a>端口角色</h2><p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_election.png?raw=true"></p>
+<h2 id="端口角色"><a href="#端口角色" class="headerlink" title="端口角色"></a>端口角色</h2><p><img src="https://rancho333.github.io/pictures/rstp_election.png"></p>
 <p>RSTP中增加了一种端口角色<code>backup port</code>. 如上图所示，S2的eth2端口为BP。非根交换机收到自己发出的BPDU时，对比端口上发出和收到的BPDU，如果发出的是<code>superior BPDU</code>，那么成为DP，否则成为BP。注意与AP端口的差异：</p>
 <ul>
 <li>AP是端口收到从<code>其它交换机</code>发来的superior BPDU，是RP的备份，这是uplinkfast实现的原理</li>
 <li>BP是端口收到从<code>自身交换机</code>发来的superior BPDU, 是DP的备份，uplinkfast对BP不生效，BP在现实网络中很少见，基本用不到。图中通过在S2和S3中加一个hub来实现，如果没有hub，S2的eth1和eth2都是DP。</li>
 </ul>
-<h2 id="BPDU的变化"><a href="#BPDU的变化" class="headerlink" title="BPDU的变化"></a>BPDU的变化</h2><p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_bpdu.png?raw=true"></p>
+<h2 id="BPDU的变化"><a href="#BPDU的变化" class="headerlink" title="BPDU的变化"></a>BPDU的变化</h2><p><img src="https://rancho333.github.io/pictures/rstp_bpdu.png"></p>
 <p>RSTP的BPDU与STP的主要在三个字段上有差异：</p>
 <ul>
 <li>protocol version identifier：stp为0，rstp为2. rstp向下兼容stp</li>
@@ -886,13 +886,13 @@
 <h3 id="BPDU的发送"><a href="#BPDU的发送" class="headerlink" title="BPDU的发送"></a>BPDU的发送</h3><p>STP中根桥周期(hello time)发送BPDU，非根桥从RP收到然后从DP中继出去。RSTP非根桥自己生成BPDU(根据缓存的根桥cache)，周期(hello time)通过DP向外发送</p>
 <h3 id="BPDU的超时"><a href="#BPDU的超时" class="headerlink" title="BPDU的超时"></a>BPDU的超时</h3><p>STP上如果端口有存储的BPDU，max_age时间内没有收到superior BPDU后便会对其超时。RSTP通过BPDU实现类似ospf中的keepalive机制，如果连续三个hello_time时间内没有从邻居收到BPDU，那么就认为该链路故障，并且立即清除所有MAC地址。</p>
 <h3 id="边缘端口"><a href="#边缘端口" class="headerlink" title="边缘端口"></a>边缘端口</h3><p>STP的收敛优化里面有<code>portfast</code>的概念，在rstp中则称之为<code>edge port</code>, 即连接主机的端口。开启edge port的端口不需要经历discarding、learning的过度，而是直接变成forwarding，端口up、down也不会产生TC。注意边缘端口的链路类型只能是p2p, 即全双工链路，区别于半双工链路(shared类型)。<br>需要注意的是RSTP中同样需要管理员手动指定edge port。uplinkfast和backbonefast特性则是自动运行的。</p>
-<h3 id="PA协商机制-重要区别"><a href="#PA协商机制-重要区别" class="headerlink" title="PA协商机制(重要区别)"></a>PA协商机制(重要区别)</h3><p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_pa_mechanism.png?raw=true"></p>
+<h3 id="PA协商机制-重要区别"><a href="#PA协商机制-重要区别" class="headerlink" title="PA协商机制(重要区别)"></a>PA协商机制(重要区别)</h3><p><img src="https://rancho333.github.io/pictures/rstp_pa_mechanism.png"></p>
 <p>PA机制的基本原理就是：将下游block之后，再将上游forwarding，这种过程向下传导，直至整个RSTP开始运转，下游block的时候依然可以传输BPDU，进行角色选举。需要把STP的选举机制联想起来，不要孤立的看待PA机制。<br>通过上图来介绍P/A协商机制的原理。</p>
 <ol>
 <li>当设备上电后，S1、S2均认为自己是根桥并向外发送BPDU(proposal flag置位)，端口状态均为blocking</li>
 <li>S2的eth0收到S1的eth0发来的superior BPDU，确定S1是根桥，S2的eth0成为RP(立即切换成forwarding)，将所有非边缘DP(eth1,eth2)状态置为block, 并通过非边缘DP发送BPDU(根桥是S1，proposal flag置位)，之后向根桥发送BPDU(TC置位, agreement置位，该BPDU是proposal BPDU的一个拷贝, 所以BID和sender BID都是S1，只是去掉了proposal的flag，增加了agreement的flag，这可以让接收到agreement的端口知道具体是那个端口发出的proposal)，具体报文如下图：</li>
 </ol>
-<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_pa_packet.png?raw=true"></p>
+<p><img src="https://rancho333.github.io/pictures/rstp_pa_packet.png"></p>
 <ol start="3">
 <li>S1收到agreement置位的BPDU后，将eth0由block置为forwarding，如果没有收到，则会通过discarding、learning切换到forwarding状态(比如下游设备运行STP时就会出现这种场景)</li>
 <li>以上为一个同步的完成流程，之后S2与S3，S2与S4之间会进行同样的同步协商动作。即S2向S3,S4发送proposal报文，S3,S4选出RP，block非边缘DP，并向下游发送proposal报文(改实例中没有)，S3,S4向S2发送agreement报文，并将自身RP置位forwarding，S2将收到agreement报文的DP置位forwarding状态</li>
@@ -926,7 +926,7 @@
 <li>邻居keepalive机制(3个hello time)</li>
 <li>集成backbonefast，配置边缘端口(uplinkfast实际是PA机制)</li>
 </ol>
-<h2 id="两个实验"><a href="#两个实验" class="headerlink" title="两个实验"></a>两个实验</h2><p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_convergence_experiment.png?raw=true"></p>
+<h2 id="两个实验"><a href="#两个实验" class="headerlink" title="两个实验"></a>两个实验</h2><p><img src="https://rancho333.github.io/pictures/rstp_convergence_experiment.png"></p>
 <p>实验拓扑如上，操作步骤如下：</p>
 <ol>
 <li>vpc1和vpc2在同一网段，vpc1持续ping vpc2</li>
@@ -936,7 +936,7 @@
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Switch(config-if)#spanning-tree portfast edge        &#x2F;&#x2F; 将接口配置成边缘端口</span><br></pre></td></tr></table></figure>
 <p>如果没有配置，根据P/A协商机制，当S2的eth0 down掉后，eth1会在discarding、learning、forwarding状态间进行时延转换(30秒)。原因是从eth1发出的proposal报文没有收到agreement回复。<br>STP中portfast只是让端口跳过状态切换，并且状态变换不会产生TCN，但是RSTP中边缘端口和PA机制有相互作用，<em>注意</em>！</p>
 <h3 id="backbonefast特性测试"><a href="#backbonefast特性测试" class="headerlink" title="backbonefast特性测试"></a>backbonefast特性测试</h3><p>在S2上shutdown端口eth0，S2的eth2发送inferior BPDU，模拟backbonefast特性测试。ping结果如下：</p>
-<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_convergence_ping.png?raw=true"></p>
+<p><img src="https://rancho333.github.io/pictures/rstp_convergence_ping.png"></p>
 <p>没有发现丢包，只是shutdown瞬间一个包时延大了一些, 相较于STP开启backfast之后依然断流30秒(S3上eth0状态切换时延)，提升很巨大。S2上端口状态如下:</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Switch#show spanning-tree | begin Interface</span><br><span class="line">Interface           Role Sts Cost      Prio.Nbr Type</span><br><span class="line">------------------- ---- --- --------- -------- --------------------------------</span><br><span class="line">Et0&#x2F;1               Desg FWD 100       128.2    P2p Edge </span><br><span class="line">Et0&#x2F;2               Root FWD 100       128.3    P2p </span><br><span class="line">Et0&#x2F;3               Desg BLK 100       128.4    P2p</span><br></pre></td></tr></table></figure>
 <p>可以看到eth2通过PA协商立即变成RP的forwarding状态，eth1上配置了边缘端口，不参与PA，所以依然是forwarding，eth3上没有配置边缘端口，处于blocking,经过30秒时延转换成forwarding。</p>
@@ -960,7 +960,7 @@
   <entry>
     <title>SONiC中ARP测试用例简析</title>
     <url>/2021/04/26/SONiC%E4%B8%ADARP%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B%E7%AE%80%E6%9E%90/</url>
-    <content><![CDATA[<h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>本文简要分析SONiC testbed中ARP测试用例的实现，作为对<a href="https://rancho333.gitee.io/2020/12/25/ARP%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0%E5%8F%8A%E5%BA%94%E7%94%A8/">ARP协议简述及应用</a>的补充。</p>
+    <content><![CDATA[<h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>本文简要分析SONiC testbed中ARP测试用例的实现，作为对<a href="https://rancho333.github.io/2020/12/25/ARP%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0%E5%8F%8A%E5%BA%94%E7%94%A8/">ARP协议简述及应用</a>的补充。</p>
 <span id="more"></span>
 <h2 id="背景知识简述"><a href="#背景知识简述" class="headerlink" title="背景知识简述"></a>背景知识简述</h2><p>ARP直接基于以太帧进行封装，<code>type</code>类型为<code>0x0806</code>，报文很简单，只有两类：ARP request报文和ARP reply报文。其中request报文可分为三类：<br>    1. 单播request，参考rfc1122，一种arp缓存刷新机制<br>    2. 广播request，这也是常见的arp请求报文<br>    3. 免费arp报文，sender ip和destination ip相同</p>
 <h2 id="测试用例简析"><a href="#测试用例简析" class="headerlink" title="测试用例简析"></a>测试用例简析</h2><p>在<code>sonic-mgmt/tests/arp</code>下共有4个测试文件：</p>
@@ -974,37 +974,37 @@
 <li>免费arp测试</li>
 </ol>
 <h3 id="单播arp-request测试"><a href="#单播arp-request测试" class="headerlink" title="单播arp request测试"></a>单播arp request测试</h3><p>测试代码在<code>sonic-mgmt/tests/arp/test_arpall.py</code>文件中，对该模块代码截取简析如下：</p>
-<p><img src="https://rancho333.gitee.io/pictures/arp_unicast_reply.png"></p>
+<p><img src="https://rancho333.github.io/pictures/arp_unicast_reply.png"></p>
 <p>报文构造代码在<code>sonic-mgmt/ansible/roles/test/files/ptftests/arptest.py</code>文件中，对应的ARP包构造函数内容如下：</p>
-<p><img src="https://rancho333.gitee.io/pictures/verifyunicastarpreply.png"></p>
+<p><img src="https://rancho333.github.io/pictures/verifyunicastarpreply.png"></p>
 <p>基本流程就是构造单播arp request报文，之后获取dut的arp表，看发送arp request的端口arp条目是否存在。根据rfc1122，这是unicast poo(单播轮询)：定时向ARP缓存条目中的主机发送点到点的ARP请求报文，假如在N次连续超时时间过后，没有收到对应主机的ARP响应报文，则将此条目从ARP缓存中删除。</p>
 <p>其实这样测试并不能测试出unicast poll的定义，和普通ARP 请求没啥区别。</p>
 <h3 id="广播arp-request测试"><a href="#广播arp-request测试" class="headerlink" title="广播arp request测试"></a>广播arp request测试</h3><p>测试代码如下：</p>
-<p><img src="https://rancho333.gitee.io/pictures/arp_expect_reply.png"></p>
+<p><img src="https://rancho333.github.io/pictures/arp_expect_reply.png"></p>
 <p>对应的ARP包构造函数内容如下：</p>
-<p><img src="https://rancho333.gitee.io/pictures/expectreply.png"></p>
+<p><img src="https://rancho333.github.io/pictures/expectreply.png"></p>
 <p>如上面的分析，和单播arp请求没啥区别，虽然ser intf1的mac改了一下，但无关紧要。</p>
 <h3 id="收到的arp报文请求的不是本接口mac"><a href="#收到的arp报文请求的不是本接口mac" class="headerlink" title="收到的arp报文请求的不是本接口mac"></a>收到的arp报文请求的不是本接口mac</h3><p>测试代码如下：</p>
-<p><img src="https://rancho333.gitee.io/pictures/arp_no_reply_other_intf.png"><br>这里asset判断的ip错了，应该是不等于10.10.1.22才对。</p>
+<p><img src="https://rancho333.github.io/pictures/arp_no_reply_other_intf.png"><br>这里asset判断的ip错了，应该是不等于10.10.1.22才对。</p>
 <p>对应的ARP包构造函数内容如下：</p>
-<p><img src="https://rancho333.gitee.io/pictures/srcoutrangenoreply.png"></p>
+<p><img src="https://rancho333.github.io/pictures/srcoutrangenoreply.png"></p>
 <h3 id="收到的arp请求中的sender-ip与本接口不在同一网段"><a href="#收到的arp请求中的sender-ip与本接口不在同一网段" class="headerlink" title="收到的arp请求中的sender ip与本接口不在同一网段"></a>收到的arp请求中的sender ip与本接口不在同一网段</h3><p>和上面<code>收到的arp报文请求的不是本接口mac</code>的流程基本一致，只是将相同的arp request报文发给dut intf1。</p>
 <h3 id="免费arp报文测试"><a href="#免费arp报文测试" class="headerlink" title="免费arp报文测试"></a>免费arp报文测试</h3><p>免费arp的测试分为两块，如果免费arp中的信息之前没有解析过，那么不应该响应免费arp报文，反之响应。</p>
 <p>不响应的代码如下：</p>
-<p><img src="https://rancho333.gitee.io/pictures/garp_no_update.png"></p>
+<p><img src="https://rancho333.github.io/pictures/garp_no_update.png"></p>
 <p>对应的ARP包构造函数内容如下：</p>
-<p><img src="https://rancho333.gitee.io/pictures/garpnoupdate.png"></p>
+<p><img src="https://rancho333.github.io/pictures/garpnoupdate.png"></p>
 <p>此时即使dut收到了免费arp报文，但是<code>10.10.1.7</code>的信息并不在dut的arp表中，所以不应该有响应动作。</p>
 <p>响应的代码如下：</p>
-<p><img src="https://rancho333.gitee.io/pictures/garp_update.png"><br>可以看到先调用<code>ExpectReply</code>让<code>10.10.1.3</code>存在于dut的arp表中，之后再调用<code>GarpUpdate</code>更新mac，MAC地址由<code>00:06:07:08:09:0a</code>更新为<code>00:00:07:08:09:0a</code>。</p>
+<p><img src="https://rancho333.github.io/pictures/garp_update.png"><br>可以看到先调用<code>ExpectReply</code>让<code>10.10.1.3</code>存在于dut的arp表中，之后再调用<code>GarpUpdate</code>更新mac，MAC地址由<code>00:06:07:08:09:0a</code>更新为<code>00:00:07:08:09:0a</code>。</p>
 <p>对应的ARP包构造函数内容如下：</p>
-<p><img src="https://rancho333.gitee.io/pictures/garpupdate.png"><br>这里面修改了<code>10.10.1.3</code>对应的MAC地址。</p>
+<p><img src="https://rancho333.github.io/pictures/garpupdate.png"><br>这里面修改了<code>10.10.1.3</code>对应的MAC地址。</p>
 <h2 id="其它三个测试文件说明"><a href="#其它三个测试文件说明" class="headerlink" title="其它三个测试文件说明"></a>其它三个测试文件说明</h2><p>对于<code>test_neighbor_mac_noptf.py</code>，ptf作为dut的邻居，针对ipv4和ipv6两种场景，分别测试在DUT的redis中和arp表中能不能找到另据的arp entry。<br>对于<code>test_neighbor_mac.py</code>，ptf作为dut的邻居，使用相同的ip(ipv4)，映射两个不同的mac地址，分别测试这两个mac在redis中存不存在。<br>对于<code>test_wr_arp.py</code>测试热重启过程中的arp功能，首先在ptf上开启ferret server，之后让dut进入warm-reboot，在此过程中，ptf发送arp request，25秒内没有收到arp reply测试失败。</p>
 <h2 id="测试结果说明"><a href="#测试结果说明" class="headerlink" title="测试结果说明"></a>测试结果说明</h2><p>以<code>10.204.112.27:8080</code>上的<code>seastone-t0</code>为例说明，测试结果如下：</p>
-<p><img src="https://rancho333.gitee.io/pictures/testbed_wrarp_seastone.png"></p>
+<p><img src="https://rancho333.github.io/pictures/testbed_wrarp_seastone.png"></p>
 <p>可以看到<code>test_wr_arp.py</code>测试失败了，结果不符合预期。wr_arp首先在ptf host上开启ferret服务，之后在dut上启动warm-reboot程序，当dut处于warm-reboot阶段时，向其vlan成员发送arp请求报文，25秒内任一vlan成没有响应则测试失败。</p>
 <p>而在<code>seastone2-t0</code>上面，该项测试失败，但是原因不一样：</p>
-<p><img src="https://rancho333.gitee.io/pictures/testbed_wrarp_seastone2.png"><br>此处是没有获取到ptf宣告的ip，这个网段应该由zebra下发到kernel，src字段为dut的loopback。</p>
+<p><img src="https://rancho333.github.io/pictures/testbed_wrarp_seastone2.png"><br>此处是没有获取到ptf宣告的ip，这个网段应该由zebra下发到kernel，src字段为dut的loopback。</p>
 ]]></content>
       <tags>
         <tag>SONiC</tag>
@@ -1013,10 +1013,10 @@
   <entry>
     <title>SONiC中OSPF使用简述</title>
     <url>/2021/04/23/SONiC%E4%B8%ADOSPF%E4%BD%BF%E7%94%A8%E7%AE%80%E8%BF%B0/</url>
-    <content><![CDATA[<h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>承接上文<a href="https://rancho333.gitee.io/2021/04/08/SONiC%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/">SONiC路由协议简述</a>，这边文章记录SONiC上使能OSPF的过程。</p>
+    <content><![CDATA[<h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>承接上文<a href="https://rancho333.github.io/2021/04/08/SONiC%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/">SONiC路由协议简述</a>，这边文章记录SONiC上使能OSPF的过程。</p>
 <span id="more"></span>
 <h2 id="实验过程"><a href="#实验过程" class="headerlink" title="实验过程"></a>实验过程</h2><h3 id="拓扑说明"><a href="#拓扑说明" class="headerlink" title="拓扑说明"></a>拓扑说明</h3><p>拓扑图如下：</p>
-<p><img src="https://rancho333.gitee.io/pictures/ospf-topology.png"></p>
+<p><img src="https://rancho333.github.io/pictures/ospf-topology.png"></p>
 <p>实验预期：</p>
 <ol>
 <li>三台设备上能建立ospf邻居，完成LSDB交换，建立ospf路由</li>
@@ -1037,21 +1037,21 @@
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&quot;INTERFACE&quot;: &#123;              </span><br><span class="line">        &quot;Ethernet1|192.168.1.1&#x2F;24&quot;: &#123;&#125;,</span><br><span class="line">        &quot;Ethernet2|192.168.2.1&#x2F;24&quot;: &#123;&#125;                                                                                                                                                                                                                                                                               </span><br><span class="line">    &#125;,      </span><br></pre></td></tr></table></figure>
 
 <p>配置完成之后，在vty中可以看到使能了ospf的接口：</p>
-<p><img src="https://rancho333.gitee.io/pictures/ospf-interface.png"></p>
+<p><img src="https://rancho333.github.io/pictures/ospf-interface.png"></p>
 <p>注意将接口的mtu配置成1500或者在ospf中关闭mtu check。</p>
 <h3 id="配置ASIC"><a href="#配置ASIC" class="headerlink" title="配置ASIC"></a>配置ASIC</h3><p>SONiC中默认ospf报文不送CPU，这可能和各家的SDK初始化实现有关。在broadcom下我们需要做一些配置：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">fp qset add ipprotocol</span><br><span class="line">fp group create 20 21				    (20是优先级， 21是group-id)</span><br><span class="line">fp entry create 21 3000				    （3000是entry-id，这是一个全局的值，注意不能重叠）</span><br><span class="line">fp qual  3000 ipprotocol 89 0xffff		(指定copy-to-cpu的协议特征)</span><br><span class="line">fp action add 3000 CopyToCpu 0 0		（对匹配到特征的协议指定动作）</span><br><span class="line">fp entry install 3000					（使能配置）</span><br><span class="line">fp show entry 3000                        （验证配置）</span><br></pre></td></tr></table></figure>
 <p>应当在ASIC中看到使能的配置：</p>
-<p><img src="https://rancho333.gitee.io/pictures/ospf-asic.png"></p>
+<p><img src="https://rancho333.github.io/pictures/ospf-asic.png"></p>
 <p>sonic中提供了copp功能配置sdk下发这些报文上CPU等的控制操作，受当前实验版本限制暂不做这方面深入研究。</p>
 <h3 id="功能验证"><a href="#功能验证" class="headerlink" title="功能验证"></a>功能验证</h3><p>查看邻居状态：</p>
-<p><img src="https://rancho333.gitee.io/pictures/ospf-neighbour.png"></p>
+<p><img src="https://rancho333.github.io/pictures/ospf-neighbour.png"></p>
 <p>查看数据库信息：</p>
-<p><img src="https://rancho333.gitee.io/pictures/ospf-database.png"></p>
+<p><img src="https://rancho333.github.io/pictures/ospf-database.png"></p>
 <p>查看路由表：</p>
-<p><img src="https://rancho333.gitee.io/pictures/ospf-route.png"></p>
+<p><img src="https://rancho333.github.io/pictures/ospf-route.png"></p>
 <p>ping测试：</p>
-<p><img src="https://rancho333.gitee.io/pictures/ospf-ping.png"></p>
+<p><img src="https://rancho333.github.io/pictures/ospf-ping.png"></p>
 <h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>当前SONiC上ospf功能使能需要做三方面的配置：</p>
 <ol>
 <li>ospf自身，包括功能启用以及协议参数配置</li>
@@ -1115,7 +1115,7 @@
   <entry>
     <title>SONiC中Vxlan-decap测试用例简析</title>
     <url>/2021/04/28/SONiC%E4%B8%ADVxlan-decap%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B%E7%AE%80%E6%9E%90/</url>
-    <content><![CDATA[<h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>本文简要分析SONiC testbed中Vxlan decap测试用例的实现，作为对<a href="https://rancho333.gitee.io/2021/02/03/vxlan%E5%AD%A6%E4%B9%A0/">vxlan学习</a>的补充。</p>
+    <content><![CDATA[<h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>本文简要分析SONiC testbed中Vxlan decap测试用例的实现，作为对<a href="https://rancho333.github.io/2021/02/03/vxlan%E5%AD%A6%E4%B9%A0/">vxlan学习</a>的补充。</p>
 <span id="more"></span>
 
 <h2 id="背景简述"><a href="#背景简述" class="headerlink" title="背景简述"></a>背景简述</h2><p>Vxlan技术的本质是通过overlay实现一个vm无感知的大二层网络，一般用于数据中心，好处是vm迁移时可以保持IP不变（再辅以一些技术手段可以保持业务不中断）,换种方式说，vm可以在任意物理主机上实现和网关的二层互通。</p>
@@ -1128,7 +1128,7 @@
 <li>RegularLAGtoVLAN: 发送常规报文给portchannel接口，应该在对应的vlan接口上看到该报文。</li>
 <li>RegularVLANtoLAG: 发送常规报文给vlan成员接口，应该在portchannel接口上看到该报文。</li>
 </ol>
-<p><img src="https://rancho333.gitee.io/pictures/vxlan_tests.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vxlan_tests.png"></p>
 <h2 id="测试参数"><a href="#测试参数" class="headerlink" title="测试参数"></a>测试参数</h2><p>共有6个测试参数。</p>
 <ol>
 <li><code>config_file</code>是运行test所需要的所有必要信息。该文件由ansible构造生成。该参数不可缺省。</li>
@@ -1296,14 +1296,14 @@
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">$(addprefix $(DEST)&#x2F;, $(MAIN_TARGET)): $(DEST)&#x2F;% :                                       </span><br><span class="line">    pushd .&#x2F;src                     </span><br><span class="line">                                    </span><br><span class="line">    # Remove any stale data         </span><br><span class="line">    rm -rf .&#x2F;device                 </span><br><span class="line">                                    </span><br><span class="line">    # Create a new dir and copy all ONIE-platform-string-named dirs into it              </span><br><span class="line">    mkdir .&#x2F;device                  </span><br><span class="line">    cp -r -L ..&#x2F;..&#x2F;..&#x2F;device&#x2F;*&#x2F;* .&#x2F;device&#x2F;                                               </span><br><span class="line">                                    </span><br><span class="line">    # Create hwsku for virtual switch</span><br><span class="line">    for d in &#96;find -L ..&#x2F;..&#x2F;..&#x2F;device -maxdepth 3 -mindepth 3 -type d | grep -vE &quot;(plugins|led-code)&quot;&#96;; do \</span><br><span class="line">        cp -Lr $$d device&#x2F;x86_64-kvm_x86_64-r0&#x2F; ; \                                      </span><br><span class="line">        cp .&#x2F;sai.vs_profile device&#x2F;x86_64-kvm_x86_64-r0&#x2F;$$(basename $$d)&#x2F;sai.profile; \  </span><br><span class="line">        grep -v ^# device&#x2F;x86_64-kvm_x86_64-r0&#x2F;$$(basename $$d)&#x2F;port_config.ini | awk &#39;&#123;i&#x3D;i+1;print &quot;eth&quot;i&quot;:&quot;$$2&#125;&#39; &gt; device&#x2F;x86_64-kvm_x86_64-r0&#x2F;$$(basename $$d)&#x2F;lanemap.ini</span><br><span class="line">    done;                           </span><br><span class="line">                                    </span><br><span class="line">    # Build the package                                                                                                                                       </span><br><span class="line">    dpkg-buildpackage -rfakeroot -b -us -uc</span><br></pre></td></tr></table></figure>
 <p>在<code>src/sonic-device-data/src/Makefile</code>中有config和media的测试</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">test:</span><br><span class="line">    # Execute Broadcom config file test</span><br><span class="line">    pushd ..&#x2F;tests&#x2F;</span><br><span class="line">    for f in $$(find ..&#x2F;..&#x2F;..&#x2F;device -name &quot;*.config.bcm&quot;); do</span><br><span class="line">        .&#x2F;config_checker $$f</span><br><span class="line">    done</span><br><span class="line">    for f in $$(find ..&#x2F;..&#x2F;..&#x2F;device -name media_settings.json); do                                                                                           </span><br><span class="line">        .&#x2F;media_checker $$f</span><br><span class="line">    done</span><br><span class="line">    popd</span><br></pre></td></tr></table></figure>
-<p>使用<code>dpkg -X target/debs/stretch/sonic-device-data_1.0-1_all.deb</code>或者在<code>fsroot/usr/share/sonic/device/</code>目录下可以发现<code>device</code>相关的文件。这些文件与设备目录上<code>/usr/share/sonic/device/</code>的文件相对应。<br>在<code>sonic_debian_extension.sh</code>脚本中会将其释放到根文件系统中去。<br><img src="https://rancho333.gitee.io/pictures/device_data.png"><br>注意，在slave.mk中操作一下才能看到脚本，否则它做为中间文件，编译完成后会被自动删除。</p>
+<p>使用<code>dpkg -X target/debs/stretch/sonic-device-data_1.0-1_all.deb</code>或者在<code>fsroot/usr/share/sonic/device/</code>目录下可以发现<code>device</code>相关的文件。这些文件与设备目录上<code>/usr/share/sonic/device/</code>的文件相对应。<br>在<code>sonic_debian_extension.sh</code>脚本中会将其释放到根文件系统中去。<br><img src="https://rancho333.github.io/pictures/device_data.png"><br>注意，在slave.mk中操作一下才能看到脚本，否则它做为中间文件，编译完成后会被自动删除。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">-       $(if $($*_DOCKERS),</span><br><span class="line">-               rm sonic_debian_extension.sh,</span><br><span class="line">-       )</span><br><span class="line">+#      $(if $($*_DOCKERS),</span><br><span class="line">+#              rm sonic_debian_extension.sh,</span><br><span class="line">+#      )</span><br><span class="line"> </span><br><span class="line">        chmod a+x $@</span><br><span class="line">        $(FOOTER)</span><br></pre></td></tr></table></figure>
 
 <p>对于porting而言，可以修改Makefile中cmd的规则，只拷贝需要的device和只进行与之对应的test。</p>
 <h2 id="platform的编译"><a href="#platform的编译" class="headerlink" title="platform的编译"></a>platform的编译</h2><p><code>slave.mk</code>是SONiC项目真正的Makefile，所有的编译规则在里面可以找到，<code>platform</code>的入口在：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">ifneq ($(CONFIGURED_PLATFORM), undefined)</span><br><span class="line">include $(PLATFORM_PATH)&#x2F;rules.mk</span><br><span class="line">endif </span><br></pre></td></tr></table></figure>
 <p>我们在执行<code>make configure PLATFORM=platform</code>时会指定platform，从而找到对应的rules.mk。</p>
-<p><img src="https://rancho333.gitee.io/pictures/rules_mk.png"></p>
+<p><img src="https://rancho333.github.io/pictures/rules_mk.png"></p>
 <p>这里面关注三个文件</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">sai.mk                          # 指定SAI版本以及下载路径</span><br><span class="line">platform-modules-device.mk      # 指定设备platform源文件路径，编译打包成debian</span><br><span class="line">one-image.mk                    # 指定SONiC系统安装镜像名称</span><br></pre></td></tr></table></figure>
 <p>sai由ASIC厂商维护，作为设备厂商，我们直接使用即可。Makefile中通过指定url在编译时下载指定版本sai，对于此类重要的模块文件，可以将之缓存到本地，指定本地url进行使用。</p>
@@ -1313,9 +1313,9 @@
 <p>通过在<code>one-image.mk</code>中增删<code>**_PLATFORM_MODULE</code>可以选择将在<code>platform-modules-device.mk</code>中编译好的对应机型的deb包拷贝到文件系统中。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">diff --git a&#x2F;platform&#x2F;broadcom&#x2F;one-image.mk b&#x2F;platform&#x2F;broadcom&#x2F;one-image.mk</span><br><span class="line">index 8cbf7269..edc51460 100644</span><br><span class="line">--- a&#x2F;platform&#x2F;broadcom&#x2F;one-image.mk</span><br><span class="line">+++ b&#x2F;platform&#x2F;broadcom&#x2F;one-image.mk</span><br><span class="line">@@ -54,8 +54,8 @@ $(SONIC_ONE_IMAGE)_LAZY_INSTALLS +&#x3D; $(DELL_S6000_PLATFORM_MODULE) \</span><br><span class="line">                                $(ALPHANETWORKS_SNH60B0_640F_PLATFORM_MODULE) \</span><br><span class="line">                                $(BRCM_XLR_GTS_PLATFORM_MODULE) \</span><br><span class="line">                                $(DELTA_AG9032V2A_PLATFORM_MODULE) \</span><br><span class="line">-                               $(JUNIPER_QFX5210_PLATFORM_MODULE) \</span><br><span class="line">-                               $(CEL_SILVERSTONE_PLATFORM_MODULE)</span><br><span class="line">+                               #$(JUNIPER_QFX5210_PLATFORM_MODULE) \</span><br><span class="line">+                               #$(CEL_SILVERSTONE_PLATFORM_MODULE)</span><br></pre></td></tr></table></figure>
 
-<p>对于打包好的platform文件，会在<code>sonic_debian_extension.sh</code>中拷贝到文件系统中去<br><img src="https://rancho333.gitee.io/pictures/platform_module.png"></p>
+<p>对于打包好的platform文件，会在<code>sonic_debian_extension.sh</code>中拷贝到文件系统中去<br><img src="https://rancho333.github.io/pictures/platform_module.png"></p>
 <p>上面这张图片上就是裁剪过后只会拷贝<code>cel-b3010</code>这一款机型的platform。有兴趣的同学可以研究下是如何实现的。</p>
-<p>在SONiC的安装镜像第一次启动时，会在<code>rc.local</code>中将其释放到文件系统中去.<br><img src="https://rancho333.gitee.io/pictures/platform_module_2.png"></p>
+<p>在SONiC的安装镜像第一次启动时，会在<code>rc.local</code>中将其释放到文件系统中去.<br><img src="https://rancho333.github.io/pictures/platform_module_2.png"></p>
 <p>对于<code>platform-modules-*_amd64.deb</code>，里面包含了device的驱动，会在systemd中添加服务完成驱动的加载。这个deb的生成规则参见<code>platform/broadcom/sonic-platform-modules-cel/debian/</code>，主要修改如下几个文件：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">rules</span><br><span class="line">control</span><br></pre></td></tr></table></figure>
 <p>以及添加</p>
@@ -1455,7 +1455,7 @@
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">[rancho sonic-buildimage]$ make list | grep frr</span><br><span class="line">&quot;ROUTING_STACK&quot;                   : &quot;frr&quot;</span><br><span class="line">target&#x2F;debs&#x2F;stretch&#x2F;frr_7.2.1-sonic-0_amd64.deb</span><br><span class="line">target&#x2F;debs&#x2F;stretch&#x2F;frr-pythontools_7.2.1-sonic-0_all.deb</span><br><span class="line">target&#x2F;debs&#x2F;stretch&#x2F;frr-dbgsym_7.2.1-sonic-0_amd64.deb</span><br><span class="line">target&#x2F;debs&#x2F;stretch&#x2F;frr-snmp_7.2.1-sonic-0_amd64.deb</span><br><span class="line">target&#x2F;debs&#x2F;stretch&#x2F;frr-snmp-dbgsym_7.2.1-sonic-0_amd64.deb</span><br><span class="line">target&#x2F;docker-fpm-frr.gz</span><br><span class="line">target&#x2F;docker-fpm-frr-dbg.gz</span><br></pre></td></tr></table></figure>
 
 <h2 id="SONiC中路由模块的交互"><a href="#SONiC中路由模块的交互" class="headerlink" title="SONiC中路由模块的交互"></a>SONiC中路由模块的交互</h2><p>SONiC中路由模块交互如下图所示：</p>
-<p><img src="https://rancho333.gitee.io/pictures/frr-sonic.png"> </p>
+<p><img src="https://rancho333.github.io/pictures/frr-sonic.png"> </p>
 <ol>
 <li>在BGP容器初始化时， zebra通过TCP socket连接到<code>fpmsyncd</code>。在稳定状态下，zebra、linux kernel、APPL_DB、ASIC_DB、ASIC中的路由表应该是完全一致的。<br>这里做一点说明，OSPF、BGP等路由进程会将自己选择出的路由发送给zebra，zebra通过计算筛选之后会通过netlink将之同步给kernel，同时zebra通过FPM(forwarding plane manger)将之同步给ASIC。zebra中运行FPM client，通过TCP socket与FPM server进行通信。FPM client端代码如下：<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">    <span class="comment">//zebra_fpm.c</span></span><br><span class="line">    serv.sin_family = AF_INET;</span><br><span class="line">    serv.sin_port = htons(zfpm_g-&gt;fpm_port);                    <span class="comment">//fpm默认使用2620端口</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> HAVE_STRUCT_SOCKADDR_IN_SIN_LEN</span></span><br><span class="line">    serv.sin_len = <span class="keyword">sizeof</span>(struct sockaddr_in);                                     </span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span> <span class="comment">/* HAVE_STRUCT_SOCKADDR_IN_SIN_LEN */</span></span></span><br><span class="line">    <span class="keyword">if</span> (!zfpm_g-&gt;fpm_server)</span><br><span class="line">        serv.sin_addr.s_addr = htonl(INADDR_LOOPBACK);          <span class="comment">//FPM server一般部署在本机上</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        serv.sin_addr.s_addr = (zfpm_g-&gt;fpm_server);</span><br></pre></td></tr></table></figure></li>
 </ol>
@@ -1465,7 +1465,7 @@
 </li>
 <li><p>zebra根据自身的计算策略过滤该路由，如果通过zebra则生成route-netlink信息将路由信息发送给kernel</p>
 </li>
-<li><p>同时，zebra通过FPM接口将route-netlink信息发送给<code>fpmsyncd</code>，2,3,4的大致流程参见下图：<br><img src="https://rancho333.gitee.io/pictures/frr-bgpd.png"> </p>
+<li><p>同时，zebra通过FPM接口将route-netlink信息发送给<code>fpmsyncd</code>，2,3,4的大致流程参见下图：<br><img src="https://rancho333.github.io/pictures/frr-bgpd.png"> </p>
 </li>
 <li><p>Fpmsyncd处理该信息并将之放入<code>APPL_DB</code><br>SONiC中FPM server在<code>fpmsyncd</code>中实现，源码在<code>sonic-swss</code>中：</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//fpmsyncd.cpp  连接redis APPL_DB</span></span><br><span class="line"><span class="function">DBConnector <span class="title">db</span><span class="params">(<span class="string">&quot;APPL_DB&quot;</span>, <span class="number">0</span>)</span></span>; </span><br><span class="line"><span class="function">RedisPipeline <span class="title">pipeline</span><span class="params">(&amp;db)</span></span>;</span><br><span class="line"><span class="function">RouteSync <span class="title">sync</span><span class="params">(&amp;pipeline)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//fpmlink.cpp  创建socket，做为FPM server</span></span><br><span class="line">addr.sin_family = AF_INET;                          </span><br><span class="line">addr.sin_port = htons(port);                        <span class="comment">//port为2620, 在fpm/fpm.h中定义</span></span><br><span class="line">addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);      <span class="comment">//部署在本地</span></span><br></pre></td></tr></table></figure></li>
@@ -1486,20 +1486,20 @@
 </li>
 </ol>
 <p>FRR与SONiC的完整交互流程图示如下：</p>
-<p><img src="https://rancho333.gitee.io/pictures/route-flow.png"></p>
+<p><img src="https://rancho333.github.io/pictures/route-flow.png"></p>
 <h2 id="静态路由的实现"><a href="#静态路由的实现" class="headerlink" title="静态路由的实现"></a>静态路由的实现</h2><p>基于以上的SONiC路由实现流程，我们可以实现一个<code>FPM client</code>，按照ZAPI的格式封装netlink路由数据发送给<code>fpmsyncd</code>，之后在各个数据中转节点验证路由是否按设定的流程转发最终生效到ASIC。这样可以脱离<code>FRR</code>的协议栈逻辑，只借用FPM模块。</p>
 <p>当然，我们可以直接通过FRR的配置文件或者<code>vtysh</code>来下发静态路由，有一个进程<code>staticd</code>用来处理静态路由。<br>路由下发的命令：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">ip route 192.168.2.0&#x2F;24 PortChannel0001</span><br></pre></td></tr></table></figure>
 <p>验证一下命令是否生效：</p>
-<p><img src="https://rancho333.gitee.io/pictures/show-ip-route.png"></p>
+<p><img src="https://rancho333.github.io/pictures/show-ip-route.png"></p>
 <p>看下在kernel中是否生效：</p>
-<p><img src="https://rancho333.gitee.io/pictures/ip-route-show.png"></p>
+<p><img src="https://rancho333.github.io/pictures/ip-route-show.png"></p>
 <p>查看是否同步到<code>APPL_DB</code>中：</p>
-<p><img src="https://rancho333.gitee.io/pictures/appl-db.png"></p>
+<p><img src="https://rancho333.github.io/pictures/appl-db.png"></p>
 <p>查看是否同步到<code>ASIC_DB</code>中：</p>
-<p><img src="https://rancho333.gitee.io/pictures/asic-db.png"></p>
+<p><img src="https://rancho333.github.io/pictures/asic-db.png"></p>
 <p>查看是否下发到<code>ASIC</code>中：</p>
-<p><img src="https://rancho333.gitee.io/pictures/asic-route.png"></p>
+<p><img src="https://rancho333.github.io/pictures/asic-route.png"></p>
 <p>可以看到路由信息按照<code>SONiC中路由模块的交互</code>中描述的进行处理下发。</p>
 <h2 id="对于单播-OSPF、RIP-以及组播-PIM-的支持"><a href="#对于单播-OSPF、RIP-以及组播-PIM-的支持" class="headerlink" title="对于单播(OSPF、RIP)以及组播(PIM)的支持"></a>对于单播(OSPF、RIP)以及组播(PIM)的支持</h2><p>对于支持上述协议，需要回答几个问题：</p>
 <ol>
@@ -1508,7 +1508,7 @@
 <li>控制面信息如何生效到转发面 (协议栈控制信息同步到kernel与ASIC)</li>
 </ol>
 <p>SONiC默认只启动了<code>bgpd</code>和<code>staticd</code>这两个路由进程，尝试手动开启<code>ospf</code>、<code>rip</code>、<code>pim</code>并为发现异常：</p>
-<p><img src="https://rancho333.gitee.io/pictures/frr-routes.png"></p>
+<p><img src="https://rancho333.github.io/pictures/frr-routes.png"></p>
 <p>SONIC本身并未对FRR做什么修改，只是增加了一个FPM server模块，整个路由通路是没有问题的，理论上是<em>完全可以支持FRR中的其它路由协议</em>的，很好奇为什么微软不顺手把这些做了？<br>难道是因为数据中心中只要BGP+ECMP+VxLAN?</p>
 <p>下面做一个工作量的评估（基于单个协议）</p>
 <ol>
@@ -1517,7 +1517,7 @@
 <li><p>OSPF、PIM基于IP，使用protocol创建socket与keenel进行通信，RIP基于UDP，BGP基于TCP。ospf创建socket如下：</p>
 </li>
 </ol>
-<p><img src="https://rancho333.gitee.io/pictures/ospf-sock.png"><br>控制报文调试1周，这玩意要是顺利应该就几分钟，大概率没啥问题。</p>
+<p><img src="https://rancho333.github.io/pictures/ospf-sock.png"><br>控制报文调试1周，这玩意要是顺利应该就几分钟，大概率没啥问题。</p>
 <ol start="3">
 <li><p>看代码，了解协议状态机，了解常见的测试拓扑，搭建测试拓扑，生成路由信息，2周</p>
 </li>
@@ -1664,7 +1664,7 @@
 <li>如果1,2,3,4一致，receiver PID最优的为superior BPDU<br>STP中涉及到参数比较的都是数值越小优先级越高，BID和PID类似，都是先比较优先级，如果优先级一致，再比较mac地址或端口号。与之相对不满足上述条件的则成为<code>inferior BPDU</code>。</li>
 </ol>
 <p>此外需要知道一个细节，端口会存储最近收到的superior BPDU(加上该端口的cost)，并对他进行老化，老化时间为max_age-message_age。典型场景是AP收不到superior BPDU, 20秒后老化变成DP，这样可以保证超时信息从拓扑中移除。只有RP和AP上会存储superior BPDU, DP只负责转发。</p>
-<h1 id="STP的选举流程"><a href="#STP的选举流程" class="headerlink" title="STP的选举流程"></a>STP的选举流程</h1><p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/stp_election.png?raw=true"></p>
+<h1 id="STP的选举流程"><a href="#STP的选举流程" class="headerlink" title="STP的选举流程"></a>STP的选举流程</h1><p><img src="https://rancho333.github.io/pictures/stp_election.png"></p>
 <ol>
 <li><p>根桥的选举<br>刚开始时，所有的交换机认为自己是根桥，所有端口都是DP(listening)，将<code>root id</code>和<code>bridge id</code>字段都填充自己的BID向外发送(组播)，经过一段时间收敛后，BID最优的被选成根桥。本质就是不同交换机之间BPDU的比较，根桥的BPDU为superior BPDU.根桥选定之后，只有根桥向外发送配置BPDU，其它交换机只负责接收和转发，端口都是DP(listening).<br>如图所示，S1的BID优先级最小，选举成为根桥。</p>
 </li>
@@ -1684,7 +1684,7 @@
 <h1 id="STP拓扑变化带来的问题"><a href="#STP拓扑变化带来的问题" class="headerlink" title="STP拓扑变化带来的问题"></a>STP拓扑变化带来的问题</h1><p>L2依据Mac地址表进行转发，拓扑变换可能导致Mac地址表失效. 当stp收敛之后，虽然会重新学习到正确的mac地址，但是会耗费相当多的时间，特别是当某条mac地址不存在或超时时间恰好是最大值(默认300秒). 为此，当拓扑变化时，通过TCN BPDU通知根桥，根桥通过TCN ACK BPDU通知所有交换机，收到此报文的交换机将mac地址表超时改成forward_time，发送TCN BPDU的交换机收到ACK后会停止发送TCN.</p>
 <p>缩短mac地址的老化时间会使拓扑不稳定，会存在泛洪流量，当大量拓扑发生改变时，这种情况是很危险的。RSTP中也有这个问题。</p>
 <h1 id="STP收敛的几个优化配置"><a href="#STP收敛的几个优化配置" class="headerlink" title="STP收敛的几个优化配置"></a>STP收敛的几个优化配置</h1><p>思科设备上提供了几种优化配置来减少收敛时间, 降低不必要的mac地址表刷新。</p>
-<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/stp_convergence.png?raw=true"></p>
+<p><img src="https://rancho333.github.io/pictures/stp_convergence.png"></p>
 <p><code>portfast</code>在edge port上开启，当端口状态发生变化时，不会发送TCN BPDU，避免刷新MAC地址表，端口可以直接从block状态变成forwarding状态，不需要等待30秒。开启命令如下</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Switch(config-if)#spanning-tree portfast edge	 &#x2F;&#x2F; 在eth2上开启portfast</span><br></pre></td></tr></table></figure>
 <p>如上图，在eth2上开启portfast后，eth2会直接变成forwarding状态，并且不会发送TCN报文。</p>
@@ -1799,10 +1799,10 @@
 
 
 <h2 id="使用需求简述"><a href="#使用需求简述" class="headerlink" title="使用需求简述"></a>使用需求简述</h2><p>很多情况下，组播报文要不可避免的经过一些二层交换设备，尤其是在局域网环境里。如下图：</p>
-<p><img src="https://rancho333.gitee.io/pictures/environment.png"></p>
+<p><img src="https://rancho333.github.io/pictures/environment.png"></p>
 <p>上图中switch会将组播报文当做广播在vlan内进行flood，这是因为组播报文的目的地址为组播地址，在二层设备上学习不到这一类的MAC表项，这样不但浪费网络带宽，而且影响网络信息安全。配置igsp后，二层组播设备可以侦听和分析组播用户和上游路由器之间的IGMP报文，根据这些信息建立二层组播转发表项，控制组播数据报文的转发。</p>
-<h2 id="IGSP基本原理"><a href="#IGSP基本原理" class="headerlink" title="IGSP基本原理"></a>IGSP基本原理</h2><p>IGSP是二层组播的基本功能，可以实现组播数据在链路层的转发和控制。当主机和上游三层设备之间传递IGMP协议报文通过二层组播设备时，IGSP分析报文携带的信息，根据这些信息建立和维护组播转发表，从而指导组播数据在数据链路层按需转发。<br><img src="https://rancho333.gitee.io/pictures/mc_data.png"></p>
-<h2 id="IGSP相关概念"><a href="#IGSP相关概念" class="headerlink" title="IGSP相关概念"></a>IGSP相关概念</h2><p><img src="https://rancho333.gitee.io/pictures/concept.png"><br>如上图所示，三层设备router从组播源接收数据并向下游转发，在二层组播涉笔Switch A和Switch B上分别运行IGSP，Host A,B,C为组播成员。下面说下IGSP中的几个重要概念。</p>
+<h2 id="IGSP基本原理"><a href="#IGSP基本原理" class="headerlink" title="IGSP基本原理"></a>IGSP基本原理</h2><p>IGSP是二层组播的基本功能，可以实现组播数据在链路层的转发和控制。当主机和上游三层设备之间传递IGMP协议报文通过二层组播设备时，IGSP分析报文携带的信息，根据这些信息建立和维护组播转发表，从而指导组播数据在数据链路层按需转发。<br><img src="https://rancho333.github.io/pictures/mc_data.png"></p>
+<h2 id="IGSP相关概念"><a href="#IGSP相关概念" class="headerlink" title="IGSP相关概念"></a>IGSP相关概念</h2><p><img src="https://rancho333.github.io/pictures/concept.png"><br>如上图所示，三层设备router从组播源接收数据并向下游转发，在二层组播涉笔Switch A和Switch B上分别运行IGSP，Host A,B,C为组播成员。下面说下IGSP中的几个重要概念。</p>
 <ul>
 <li><p>路由器端口（Router Port）<br>如Switch A和Switch B上蓝色圆圈表示的接口。<br>路由器端口指二层组播设备上 <em><strong>朝向</strong></em> 组播路由器的接口。二层组播设备从该接口接受IGMP和PIM协议报文以及组播数据报文。<br>由协议生成的路由器端口叫做动态路由器端口，手动配置的路由器端口叫做静态路由器端口。<br>收到源地址不为0.0.0.0的IGMP普遍组查询报文或PIM Hello报文的接口都被视为动态路由器端口（呃，ENOS中IGSP貌似没有处理PIM报文的地方）。</p>
 </li>
@@ -1876,8 +1876,8 @@
 <li>各子目录下的Makefile，如drivers下的，负责所在子目录下源代码的管理</li>
 <li>Rules.make：规则文件，被所有的Makefile使用</li>
 </ol>
-<p>用户通过make config后，这里实际就是收集各目录下的Kconfig/deconfig文件生成配置界面，供用户进行功能选择，最后产生<code>.config</code>，如果.config文件存在，则是直接通过.config生成配置界面。顶层Makefile读入.config中的配置选择进行具体模块的编译。顶层Makefiel中会包含具体arch的Makefile<br><img src="https://rancho333.gitee.io/pictures/arch.png"><br>Rules.make其实就是不同模块之间会共用到的Makefile规则。</p>
-<p>在ENOS中，系统架构人员将生成好的ARCH的config文件存放ARCH的目录下，上层开发人员编译时直接使用指定的config文件编译即可。<br><img src="https://rancho333.gitee.io/pictures/config.png"><br>之后在指定的<code>O</code>目录下会生成编译过程中生成的文件，这样可以避免污染源码（make clean不能清除么），或者是更便于管理和模块化考虑。<br>如果需要进行kernel的二次配置，需要到<code>O</code>目录下去执行make menuconfig，之后将重新生成的<code>.config</code>拷回<code>ARCH</code>目录覆盖之前的配置文件。这是基于ARCH缺省配置的一种应用，在向内核代码增加了新的功能后，如果新功能对于这个ARCH是必需的，就需要修改此ARCH的缺省配置，修改方法如下：</p>
+<p>用户通过make config后，这里实际就是收集各目录下的Kconfig/deconfig文件生成配置界面，供用户进行功能选择，最后产生<code>.config</code>，如果.config文件存在，则是直接通过.config生成配置界面。顶层Makefile读入.config中的配置选择进行具体模块的编译。顶层Makefiel中会包含具体arch的Makefile<br><img src="https://rancho333.github.io/pictures/arch.png"><br>Rules.make其实就是不同模块之间会共用到的Makefile规则。</p>
+<p>在ENOS中，系统架构人员将生成好的ARCH的config文件存放ARCH的目录下，上层开发人员编译时直接使用指定的config文件编译即可。<br><img src="https://rancho333.github.io/pictures/config.png"><br>之后在指定的<code>O</code>目录下会生成编译过程中生成的文件，这样可以避免污染源码（make clean不能清除么），或者是更便于管理和模块化考虑。<br>如果需要进行kernel的二次配置，需要到<code>O</code>目录下去执行make menuconfig，之后将重新生成的<code>.config</code>拷回<code>ARCH</code>目录覆盖之前的配置文件。这是基于ARCH缺省配置的一种应用，在向内核代码增加了新的功能后，如果新功能对于这个ARCH是必需的，就需要修改此ARCH的缺省配置，修改方法如下：</p>
 <ol>
 <li>备份.config文件</li>
 <li>cp arch/arm/deconfig .config</li>
@@ -1891,7 +1891,7 @@
 <li><code>m</code> 表示本编译选项对应的内核代码被编译成模块</li>
 <li><code>n</code>表示不选择此编译选项<br>如果根本没有选择某模块，该模块是被注释掉的</li>
 </ol>
-<h1 id="vmlinux-uImage-Image的关系或区别"><a href="#vmlinux-uImage-Image的关系或区别" class="headerlink" title="vmlinux,uImage,Image的关系或区别"></a>vmlinux,uImage,Image的关系或区别</h1><p>Linux内核有多种格式的镜像，包括vmlinux、Image、zImage、bzImage、uImage、xipImage、bootpImage等。<br>vmlinux是编译出来的最原始的内核文件，未经压缩，vm代表virtual memory Linux支持虚拟内存；<br>Image是经过objcopy处理的只包含二进制数据的内核代码，未经压缩，不是elf格式；objcopy的实质是将所有的符号和 重定位信息都抛弃，只剩下二进制数据。<br>zImage是vmlinux加上解压代码经gzip压缩而成，是ARM linux常用的一种压缩镜像文件。这种格式的Linux镜像多存放在NAND上。bzImage与之类似，只不过是采用了压缩率更高的算法。<br>uImage是uboot专用的镜像文件，它是在zImage之前加上一个长度为0x40的tag，里面包含了镜像文件的类型、加载位置、生成时间、大小等信息。通过mkimage命令可以制作uImage。<br>xipImage多放在NorFlash上直接运行。<br>这里只是一些简单的描述，有待在今后的项目中去加深理解各种格式的使用，存在肯定是有其对应的使用场景的！<br><img src="https://rancho333.gitee.io/pictures/vmlinux.png"></p>
+<h1 id="vmlinux-uImage-Image的关系或区别"><a href="#vmlinux-uImage-Image的关系或区别" class="headerlink" title="vmlinux,uImage,Image的关系或区别"></a>vmlinux,uImage,Image的关系或区别</h1><p>Linux内核有多种格式的镜像，包括vmlinux、Image、zImage、bzImage、uImage、xipImage、bootpImage等。<br>vmlinux是编译出来的最原始的内核文件，未经压缩，vm代表virtual memory Linux支持虚拟内存；<br>Image是经过objcopy处理的只包含二进制数据的内核代码，未经压缩，不是elf格式；objcopy的实质是将所有的符号和 重定位信息都抛弃，只剩下二进制数据。<br>zImage是vmlinux加上解压代码经gzip压缩而成，是ARM linux常用的一种压缩镜像文件。这种格式的Linux镜像多存放在NAND上。bzImage与之类似，只不过是采用了压缩率更高的算法。<br>uImage是uboot专用的镜像文件，它是在zImage之前加上一个长度为0x40的tag，里面包含了镜像文件的类型、加载位置、生成时间、大小等信息。通过mkimage命令可以制作uImage。<br>xipImage多放在NorFlash上直接运行。<br>这里只是一些简单的描述，有待在今后的项目中去加深理解各种格式的使用，存在肯定是有其对应的使用场景的！<br><img src="https://rancho333.github.io/pictures/vmlinux.png"></p>
 <h1 id="对于文件系统的一点理解"><a href="#对于文件系统的一点理解" class="headerlink" title="对于文件系统的一点理解"></a>对于文件系统的一点理解</h1><p>加在这里可能不是很符合这篇文章的主题！<br>Linux下一切皆文件。Linux系统中任何文件系统的挂载必须满足两个条件：挂载点和文件系统。rootfs之所以存在，是因为需要在VFS机制下给系统提供最原始的挂载点。<br>rootfs其实就是文件系统顶层的<code>/</code>，使用pwd命令后看到的第一个字符，它有三个特点：</p>
 <ol>
 <li>它是系统自己创建并加载的第一个文件系统，是Linux内核自己创建的，并不是我们常说的外部根文件系统，将外部根文件系统解压或者说挂载到<code>/</code>后就是用户能看到的Linux文件系统，里面有很多的文件夹，如’etc’、’bin’等。<em>不能被unmount或者删除</em>，通过<code>cat /proc/mounts</code>也可以看出。下述的rootfs特指<code>/</code></li>
@@ -1904,14 +1904,14 @@
 <li>他只是一个zip压缩的文件系统，而不是cpio文件</li>
 <li>initrd中的/initrd程序只是做一些setup操作并最后返回到kernel中执行，而initramfs中的/init执行完后不返回到kernel</li>
 </ol>
-<p>对于initramfs，也就是系统移植时需要制作的文件系统。它存在于两处，一种是内核编译后自动生成的内部initramfs(在/usr目录下)，另一种是用户自己制作的，通过cmdline将地址传递给kernel的外部initramfs<br>对于内部initramfs，这个文件系统里面实际上啥也没有：<br><img src="https://rancho333.gitee.io/pictures/initramfs_kernel.png"><br>rootfs挂载之后，首先会先释放这个内部的initramfs到rootfs（很显然啥也干不了！<em>没搞清楚为什么会存在，但肯定有原因！</em>）,然后kernel会尝试在rootfs中寻找/init，一旦找到就执行init，kernel也就完成了启动工作，之后init就会接管接下来的工作。如果kernel找不到，就会去找外部initramfs然后释放（uboot下通过initrd参数指定位置）或者按照标准做法解析参数<code>root=</code>（这里面是解压好到某个介质分区的文件系统），试图找到一个文件系统并挂载到rootfs，之后就init。</p>
+<p>对于initramfs，也就是系统移植时需要制作的文件系统。它存在于两处，一种是内核编译后自动生成的内部initramfs(在/usr目录下)，另一种是用户自己制作的，通过cmdline将地址传递给kernel的外部initramfs<br>对于内部initramfs，这个文件系统里面实际上啥也没有：<br><img src="https://rancho333.github.io/pictures/initramfs_kernel.png"><br>rootfs挂载之后，首先会先释放这个内部的initramfs到rootfs（很显然啥也干不了！<em>没搞清楚为什么会存在，但肯定有原因！</em>）,然后kernel会尝试在rootfs中寻找/init，一旦找到就执行init，kernel也就完成了启动工作，之后init就会接管接下来的工作。如果kernel找不到，就会去找外部initramfs然后释放（uboot下通过initrd参数指定位置）或者按照标准做法解析参数<code>root=</code>（这里面是解压好到某个介质分区的文件系统），试图找到一个文件系统并挂载到rootfs，之后就init。</p>
 <p>所以我们实际使用的肯定是外部文件系统了，对于外部的文件系统，我们可以通过不同的方法将它挂载到rootfs。</p>
 <ol>
 <li>制作一个独立的cpio.lzma包，然后告诉bootloader它的地址，通过cmdline将参数传递给kernel</li>
 <li>制作一个独立的包，通过mkimge(只针对于uboot)将kernel+initramfs+dtb打包成一个文件，在uboot下启动（实验过可行）</li>
 <li>用外部的initramfs替换kernel自动生成的initramfs，有两种方法：<ol>
 <li>先编译kernel，让它生成内部intramfs，然后制作外部initramfs，拷贝替换掉，最后重新编译内核。外部initramfs就会和kernel编成一个文件。ENOS里面使用的是这种方法。</li>
-<li>使用内核编译选项CONFIG_INITRAMFS_SOURCE指定根文件系统路径，即kernel会根据给定的文件生成内部initramfs，这里面又有集中不同的给定方式，这里不表。<br><img src="https://rancho333.gitee.io/pictures/kernel_initramfs.png"><br>外部initramfs替换内部initramfs之后，kernel会在第一时间找到/init,所以<code>root=，initrd=</code>这些参数都不会起作用了。</li>
+<li>使用内核编译选项CONFIG_INITRAMFS_SOURCE指定根文件系统路径，即kernel会根据给定的文件生成内部initramfs，这里面又有集中不同的给定方式，这里不表。<br><img src="https://rancho333.github.io/pictures/kernel_initramfs.png"><br>外部initramfs替换内部initramfs之后，kernel会在第一时间找到/init,所以<code>root=，initrd=</code>这些参数都不会起作用了。</li>
 </ol>
 </li>
 </ol>
@@ -1928,7 +1928,7 @@
 <span id="more"></span>
 <h1 id="概念说明"><a href="#概念说明" class="headerlink" title="概念说明"></a>概念说明</h1><h2 id="转发等价类"><a href="#转发等价类" class="headerlink" title="转发等价类"></a>转发等价类</h2><p>MPLS作为一种分类转发技术，将具有相同转发处理方式的分组归位一类，称为FEC(forwarding equivalence class，转发等价类)。相同FEC的分组在MPLS中将获得完全相同的处理。<br>FEC的划分方式非常灵活，可以是源地址、目的地址、源端口、目的端口、协议类型或VPN等为划分依据的任意组合。例如，在传统的采用最长匹配算法的IP转发中，到同一个目的地址的所有报文就是一个FEC。</p>
 <h2 id="标签"><a href="#标签" class="headerlink" title="标签"></a>标签</h2><p>标签是一个长度固定，仅具有本地意义的短标识符，用于唯一标识一个分组所属的FEC。一个标签只能代表一个FEC。标签长度为4个字节，结构如下：</p>
-<p><img src="https://rancho333.gitee.io/pictures/mpls_packet.png"></p>
+<p><img src="https://rancho333.github.io/pictures/mpls_packet.png"></p>
 <p>字段解释如下：</p>
 <table>
 <thead>
@@ -1955,10 +1955,10 @@
 </tr>
 </tbody></table>
 <p>如果链路层协议具有标签域，如ATM的VPI/VCI,则标签封装在这些域中；否则，标签封装在链路层头和网络层数据之间的一个垫层。这样，任意链路层都能够支持标签。下图是标签在分组中的封装位置。</p>
-<p><img src="https://rancho333.gitee.io/pictures/mpls_packet_location.png"></p>
+<p><img src="https://rancho333.github.io/pictures/mpls_packet_location.png"></p>
 <h2 id="标签交换路由器"><a href="#标签交换路由器" class="headerlink" title="标签交换路由器"></a>标签交换路由器</h2><p>LSR(label switching router,标签交换路由器)是MPLS网络中的基本单元，所有LSR都支持MPLS技术。</p>
 <h2 id="标签交换路径"><a href="#标签交换路径" class="headerlink" title="标签交换路径"></a>标签交换路径</h2><p>一个转发等价类在MPLS网络中经过的路径称为LSP(label switched path，标签交换路径)。在一条LSP上，沿数据传送的方向，相邻的LSR分别称为上游LSR和下游LSR。如下图所示，R2是R1的下游LSR，相应的R1是R2的上有LSR。</p>
-<p><img src="https://rancho333.gitee.io/pictures/mpls_lsr.png"><br>LSP在功能上与ATM和帧中继(frame relay)的虚电路相同，是从MPLS网络的入口到出口的一个单向路径，LSP中的每个节点由LSR组成。</p>
+<p><img src="https://rancho333.github.io/pictures/mpls_lsr.png"><br>LSP在功能上与ATM和帧中继(frame relay)的虚电路相同，是从MPLS网络的入口到出口的一个单向路径，LSP中的每个节点由LSR组成。</p>
 <h2 id="标签分发协议"><a href="#标签分发协议" class="headerlink" title="标签分发协议"></a>标签分发协议</h2><p>LDP(label distribution protocol，标签分发协议)是MPLS的控制协议，它相当于传统网络中的信令协议，负责FEC的分类、标签的分配以及LSP的建立和维护等一系列操作。MPLS可以使用多种标签发布协议，包括专为标签发布而制定的协议，例如：LDP、CR-LDP(constraint-based routing using LDP,基于约束路由的LDP)；也包括现有协议扩展后支持标签发布的，例如：BGP、RSVP(resource reservation protocol，资源预留协议)。同时，还可以手工配置静态LSP。<br>LDP有两个重要的作用：</p>
 <ol>
 <li>给本地路由信息分配标签，进行绑定生成LIB表</li>
@@ -1967,7 +1967,7 @@
 <h2 id="LSP隧道技术"><a href="#LSP隧道技术" class="headerlink" title="LSP隧道技术"></a>LSP隧道技术</h2><p>MPLS支持LSP隧道技术。一条LSP的上游LSR和下游LSR，尽管他们之间的路径可能并不在路由协议所提供的路径上，但MPLS允许在他们之间建立一条新的LSP，这样，上游LSR和下游LSR分别就是这条LSP的起点和终点。这时，上游LSR和下游LSR间就是LSP隧道，它避免了采用传统的网络层封装隧道。如上图中LSP <code>R2-&gt;R21-&gt;R22-&gt;R3</code>就是R2、R3间的一条隧道。如果隧道经由的路由与逐跳从路由协议中取得的路由一致，这种隧道就称为逐跳路由隧道(Hop by Hop routed tunnel)，否则称为显示路由隧道(explicitly routed tunnel)。</p>
 <h2 id="多层标签栈"><a href="#多层标签栈" class="headerlink" title="多层标签栈"></a>多层标签栈</h2><p>如果分组在超过一层的LSP隧道中传送，就会有多层标签，形成标签栈(label stack)。在每一隧道的入口和出口，进行标签的入栈(push)和出栈(pop)操作。标签按照<code>后进先出</code>(last-in-first-out)方式组织标签，MPLS从栈顶开始处理标签。<br>MPLS对标签栈的深度没有限制，若一个分组的标签深度为m，则位于栈底的标签为1级标签，位于栈顶的标签为m级标签。未压入标签的分组可看作标签栈为空(即标签栈深度为0)的分组。</p>
 <h1 id="MPLS体系结构"><a href="#MPLS体系结构" class="headerlink" title="MPLS体系结构"></a>MPLS体系结构</h1><h2 id="MPLS网络结构"><a href="#MPLS网络结构" class="headerlink" title="MPLS网络结构"></a>MPLS网络结构</h2><p>如下图所示，MPLS网络的基本构成单元是LSR，由LSR构成的网络称为MPLS域。位于MPLS域边缘、连接其它用户网络的LSR称为LER(label edge router, 边缘LSR)，区域内部的LSR称为核心LSR。核心LSR可以是支持MPLS的路由器，也可以是由ATM交换机等升级而成的ATM-LSR。域内部的LSR之间使用MPLS通信，MPLS域的边缘由LER与传统IP技术进行适配。<br>分组在入口LER被压入标签后，沿着由一系列LSR构成的LSP传送，其中，入口LER被称为ingress，出口LER被称为egress，中间的节点则称为transit。</p>
-<p><img src="https://rancho333.gitee.io/pictures/mpls_network.png"><br>结合上图简要介绍MPLS基本工作过程：</p>
+<p><img src="https://rancho333.github.io/pictures/mpls_network.png"><br>结合上图简要介绍MPLS基本工作过程：</p>
 <ol>
 <li>首先，LDP和传统路由协议(如OSPF、ISIS等)一起，在各个LSR中为有业务需求的FEC建立路由表和LIB(label information base，标签信息表)</li>
 <li>入口LER接收分组，完成第三层功能，判定分组所属的FEC，并给分组加上标签，形成MPLS标签分组</li>
@@ -1975,7 +1975,7 @@
 <li>最后，在MPLS出口LER去掉分组中的标签，继续进行后面的IP转发</li>
 </ol>
 <p>MPLS并不是一种业务或者应用，它本质上是一种隧道技术，也是一种将标签交换转发和网络层路由技术集于一身的路由与交换技术平台，这个平台不仅支持多种高层协议与业务，而且，在一定程度上可以保证信息传输的安全性。</p>
-<h2 id="MPLS节点结构"><a href="#MPLS节点结构" class="headerlink" title="MPLS节点结构"></a>MPLS节点结构</h2><p><img src="https://rancho333.gitee.io/pictures/mpls_node.png"></p>
+<h2 id="MPLS节点结构"><a href="#MPLS节点结构" class="headerlink" title="MPLS节点结构"></a>MPLS节点结构</h2><p><img src="https://rancho333.github.io/pictures/mpls_node.png"></p>
 <p>如上图所示，MPLS节点由两部分组成：</p>
 <ul>
 <li>控制平面(control plane)：负责标签的分配、路由的选择、标签转发表的建立、标签交换路径的建立、拆除等工作</li>
@@ -1984,7 +1984,7 @@
 <p>对于普通的LSR，在转发平面只需要进行标签分组的转发，需要使用到LFIB。对于LER，在转发平面不仅需要进行标签分组的转发，也需要进行IP分组的转发，所以既会使用到LFIB，也会使用到FIB表。</p>
 <h2 id="MPLS与路由协议"><a href="#MPLS与路由协议" class="headerlink" title="MPLS与路由协议"></a>MPLS与路由协议</h2><p>LDP通过逐跳方式建立LSP时，利用沿途各LSR路由转发表中的信息来确定下一跳，而路由转发表中的信息一般是通过IGP、BGP等路由协议收集的。LDP并不直接和各种路由协议关联，只是间接使用路由信息。另一方面，通过对BGP、RSVP等已有协议进行扩展，也可以支持标签的分发。<br>在MPLS的应用中，也可能需要对某些路由协议进行扩展。例如，基于MPLS的VPN应用需要对BGP进行扩展，使BGP能够传播VPN的路由信息；基于MPLS的TE(traffic engineering,流量工程)需要对OSPF或IS-IS协议进行扩展，以便携带链路状态信息。</p>
 <h2 id="MPLS的应用"><a href="#MPLS的应用" class="headerlink" title="MPLS的应用"></a>MPLS的应用</h2><p>最初，MPLS技术结合了二层交换与三层路由技术，提高了路由查找速度。但随着ASIC的发展，路由查找速度已经不成为阻碍网络发展的瓶颈。这使得MPLS在提高转发速度方面不具备明显的优势。<br>但由于MPLS结合了IP网络强大的三层路由功能和传统二层网络高效的转发机制，在转发平面采用面向连接的方式，与现有二层网络转发方式非常相似，这些特点使得MPLS能够很容易的实现IP与ATM、帧中继等二层网络的无缝融合，并为QoS、TE、VPN等应用提供更好的解决方案。</p>
-<h3 id="基于MPLS的VPN"><a href="#基于MPLS的VPN" class="headerlink" title="基于MPLS的VPN"></a>基于MPLS的VPN</h3><p>传统的VPN一般是通过GRE、L2TP、PPTP等隧道协议来实现私有网络间数据流在公网上的传送，LSP本身就是公网上的隧道，因此，用MPLS来实现VPN有天然的优势。基于MPLS的VPN就是通过LSP将私有网络的不同分支连接起来，形成一个同一的网络。基于MPLS的VPN还支持对不同的VPN间的互通控制。<br><img src="https://rancho333.gitee.io/pictures/mpls_vpn.png"></p>
+<h3 id="基于MPLS的VPN"><a href="#基于MPLS的VPN" class="headerlink" title="基于MPLS的VPN"></a>基于MPLS的VPN</h3><p>传统的VPN一般是通过GRE、L2TP、PPTP等隧道协议来实现私有网络间数据流在公网上的传送，LSP本身就是公网上的隧道，因此，用MPLS来实现VPN有天然的优势。基于MPLS的VPN就是通过LSP将私有网络的不同分支连接起来，形成一个同一的网络。基于MPLS的VPN还支持对不同的VPN间的互通控制。<br><img src="https://rancho333.github.io/pictures/mpls_vpn.png"></p>
 <p>上图是基于MPLS的VPN的基本结构</p>
 <ul>
 <li>CE可以是路由器，也可以是交换机或主机</li>
@@ -2017,11 +2017,11 @@
 <li>protocol version字段是0x03</li>
 <li>BPDU type字段和rstp一样是0x02</li>
 <li>flags字段和rstp保持一致</li>
-<li>BID字段中的扩展ID则为0<br>其它字段简介如下：<br><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/mstp_bpdu.png?raw=true"></li>
+<li>BID字段中的扩展ID则为0<br>其它字段简介如下：<br><img src="https://rancho333.github.io/pictures/mstp_bpdu.png"></li>
 </ul>
 <p>MSTP配置比较复杂，特别是在多域使用尤其复杂，本文只通过单域对MSTP有一个简单的了解。</p>
 <h1 id="实验说明"><a href="#实验说明" class="headerlink" title="实验说明"></a>实验说明</h1><p>经典的三角环形拓扑， 创建一个MSTP域，域内创建两个实例instance 1、2, vlan 10-15映射到实例1， vlan 16-20映射到实例2。实例0的根桥是S1，实例1的根桥是S2，实例2的根桥是S3. 拓扑图如下：</p>
-<p><img src="https://github.com/Rancho333/pictures_hub/blob/920baf1e40926adc604b727854fd10b7861dc24e/non_auto/mstp_topology.png?raw=true"></p>
+<p><img src="https://rancho333.github.io/pictures/mstp_topology.png"></p>
 <p>实验步骤如下：<br>创建Vlan 10-20</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S1(config)#vlan 10-20</span><br><span class="line">&#x2F;&#x2F; S2和S3做相同配置</span><br></pre></td></tr></table></figure>
 
@@ -2040,13 +2040,13 @@
 <p>实验结果对比检查：<br>确认配置信息：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S1#show spanning-tree mst configuration </span><br><span class="line">Name      [rancho]</span><br><span class="line">Revision  1     Instances configured 3</span><br><span class="line"></span><br><span class="line">Instance  Vlans mapped</span><br><span class="line">--------  ---------------------------------------------------------------------</span><br><span class="line">0         1-9,21-4094</span><br><span class="line">1         10-15</span><br><span class="line">2         16-20</span><br><span class="line">-------------------------------------------------------------------------------</span><br><span class="line">&#x2F;&#x2F; S2与S3中做相同检查</span><br></pre></td></tr></table></figure>
 
-<p>确认实例0中根桥及端口状态：<br><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/mstp_instance_0.png?raw=true"></p>
+<p>确认实例0中根桥及端口状态：<br><img src="https://rancho333.github.io/pictures/mstp_instance_0.png"></p>
 <p>可以看到实例0中，S1是根桥，S3的eth0处于blocking状态。</p>
-<p>确认实例1中根桥及端口状态：<br><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/mstp_instance_1.png?raw=true"></p>
+<p>确认实例1中根桥及端口状态：<br><img src="https://rancho333.github.io/pictures/mstp_instance_1.png"></p>
 <p>可以看到实例1中，S2是根桥，S3的eth1处于blocking状态。</p>
-<p>确认实例2中根桥及端口状态：<br><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/mstp_instance_2.png?raw=true"></p>
+<p>确认实例2中根桥及端口状态：<br><img src="https://rancho333.github.io/pictures/mstp_instance_2.png"></p>
 <p>可以看到实例2中，S3是根桥，S2的eth0处于blocking状态。</p>
-<p>三个实例中对应的转发路径如下图所示：<br><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/mstp_instance_forward_path.png?raw=true"></p>
+<p>三个实例中对应的转发路径如下图所示：<br><img src="https://rancho333.github.io/pictures/mstp_instance_forward_path.png"></p>
 <p>可以看到不同实例的流量之间负载均衡。</p>
 <h1 id="兼容性说明"><a href="#兼容性说明" class="headerlink" title="兼容性说明"></a>兼容性说明</h1><p>MSTP向下兼容RSTP和STP，不建议这么使用。</p>
 ]]></content>
@@ -2416,24 +2416,24 @@
 <li>有的命令和<code>sudo</code>一起用就<code>command not found</code></li>
 </ol>
 <h1 id="标准输入和参数的区别"><a href="#标准输入和参数的区别" class="headerlink" title="标准输入和参数的区别"></a>标准输入和参数的区别</h1><p>最初遇到这个问题的时候是在shell下面使用<code>管道</code>操作，例如：<code>find ./ -name &quot;*.c&quot; | xargs grep -rn zhw</code>,这条命令的含义是：在当前路径下的所有<code>.c</code>文件中查找<code>zhw</code>关键字，注意这里在管道的右侧加了关键字<code>xargs</code>，表示将<code>find</code>找到的结果作为<em>参数</em>传递给<code>grep</code>，grep是不接受标准输入的。</p>
-<p>标准输入就是编程语言中诸如<code>scanf</code>或者<code>readline</code>获取到的信息；而参数是指程序的<code>main</code>函数传入的<code>args</code>字符串数组。管道符和重定向符都是将数据作为程序的标准输入，下面这个示例：<br><img src="https://rancho333.gitee.io/pictures/grep.png"></p>
+<p>标准输入就是编程语言中诸如<code>scanf</code>或者<code>readline</code>获取到的信息；而参数是指程序的<code>main</code>函数传入的<code>args</code>字符串数组。管道符和重定向符都是将数据作为程序的标准输入，下面这个示例：<br><img src="https://rancho333.github.io/pictures/grep.png"></p>
 <ol>
 <li>grep要搜索的文件作为参数是可选的，<code>-r</code>可以在当前路径下递归查找</li>
 <li>find不加xargs和直接grep效果是一样的，说明没有指定查找文件，而使用xargs则指定了查找文件作为参数传递给grep</li>
 </ol>
-<p>这里多说一点：<br><img src="https://rancho333.gitee.io/pictures/find.png"><br>通常使用find命令查找特定的文件，然后再这些文件中用grep去匹配关键字，但是如果find的结果是空，那么通过xargs方式就相当于没有给grep指明特定查找文件（它就会在当前目录递归）,而通过<code>-exec</code>则表示对匹配的文件执行该参数所给出的shell命令，此时grep实际并没有执行，这才符合我们的预期结果。</p>
-<p>上面两个小例子，理解问题的本质是多么的重要，基础打牢固，花哨的东西就随便玩了！<br>除了<code>xargs</code>可以读取数据作为命令参数外，通过<code>$(cmd)</code>形式也能达到同样的效果，例如：<br><img src="https://rancho333.gitee.io/pictures/grep.png"></p>
+<p>这里多说一点：<br><img src="https://rancho333.github.io/pictures/find.png"><br>通常使用find命令查找特定的文件，然后再这些文件中用grep去匹配关键字，但是如果find的结果是空，那么通过xargs方式就相当于没有给grep指明特定查找文件（它就会在当前目录递归）,而通过<code>-exec</code>则表示对匹配的文件执行该参数所给出的shell命令，此时grep实际并没有执行，这才符合我们的预期结果。</p>
+<p>上面两个小例子，理解问题的本质是多么的重要，基础打牢固，花哨的东西就随便玩了！<br>除了<code>xargs</code>可以读取数据作为命令参数外，通过<code>$(cmd)</code>形式也能达到同样的效果，例如：<br><img src="https://rancho333.github.io/pictures/grep.png"></p>
 <p><code>$(cmd)</code>读取<code>cmd</code>命令输出的数据作为参数。</p>
-<p>最后说一下如何区分命令能够接受标准输入还是参数：如果命令能够让终端阻塞，说明该命令能接受标准输入，反之就是不接受。<code>rm</code>命令是不接受标准输入的。<br><img src="https://rancho333.gitee.io/pictures/block.png"></p>
+<p>最后说一下如何区分命令能够接受标准输入还是参数：如果命令能够让终端阻塞，说明该命令能接受标准输入，反之就是不接受。<code>rm</code>命令是不接受标准输入的。<br><img src="https://rancho333.github.io/pictures/block.png"></p>
 <h1 id="后台运行程序"><a href="#后台运行程序" class="headerlink" title="后台运行程序"></a>后台运行程序</h1><p>如果一些服务需要长时间运行，比如main函数里面有个<code>while(1)</code>的死循环，程序运行后命令行会阻塞。在命令后加上<code>&amp;</code>后程序就可以在后台运行而不会阻塞命令行。底层的原理或者说这是怎么实现的呢？</p>
 <p>每一个命令行终端都是一个shell进程，每当有命令需要执行是shell会fork一个子进程去执行命令，而shell进程会阻塞，等待子shell进程退出才重新响应。写一个很简单的demo</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">void main()                                                                                           </span><br><span class="line">&#123;</span><br><span class="line">    while(1)</span><br><span class="line">    &#123;&#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>加上<code>&amp;</code>后，只是让shell进程不再阻塞，可以继续响应你的新命令，但是当你关掉这个shell命令行中终端后，依附于它的所有子进程都会退出。如下：<br><img src="https://rancho333.gitee.io/pictures/ps.png"><br>但是如果<code>(cmd &amp;)</code>这样来运行命令，则是将<code>cmd</code>挂到一个<code>systemd</code>系统守护进程下，这样即使当终端退出后，对于刚才的命令也没有影响。如下：<br><img src="https://rancho333.gitee.io/pictures/nohup.png"><br>不过<code>nohup cmd &amp;</code>的做法似乎常见一些，原理类似。此外还可以试试<code>tmux</code>这个小工具，如果利用晚上的时候在服务器编译大型项目，这玩意挺好用的，不用担心断网（终端被kill）。</p>
+<p>加上<code>&amp;</code>后，只是让shell进程不再阻塞，可以继续响应你的新命令，但是当你关掉这个shell命令行中终端后，依附于它的所有子进程都会退出。如下：<br><img src="https://rancho333.github.io/pictures/ps.png"><br>但是如果<code>(cmd &amp;)</code>这样来运行命令，则是将<code>cmd</code>挂到一个<code>systemd</code>系统守护进程下，这样即使当终端退出后，对于刚才的命令也没有影响。如下：<br><img src="https://rancho333.github.io/pictures/nohup.png"><br>不过<code>nohup cmd &amp;</code>的做法似乎常见一些，原理类似。此外还可以试试<code>tmux</code>这个小工具，如果利用晚上的时候在服务器编译大型项目，这玩意挺好用的，不用担心断网（终端被kill）。</p>
 <h1 id="单引号和双引号的区别"><a href="#单引号和双引号的区别" class="headerlink" title="单引号和双引号的区别"></a>单引号和双引号的区别</h1><p>使用<code>set -x</code>命令，可以开启shell的命令回显。</p>
 <p>对于单引号：所见即所得，会将单引号内的内容原样输出</p>
 <p>对于双引号：把双引号内的内容输出出来；如果内容中有命令、变量等，会先把变量、命令解析出结果，然后在输出最终内容来。</p>
 <p>不加引号：不会将含有空格的字符串视为一个整体输出, 如果内容中有命令、变量等，会先把变量、命令解析出结果，然后在输出最终内容来，如果字符串中带有空格等特殊字符，则不能完整的输出，需要改加双引号，一般连续的字符串，数字，路径等可以用。所以在写shell脚本的时候一定注意使用小括号和双引号哈！</p>
-<p>示例如下：<br><img src="https://rancho333.gitee.io/pictures/ds.png"></p>
+<p>示例如下：<br><img src="https://rancho333.github.io/pictures/ds.png"></p>
 <h1 id="sudo-找不到命令"><a href="#sudo-找不到命令" class="headerlink" title="sudo 找不到命令"></a>sudo 找不到命令</h1><p>有时候普通用户可以印的命令，加上<code>sudo</code>之后却报错<code>command not found</code>，原因在于这个命令仅存在与该用户的环境变量PATH中。解决方法是：</p>
 <ol>
 <li>使用绝对路径调用命令</li>
@@ -2454,7 +2454,7 @@
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1. 轮询（polling）内核定期对设备的状态进行查询，然后做出相应的处理</span><br><span class="line">2. 中断（interrupt）让硬件在需要的时候向内核发出信号（变内核主动为硬件主动）</span><br></pre></td></tr></table></figure>
 <p>轮询是周期性的重复执行，大量耗用CPU的时间，效率比较低，对于实时性比较高的操作，肯定是不适用的。</p>
 <p>从物理学的角度看，中断是一种电信号，由硬件设备产生，并直接送入中断控制器（如8259A）的输入引脚上，然后再由中断控制器向CPU发送相应的信号。处理器检测到该信号，便中断当前正在处理的工作，转而去处理中断。对于软件开发人员，一般需要用到的就是中断号和中断处理函数。</p>
-<p>提一下，PCIE可以通过MSI(message signaled interrupts)方式实现中断：<br><img src="https://rancho333.gitee.io/pictures/msi.png"><br>CPu里面有一段特殊的寄存器空间，往这个寄存器里面写数据，就会触发CPU中断。pci设备经过配置以后，一旦需要上报中断就会往cpu这种寄存器里面写一个值，触发cpu中断。</p>
+<p>提一下，PCIE可以通过MSI(message signaled interrupts)方式实现中断：<br><img src="https://rancho333.github.io/pictures/msi.png"><br>CPu里面有一段特殊的寄存器空间，往这个寄存器里面写数据，就会触发CPU中断。pci设备经过配置以后，一旦需要上报中断就会往cpu这种寄存器里面写一个值，触发cpu中断。</p>
 <p>中断的处理流程：</p>
 <ol>
 <li>保存现场</li>
@@ -2499,7 +2499,7 @@
 <td align="left">不会返回</td>
 </tr>
 </tbody></table>
-<h2 id="中断控制器"><a href="#中断控制器" class="headerlink" title="中断控制器"></a>中断控制器</h2><p>常见的中断控制器有两种，两片8259A外部芯片’级联’和多级I/O APIC系统，见下图：<br><img src="https://rancho333.gitee.io/pictures/interrupt_ctl.png"><br>至于硬件实现细节这里不做过多描述。辨别一个系统是否正在使用I/O APIC，可以使用如下命令查看：<br><img src="https://rancho333.gitee.io/pictures/interrupts.png"><br>可以看到第6列上显示的是IO-APIC,如果上面显示的是XY-APIC，说明系统正在使用8259A芯片。<br>对上面文件的输出，解释如下：</p>
+<h2 id="中断控制器"><a href="#中断控制器" class="headerlink" title="中断控制器"></a>中断控制器</h2><p>常见的中断控制器有两种，两片8259A外部芯片’级联’和多级I/O APIC系统，见下图：<br><img src="https://rancho333.github.io/pictures/interrupt_ctl.png"><br>至于硬件实现细节这里不做过多描述。辨别一个系统是否正在使用I/O APIC，可以使用如下命令查看：<br><img src="https://rancho333.github.io/pictures/interrupts.png"><br>可以看到第6列上显示的是IO-APIC,如果上面显示的是XY-APIC，说明系统正在使用8259A芯片。<br>对上面文件的输出，解释如下：</p>
 <ol>
 <li>第一列表示IRQ中断号</li>
 <li>第二、三、四、五列表示相应的CPu核心被中断的次数</li>
@@ -2528,7 +2528,7 @@
 <li>cat /proc/interrupts查看中断号，注意如果是使用ssh或telent到linux上的是不会响应键盘中断的，需要使用虚拟机来实验</li>
 <li>加载驱动<code>sudo insmod ./first_interrupt.ko irq=1 devname=zhwirq</code></li>
 <li>查看驱动<code>lsmod | grep first</code>,查看中断<code>cat /proc/interrupts | grep zhw</code></li>
-<li>dmesg查看内核日志文件，dmesg | tail -20<br><img src="https://rancho333.gitee.io/pictures/dmesg.png"></li>
+<li>dmesg查看内核日志文件，dmesg | tail -20<br><img src="https://rancho333.github.io/pictures/dmesg.png"></li>
 <li>卸载驱动<code>sudo rmmod first_interrupt</code></li>
 </ol>
 <p>加载驱动后，先进行驱动初始化，之后每当有键盘中断触发后，都会进入ISR，卸载驱动后不会再触发。</p>
@@ -2589,13 +2589,13 @@
 <td align="center">bionic</td>
 </tr>
 </tbody></table>
-<h3 id="deb说明"><a href="#deb说明" class="headerlink" title="deb说明"></a>deb说明</h3><p>deb后面的内容有三大部分：deb URI section1 section2<br>以<code>deb http://us.archive.ubuntu.com/ubuntu/ xenial main restricted</code>为例进行说明。<br>URI是库所在的地址，支持http，fpt以及本地路径,访问<code>http://us.archive.ubuntu.com/ubuntu/</code>可以看到如下信息：<br><img src="https://rancho333.gitee.io/pictures/ubuntu.png"><br><code>dists</code>和<code>pool</code>这两个目录比较重要。<code>dists</code>目录包含了当前库的所有软件包的索引。这些索引通过codename分布在不同的文件夹中。例如<code>xenial</code>所在的目录。<br><img src="https://rancho333.gitee.io/pictures/xenial.png"><br>上图中的文件夹名其实就是对应了section1，我们可以根据需要填写不同的section1.<br>这里面的文件都是用以下格式命名的：  </p>
+<h3 id="deb说明"><a href="#deb说明" class="headerlink" title="deb说明"></a>deb说明</h3><p>deb后面的内容有三大部分：deb URI section1 section2<br>以<code>deb http://us.archive.ubuntu.com/ubuntu/ xenial main restricted</code>为例进行说明。<br>URI是库所在的地址，支持http，fpt以及本地路径,访问<code>http://us.archive.ubuntu.com/ubuntu/</code>可以看到如下信息：<br><img src="https://rancho333.github.io/pictures/ubuntu.png"><br><code>dists</code>和<code>pool</code>这两个目录比较重要。<code>dists</code>目录包含了当前库的所有软件包的索引。这些索引通过codename分布在不同的文件夹中。例如<code>xenial</code>所在的目录。<br><img src="https://rancho333.github.io/pictures/xenial.png"><br>上图中的文件夹名其实就是对应了section1，我们可以根据需要填写不同的section1.<br>这里面的文件都是用以下格式命名的：  </p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">codename</span><br><span class="line">codename-backports    #unsupported updates</span><br><span class="line">codename-proposed	  #pre-released updates</span><br><span class="line">codename-security	  #important security updates</span><br><span class="line">codename-updates	  #recommanded updates</span><br></pre></td></tr></table></figure>
 
-<p>打开其中一个任一文件夹，例如<code>xenial-updates</code>:<br><img src="https://rancho333.gitee.io/pictures/xenial.png"><br>里面有<code>main,multiverse,restricted,universe</code>文件夹，这些文件夹对应deb后面的section2,里面包含了不同软件包的索引。它们的区别在于：  </p>
+<p>打开其中一个任一文件夹，例如<code>xenial-updates</code>:<br><img src="https://rancho333.github.io/pictures/xenial.png"><br>里面有<code>main,multiverse,restricted,universe</code>文件夹，这些文件夹对应deb后面的section2,里面包含了不同软件包的索引。它们的区别在于：  </p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">main：完全的自由软件</span><br><span class="line">restricted: 不完全的自由软件</span><br><span class="line">universe: ubuntu官方不提供支持与补丁，全靠社区支持</span><br><span class="line">multiverse: 非自由软件，完全不提供支持和补丁</span><br></pre></td></tr></table></figure>
 
-<p>打开main目录下的binary-i386子目录下的Packages.gz文件，可以看到如下内容：<br><img src="https://rancho333.gitee.io/pictures/packages.png"><br>说明：Packages.gz这个文件其实就是一个“索引”文件,里面记录了各种包的包名(Package)、运行平台(Architecture)、版本号（Version）、依赖关系(Depends)、deb包地址(Filename)等。Filename指向的是源服务器pool目录下的某个deb。猜测：<code>apt-get install</code>某个软件是，其实就是基于这些Packages.gz来计算依赖关系，然后根据其中的filename地址来下载所需的deb，最后执行<code>dpkg -i pacckage.deb</code>来完成软件包的安装。  </p>
+<p>打开main目录下的binary-i386子目录下的Packages.gz文件，可以看到如下内容：<br><img src="https://rancho333.github.io/pictures/packages.png"><br>说明：Packages.gz这个文件其实就是一个“索引”文件,里面记录了各种包的包名(Package)、运行平台(Architecture)、版本号（Version）、依赖关系(Depends)、deb包地址(Filename)等。Filename指向的是源服务器pool目录下的某个deb。猜测：<code>apt-get install</code>某个软件是，其实就是基于这些Packages.gz来计算依赖关系，然后根据其中的filename地址来下载所需的deb，最后执行<code>dpkg -i pacckage.deb</code>来完成软件包的安装。  </p>
 <h2 id="替换源"><a href="#替换源" class="headerlink" title="替换源"></a>替换源</h2><p>先将默认的sources.list进行备份，然后仿照下表修改源：  </p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"># 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释</span><br><span class="line">deb https:&#x2F;&#x2F;mirrors.aliyun.com&#x2F;ubuntu&#x2F; bionic main restricted universe multiverse</span><br><span class="line"># deb-src https:&#x2F;&#x2F;mirrors.aliyun.com&#x2F;ubuntu&#x2F; bionic main restricted universe multiverse</span><br><span class="line">deb https:&#x2F;&#x2F;mirrors.aliyun.com&#x2F;ubuntu&#x2F; bionic-updates main restricted universe multiverse</span><br><span class="line"># deb-src https:&#x2F;&#x2F;mirrors.aliyun.com&#x2F;ubuntu&#x2F; bionic-updates main restricted universe multiverse</span><br><span class="line">deb https:&#x2F;&#x2F;mirrors.aliyun.com&#x2F;ubuntu&#x2F; bionic-backports main restricted universe multiverse</span><br><span class="line"># deb-src https:&#x2F;&#x2F;mirrors.aliyun.com&#x2F; bionic-backports main restricted universe multiverse</span><br><span class="line">deb https:&#x2F;&#x2F;mirrors.aliyun.com&#x2F;ubuntu&#x2F; bionic-security main restricted universe multiverse</span><br><span class="line"># deb-src https:&#x2F;&#x2F;mirrors.aliyun.com&#x2F;ubuntu&#x2F; bionic-security main restricted universe multiverse</span><br><span class="line"></span><br><span class="line"># 预发布软件源，不建议启用</span><br><span class="line"># deb https:&#x2F;&#x2F;mirrors.aliyun.com&#x2F;ubuntu&#x2F; bionic-proposed main restricted universe multiverse</span><br><span class="line"># deb-src https:&#x2F;&#x2F;mirrors.aliyun.com&#x2F;ubuntu&#x2F; bionic-proposed main restricted universe multiverse</span><br></pre></td></tr></table></figure>
 
@@ -2636,12 +2636,12 @@
 <p>使用命令<code>gcc cons.c -fPIC -shared -o  libcons.so</code>编译生成动态库文件。</p>
 <h2 id="使用动态进行编译"><a href="#使用动态进行编译" class="headerlink" title="使用动态进行编译"></a>使用动态进行编译</h2><p>动态库一般是封装了一些常用的模块或功能，我们在需要调用动态库的代码中先加入需要调用函数所在的头文件（这些头文件是与动态库一起发布的），然后在编译的时候链接该库就可以了。调用库的示例代码demo.c:</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">#include &quot;cons.h&quot;</span><br><span class="line"></span><br><span class="line">void main()</span><br><span class="line">&#123;</span><br><span class="line">        printf(&quot;%s\n&quot;, __FUNCTION__);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>使用命令<code>gcc demo.c -o demo -L./ -lcons</code>进行编译，其中<code>-L</code>指明了查找动态库的路径，<code>-lcons</code>指明动态库的名字，它的组成是<code>-l</code>加上动态库真实名字的<code>lib</code>与<code>.so</code>之间的字符串，如<code>libcons.so</code>就是<code>-l+cons</code>。<br>使用<code>ldd demo</code>查看程序所依赖动态库的具体情况（是否存在，查找路径等）：<br><img src="https://rancho333.gitee.io/pictures/ldd.png"></p>
+<p>使用命令<code>gcc demo.c -o demo -L./ -lcons</code>进行编译，其中<code>-L</code>指明了查找动态库的路径，<code>-lcons</code>指明动态库的名字，它的组成是<code>-l</code>加上动态库真实名字的<code>lib</code>与<code>.so</code>之间的字符串，如<code>libcons.so</code>就是<code>-l+cons</code>。<br>使用<code>ldd demo</code>查看程序所依赖动态库的具体情况（是否存在，查找路径等）：<br><img src="https://rancho333.github.io/pictures/ldd.png"></p>
 <p>发现demo与libcons.so之间并未产生依赖关系，这里猜测是demo.c中并没有显示的使用到libcons.so中的资源，所以即使加上<code>-lcons</code>编译选项，编译器也会对之进行优化。那么我们修改demo.c中的代码为：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">#include &quot;cons.h&quot;</span><br><span class="line"></span><br><span class="line">void main()</span><br><span class="line">&#123;</span><br><span class="line">        printf(&quot;%s\n&quot;, __FUNCTION__);</span><br><span class="line">        after_main();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这里加上对函数<code>after_main</code>的调用，再使用ldd查看：<br><img src="https://rancho333.gitee.io/pictures/ldd.png"></p>
+<p>这里加上对函数<code>after_main</code>的调用，再使用ldd查看：<br><img src="https://rancho333.github.io/pictures/ldd.png"></p>
 <p>发现ldd中虽然已经有了libcons.so的信息，但是是<code>not found</code>，执行<code>demo</code>当然也会报这个库找不到。这是因为我们的库所在的路径并没有加到<em>查找库所在路径</em>的环境中，类似于shell的命令查找规则<em>PATH</em>环境变量，这里可以将路径添加到环境变量中或者将库拷贝到已知的查找路径中。用户添加的一般拷到<code>/usr/lib</code>下，这里再回到上面编译demo.c的地方，如果事先将库拷到系统路径中，那么久不用加<code>-L</code>指定路径了。如果是做嵌入式开发，记得一定要把库拷到开发板上哦。动态库在程序编译和执行的时候都会用的。</p>
-<p>再次ldd看下并执行：<br><img src="https://rancho333.gitee.io/pictures/ldd.png"></p>
+<p>再次ldd看下并执行：<br><img src="https://rancho333.github.io/pictures/ldd.png"></p>
 <p>可以正常执行打印出函数名字了，但是有点奇怪的是没有调用befor_main函数为什么也会打印出来呢。</p>
 <h2 id="constructor关键字"><a href="#constructor关键字" class="headerlink" title="constructor关键字"></a>constructor关键字</h2><p>回到上面去看看before_main函数的声明，发现有个<code>__attribute__((constructor))</code>。</p>
 <h3 id="attribute-介绍"><a href="#attribute-介绍" class="headerlink" title="__attribute__介绍"></a>__attribute__介绍</h3><p>__attribute__可以设置函数属性(Function Attribute)、变量属性(Variable Attribute)和类型属性(Type Attribute)。__attribute__前后都有两个下划线，并且后面会紧跟一对原括弧，括弧里面是相应的__attribute__参数<br><em><strong>attribute__语法格式为：__attribute</strong> ( ( attribute-list ) )</em></p>
@@ -2660,7 +2660,7 @@
     <content><![CDATA[<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>在嵌入式设备调试中，经常会使用console口对设备进行管理。使用vim进行文件编辑时，会发现屏幕回显有问题，例如，行显示不会逐步递增到屏幕底端，列显示时换行错乱。这是tty设置的<code>rows</code>与<code>cols</code>与实际的屏幕尺寸不适配。</p>
 <span id="more"></span>
 <h1 id="对于console连接"><a href="#对于console连接" class="headerlink" title="对于console连接"></a>对于console连接</h1><p>我们可以使用<code>stty -a</code>查看stty的所有配置信息，其中第一行包括波特率，终端的大小（以字符为基准）。也可以直接使用<code>stty size</code>查看终端的大小。</p>
-<p><img src="https://rancho333.gitee.io/pictures/stty.png"></p>
+<p><img src="https://rancho333.github.io/pictures/stty.png"></p>
 <p>对于常见的远程登录软件，如<code>xshell</code>和<code>secure CRT</code>会在软件底端显示出当前终端的大小，我们按照这个数值进行设定即可。之后<code>reset</code>终端设置。如果显示依然不正常，最大化窗口然后再恢复即可。</p>
 <h1 id="对于ssh或telent连接"><a href="#对于ssh或telent连接" class="headerlink" title="对于ssh或telent连接"></a>对于ssh或telent连接</h1><p>为什么使用ssh或者telnet连接时不会出现这种终端显示的问题呢，因为ssh当窗口大小发生变化后，会自动的调整stty的数值。可以尝试调整窗口大小，然后<code>stty size</code>查看终端大小与软件显示的窗口大小进行比较。</p>
 <h1 id="写在后面"><a href="#写在后面" class="headerlink" title="写在后面"></a>写在后面</h1><p>Linux的TTY子系统其实是一个很复杂的点。其中包括的知识点有<code>行编辑</code>、<code>进程组</code>、<code>会话组</code>、<code>信号控制</code>、<code>流控制与I/O阻塞</code>、<code>TTY配置</code>等。</p>
@@ -2770,7 +2770,7 @@
 </ul>
 <h2 id="SONiC的上层应用"><a href="#SONiC的上层应用" class="headerlink" title="SONiC的上层应用"></a>SONiC的上层应用</h2><p>SONiC的服务跑在docker中，如PMON、syncd、frr等。关于这些服务是如何启动的？可以参见《SONIC中docker运行服务的单分析》，源码中注意下<code>docker_image_ctl.j2</code>文件，这是docker的启动管理模板。</p>
 <p>SONiC核心的功能就是交换路由，所以交换路由协议在里面是很重要的，与传统交换机相比，SONiC中的服务运行在docker中，使用redis集中式进行数据管理，其它并没有什么本质区别。</p>
-<p>后续考虑以vxlan为切入点，深入了解学习SONiC的系统架构，对于vxlan，参见<a href="https://rancho333.gitee.io/2021/02/03/vxlan%E5%AD%A6%E4%B9%A0/">vxlan学习</a>。</p>
+<p>后续考虑以vxlan为切入点，深入了解学习SONiC的系统架构，对于vxlan，参见<a href="https://rancho333.github.io/2021/02/03/vxlan%E5%AD%A6%E4%B9%A0/">vxlan学习</a>。</p>
 <p>如何配置管理SONiC呢？传统的交换机会做一个命令行程序，指定用户登录后执行该程序，可以称之为CLI，在里面可以进入shell，也可以从shell退回CLI。社区版SONiC登录之后运行bash，用python做了一套简单的命令行，可以进行配置管理，这玩意解析速度极慢，使用体验极差。除此之外，还可以通过修改<code>config_db.json</code>然后重新加载或者直接使用<code>redis</code>命令行进行配置。当然SONiC支持SDN，可以通过openflow方式集中式管理配置。阿里在SONiC上面做了一套传统CLI，称之为<code>lambda-cli</code>，比社区版SONiC的命令行好用多了。</p>
 <h2 id="TestBed自动化测试"><a href="#TestBed自动化测试" class="headerlink" title="TestBed自动化测试"></a>TestBed自动化测试</h2><p>TBD</p>
 ]]></content>
@@ -2787,8 +2787,8 @@
 <h1 id="Linux环境准备"><a href="#Linux环境准备" class="headerlink" title="Linux环境准备"></a>Linux环境准备</h1><h2 id="minicom安装"><a href="#minicom安装" class="headerlink" title="minicom安装"></a>minicom安装</h2><p>通过以下命令安装minicom。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">apt install  lrzsz</span><br><span class="line">apt install minicom</span><br></pre></td></tr></table></figure>
 
-<h2 id="串口参数设置"><a href="#串口参数设置" class="headerlink" title="串口参数设置"></a>串口参数设置</h2><p><code>minicom -s</code>进行参数设置。<br><img src="https://rancho333.gitee.io/pictures/minicom_s.png"></p>
-<p>按如下参数进行设置.<br><img src="https://rancho333.gitee.io/pictures/serial_port.png"><br>可以在插拔usb转串口线在<code>/dev</code>查看串口设备。波特率以设备波特率为准。</p>
+<h2 id="串口参数设置"><a href="#串口参数设置" class="headerlink" title="串口参数设置"></a>串口参数设置</h2><p><code>minicom -s</code>进行参数设置。<br><img src="https://rancho333.github.io/pictures/minicom_s.png"></p>
+<p>按如下参数进行设置.<br><img src="https://rancho333.github.io/pictures/serial_port.png"><br>可以在插拔usb转串口线在<code>/dev</code>查看串口设备。波特率以设备波特率为准。</p>
 <p>设置完成后记得保存设置。</p>
 <h2 id="设备登录"><a href="#设备登录" class="headerlink" title="设备登录"></a>设备登录</h2><p>在shell下输入<code>minicom</code>即可登录设备。<br>minicom的控制命令。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Ctrl-A x        退出minicom</span><br><span class="line">Ctrl-A z        显示快捷键帮助信息</span><br></pre></td></tr></table></figure>
@@ -2801,12 +2801,12 @@
     <content><![CDATA[<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>在没有接触过嵌入式之前，对于计算机存储的认知仅限于知道硬盘和内存，然后硬盘掉电可以保存数据，内存掉电丢失数据。后来逐渐听到更多的专业名词，什么ROM，RAM，SRAM，DRAM，FLASH,，NandFlash，NorFlash等等了。以前将自己的定位总是局限在协议工程师，对于和硬件和驱动相关的东西有些抵触，随着工作的深入，也时常会用到一些I2C,gpio之类的东东。本着沉下来，归零，再出发的心态，这篇文章用来梳理一下自己对于计算机存储体系的认知。</p>
 <span id="more"></span>
 
-<h1 id="总体架构"><a href="#总体架构" class="headerlink" title="总体架构"></a>总体架构</h1><p>下面这张图大家应该都很熟悉了<br><img src="https://rancho333.gitee.io/pictures/storage.png"><br>生活中的大部分物品，基本都满足“好的不一定是最贵的，但是最贵的一定是好的”，在计算机存储体系中，基本满足了上面这句话。塔尖上的那一小撮是最贵的，最快的，存储空间最小的。在实际生产中需要做到价格与性能（或者说实际需求）的平衡。下面从上到下梳理一下吧。</p>
+<h1 id="总体架构"><a href="#总体架构" class="headerlink" title="总体架构"></a>总体架构</h1><p>下面这张图大家应该都很熟悉了<br><img src="https://rancho333.github.io/pictures/storage.png"><br>生活中的大部分物品，基本都满足“好的不一定是最贵的，但是最贵的一定是好的”，在计算机存储体系中，基本满足了上面这句话。塔尖上的那一小撮是最贵的，最快的，存储空间最小的。在实际生产中需要做到价格与性能（或者说实际需求）的平衡。下面从上到下梳理一下吧。</p>
 <h2 id="寄存器"><a href="#寄存器" class="headerlink" title="寄存器"></a>寄存器</h2><p>恩，之前软考《网络工程师》的时候接触过一点点.哦，文章有点跑题了，但是还是想记录一下。CPU执行指令分为：取指令，分析指令，执行指令三部曲，这里面会用到一系列的寄存器，有分别属于控制器和运算器，列举几个常见的。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">控制器</span><br><span class="line">    程序计数器PC：存放下一条指令的地址</span><br><span class="line">    指令寄存器IR:存放正在运行的指令</span><br></pre></td></tr></table></figure>
 <p>指令包括操作码和地址码（操作数所在的地址）</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">运算器：</span><br><span class="line">    累加寄存器AC</span><br><span class="line">    数据缓冲寄存器</span><br><span class="line">    状态条件寄存器</span><br></pre></td></tr></table></figure>
-<p>具体见下图：<br><img src="https://rancho333.gitee.io/pictures/register.png"><br>寄存器是CPU的内部组成单元，是CPU运算是取指令和数据最快的地方。当然不仅仅是CPU了，比如交换芯片及很多其它的ASIC都是用寄存器来实现某些功能的，你会发现芯片SDK提供的API最底层就是读写某些寄存器来实现具体功能。</p>
+<p>具体见下图：<br><img src="https://rancho333.github.io/pictures/register.png"><br>寄存器是CPU的内部组成单元，是CPU运算是取指令和数据最快的地方。当然不仅仅是CPU了，比如交换芯片及很多其它的ASIC都是用寄存器来实现某些功能的，你会发现芯片SDK提供的API最底层就是读写某些寄存器来实现具体功能。</p>
 <h2 id="cache与主存"><a href="#cache与主存" class="headerlink" title="cache与主存"></a>cache与主存</h2><p>cache与主存都是RAM（Random-Access Memory, 随机访问存储器），cache使用的是静态SRAM，主存使用的是DRAM。这两种器件掉电数据都会丢失。</p>
 <p>SRAM只要存储器保持通电，里面存储的数据就可以保持不变。<br>DRAM需要周期性的充电刷新，主存也就是我们PC中的内存条了。</p>
 <h2 id="ROM与flash"><a href="#ROM与flash" class="headerlink" title="ROM与flash"></a>ROM与flash</h2><p>以前一直纳闷为啥只读存储还能改里面的数据。<br>ROM一般用来存放bootloader(一般叫做固件，firmware)，这里面的内容在程序运行期间是无法更改的，掉电数据依然存在。<br>早期ROM在工厂里用特殊方法烧录进去，一旦烧录进去，用户只能验证写入的资料是否正确，不能再做任何修改。<br>后来人们发明了PROM（Programmable ROM， 可编程ROM），工厂制作的PROM内部没有数据，用户可以使用专用的编程期间烧写资料进去，但只能写一次，一旦写入也无法修改。<br>再后来发明了EPROM（Erasable Programmable ROM, 可擦写可编程ROM），芯片可以重复擦除和写入，但是需要使用紫外线照射芯片，比较麻烦。<br>再后来发明了EEPROM（Electrically Erasable Programmable ROM，电可擦除可编程ROM）,用专门的烧录器和烧录软件就可以直接烧录了，很方便。现在用的ROM大部分是这种。</p>
@@ -2837,7 +2837,7 @@
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">npm install -g hexo-cli</span><br></pre></td></tr></table></figure>
 <p>之后进行Hexo的初始化</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">hexo init &lt;folder&gt;</span><br><span class="line">cd &lt;folder&gt;</span><br></pre></td></tr></table></figure>
-<p>完成之后，指定文件夹的目录如下：<br><img src="https://rancho333.gitee.io/pictures/hexo_tree.png"><br>这里面不包含pbulic文件夹，会在执行第一次<code>hexo g</code>命令后生成，并且在执行<code>hexo d</code>命令后会生成<code>.deploy_git</code>文件夹，这两个文件夹中的内容是相同的，是最终部署到github.io中的文件。<br>然后执行<code>npm install</code>产生node_modules文件夹，至此，服务端的基本初始化完成。<br>修改<code>_config.yml</code>配置文件如下：  </p>
+<p>完成之后，指定文件夹的目录如下：<br><img src="https://rancho333.github.io/pictures/hexo_tree.png"><br>这里面不包含pbulic文件夹，会在执行第一次<code>hexo g</code>命令后生成，并且在执行<code>hexo d</code>命令后会生成<code>.deploy_git</code>文件夹，这两个文件夹中的内容是相同的，是最终部署到github.io中的文件。<br>然后执行<code>npm install</code>产生node_modules文件夹，至此，服务端的基本初始化完成。<br>修改<code>_config.yml</code>配置文件如下：  </p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">deploy:</span><br><span class="line">  type: git </span><br><span class="line">  repository: git@github.com:yourname&#x2F;yourname.github.io.git</span><br><span class="line">  branch: master</span><br></pre></td></tr></table></figure>
 <p>部署到github.io即完成，执行<code>hexo g -d</code>。这时候访问：<code>https://yourname.github.io/</code>即可访问Blog。  </p>
 <h2 id="Hexo常用命令"><a href="#Hexo常用命令" class="headerlink" title="Hexo常用命令"></a>Hexo常用命令</h2><table>
@@ -2888,7 +2888,7 @@
 <li>下载源码<code>git clone https://github.com/yourname/yourname.github.io.git</code></li>
 <li>安装依赖<code>npm install -g hexo-cli、npm install、npm install hexo-deployer-git</code>,注意不需要执行<code>hexo init</code>  </li>
 </ol>
-<h2 id="重新部署的问题"><a href="#重新部署的问题" class="headerlink" title="重新部署的问题"></a>重新部署的问题</h2><p>虽然之前将hexo的源码也备份到了远程仓库，但是一旦主机环境发生改变，得重新安装对应的依赖，这也带来一定的不稳定隐患，现在将开发环境打包到docker，发布到<a href="https://hub.docker.com/repository/docker/rancho123/ubuntu">docker hub</a>中, 后续个人的工作环境会持续集成进去。一些Linux通用配置（vim, bash）则存放到<a href="https://gitee.com/Rancho333/vim_cfg">gitee</a>上。</p>
+<h2 id="重新部署的问题"><a href="#重新部署的问题" class="headerlink" title="重新部署的问题"></a>重新部署的问题</h2><p>虽然之前将hexo的源码也备份到了远程仓库，但是一旦主机环境发生改变，得重新安装对应的依赖，这也带来一定的不稳定隐患，现在将开发环境打包到docker，发布到<a href="https://hub.docker.com/repository/docker/rancho123/ubuntu">docker hub</a>中, 后续个人的工作环境会持续集成进去。一些Linux通用配置（vim, bash）则存放到<a href="https://github.com/Rancho333/vim_cfg">github</a>上。</p>
 <p>之前主题文件<code>next</code>是用一个单独repository来进行管理，自己的修改可以提交，但是分成两个仓库不方便。所以现在将next主题源码也集成到hexo中。所以现在如果重新部署blog环境，需要做3件事：</p>
 <ol>
 <li><code>https://github.com/Rancho333/Rancho333.github.io.git</code>下载源码(包含hexo+theme)</li>
@@ -2914,7 +2914,7 @@
 <span id="more"></span>
 <h1 id="ARP协议简介"><a href="#ARP协议简介" class="headerlink" title="ARP协议简介"></a>ARP协议简介</h1><h2 id="ARP的作用"><a href="#ARP的作用" class="headerlink" title="ARP的作用"></a>ARP的作用</h2><p>ARP(Address Resolution Protocol，地址解析协议)是将IP地址解析为以太网MAC地址的协议。与之相对的，将MAC地址解析为IP地址的协议称为RARP。</p>
 <p>在局域网中，当终端设备需要将数据发送给另一个终端设备时，它必须知道对方网络的IP地址。但是仅仅有IP地址是不够的，因为IP数据必须封装成帧才能通过物理网络发送，因此发送端还必须有接收端的MAC地址，所以需要一个从IP地址到物理地址的映射。ARP就是实现这个功能的协议。</p>
-<h2 id="ARP报文的结构"><a href="#ARP报文的结构" class="headerlink" title="ARP报文的结构"></a>ARP报文的结构</h2><p><img src="https://rancho333.gitee.io/pictures/arp_protocol.png"> </p>
+<h2 id="ARP报文的结构"><a href="#ARP报文的结构" class="headerlink" title="ARP报文的结构"></a>ARP报文的结构</h2><p><img src="https://rancho333.github.io/pictures/arp_protocol.png"> </p>
 <p>对于各个字段的解释如下</p>
 <table>
 <thead>
@@ -2986,8 +2986,8 @@
 </tr>
 </tbody></table>
 <p>在Linux上可以通过tcpdump工具抓取ARP包</p>
-<p><img src="https://rancho333.gitee.io/pictures/arp_data_raw.png"><br>使用wireshark工具可以更为方便的查看报文中的各个字段：</p>
-<p><img src="https://rancho333.gitee.io/pictures/arp_data.png"> </p>
+<p><img src="https://rancho333.github.io/pictures/arp_data_raw.png"><br>使用wireshark工具可以更为方便的查看报文中的各个字段：</p>
+<p><img src="https://rancho333.github.io/pictures/arp_data.png"> </p>
 <h2 id="ARP地址解析过程"><a href="#ARP地址解析过程" class="headerlink" title="ARP地址解析过程"></a>ARP地址解析过程</h2><p>假设主机A和B在同一个网段，主机A要向主机B发送信息，解析过程如下：</p>
 <ul>
 <li>主机A查看自己的ARP表，找到则直接使用</li>
@@ -3037,7 +3037,7 @@
 </ul>
 <h1 id="ARP协议应用"><a href="#ARP协议应用" class="headerlink" title="ARP协议应用"></a>ARP协议应用</h1><p>ARP协议的状态机比较简单，但是应用起来是比较有意思的，一些基础网络问题也是值得思考的。</p>
 <h2 id="二层通信与三层通信中ARP的应用"><a href="#二层通信与三层通信中ARP的应用" class="headerlink" title="二层通信与三层通信中ARP的应用"></a>二层通信与三层通信中ARP的应用</h2><p>二三层设备互通中arp是怎样工作的？</p>
-<p><img src="https://rancho333.gitee.io/pictures/ping_arp.png"><br>如图所示，两个vlan通过interface vlan路由接口实现互通。下文说明中，交换机和终端设备均为初始状态，不含有arp表项。</p>
+<p><img src="https://rancho333.github.io/pictures/ping_arp.png"><br>如图所示，两个vlan通过interface vlan路由接口实现互通。下文说明中，交换机和终端设备均为初始状态，不含有arp表项。</p>
 <h3 id="A和B之间的互通-二层"><a href="#A和B之间的互通-二层" class="headerlink" title="A和B之间的互通(二层)"></a>A和B之间的互通(二层)</h3><p>以A向B发起ping请求为例。</p>
 <ol>
 <li>A检查报文的目的IP地址发现和自己在同一个网段；</li>
@@ -3086,8 +3086,8 @@
 <li>普通代理ARP的应用场景：想要互通的主机分别连接到设备的不同的三层接口上，且这些主机不在同一个广播域中</li>
 <li>本地代理ARP的应用环境为：想要互通的主机连接到设备的同一个三层接口在，且这些主机不在同一个广播域中</li>
 </ul>
-<h3 id="普通代理ARP"><a href="#普通代理ARP" class="headerlink" title="普通代理ARP"></a>普通代理ARP</h3><p>处于同一网段内的主机，当连接到设备的不同三层接口时，可以利用设备的代理ARP功能，通过三层转发实现互通。<br>拓扑如下图所示。设备Router通过两个三层接口Eth1/1和Eth1/2连接两个网络，两个三层接口的IP地址不在同一个网段，但是两个网络内的主机Host A和Host B的地址通过掩码的控制，既与相连设备的接口地址在同一网段，同时二者也处于同一个网段。<br><img src="https://rancho333.gitee.io/pictures/general_arp_agent.png"><br>这种组网场景下，当Host A需要与Host B通信时，由于dst ip与src ip在同一网段，因此Host A会直接对Host B进行ARP请求。但是，两台主机不在同一个广播域中，Host B无法收到Host A的ARP请求报文，当然也就无法应答。<br>通过在Router上启用代理ARP功能，可以解决此问题。启用代理ARP后,Router可以应答Host A的ARP请求。同时，Router相当于Host B的代理，把从其它主机发送过来的报文转发给它。<br>代理ARP的优点是，它可以只被应用在一个设备上（此时设备的作用相当于网关），不会影响到网络中其它设备的路由表。代理ARP功能可以在IP主机没有配置缺省网关或者IP主机没有任何路由能力的情况下使用。</p>
-<h3 id="本地代理ARP"><a href="#本地代理ARP" class="headerlink" title="本地代理ARP"></a>本地代理ARP</h3><p>拓扑如图所示。Host A与Host B属于同一个VLAN 2,但他们分别连接到被二层隔离的端口Eth1/3和Eth1/1上，通过在Router上启用本地代理ARP功能，可以实现Host A和Host B的三层互通。<br><img src="https://rancho333.gitee.io/pictures/local_arp_agent.png"></p>
+<h3 id="普通代理ARP"><a href="#普通代理ARP" class="headerlink" title="普通代理ARP"></a>普通代理ARP</h3><p>处于同一网段内的主机，当连接到设备的不同三层接口时，可以利用设备的代理ARP功能，通过三层转发实现互通。<br>拓扑如下图所示。设备Router通过两个三层接口Eth1/1和Eth1/2连接两个网络，两个三层接口的IP地址不在同一个网段，但是两个网络内的主机Host A和Host B的地址通过掩码的控制，既与相连设备的接口地址在同一网段，同时二者也处于同一个网段。<br><img src="https://rancho333.github.io/pictures/general_arp_agent.png"><br>这种组网场景下，当Host A需要与Host B通信时，由于dst ip与src ip在同一网段，因此Host A会直接对Host B进行ARP请求。但是，两台主机不在同一个广播域中，Host B无法收到Host A的ARP请求报文，当然也就无法应答。<br>通过在Router上启用代理ARP功能，可以解决此问题。启用代理ARP后,Router可以应答Host A的ARP请求。同时，Router相当于Host B的代理，把从其它主机发送过来的报文转发给它。<br>代理ARP的优点是，它可以只被应用在一个设备上（此时设备的作用相当于网关），不会影响到网络中其它设备的路由表。代理ARP功能可以在IP主机没有配置缺省网关或者IP主机没有任何路由能力的情况下使用。</p>
+<h3 id="本地代理ARP"><a href="#本地代理ARP" class="headerlink" title="本地代理ARP"></a>本地代理ARP</h3><p>拓扑如图所示。Host A与Host B属于同一个VLAN 2,但他们分别连接到被二层隔离的端口Eth1/3和Eth1/1上，通过在Router上启用本地代理ARP功能，可以实现Host A和Host B的三层互通。<br><img src="https://rancho333.github.io/pictures/local_arp_agent.png"></p>
 <p>本地代理ARP可以在下列三种情况下实现主机之间的三层互通：</p>
 <ul>
 <li>想要互通的主机分别连接到同一个VLAN中的不同的二层隔离端口下</li>
@@ -3130,7 +3130,7 @@
 <p>在配置被特性后，网关设备在进行ARP学习前将对ARP报文进行检查。如果以太网数据帧首部中的源MAC地址和ARP报文中sender mac地址不同，则认为是攻击报文，将其丢弃，否则，继续进行ARP学习。</p>
 <h3 id="ARP主动确认功能"><a href="#ARP主动确认功能" class="headerlink" title="ARP主动确认功能"></a>ARP主动确认功能</h3><p>ARP的主动确认功能主要应用于网关设备上，防止攻击者仿冒用户欺骗网关设备。</p>
 <p>启用ARP主动确认功能后，设备在新建或更新ARP表项前需进行主动确认，防止产生错误的ARP表项。</p>
-<h2 id="MLAG结合VARP实现VRRP"><a href="#MLAG结合VARP实现VRRP" class="headerlink" title="MLAG结合VARP实现VRRP"></a>MLAG结合VARP实现VRRP</h2><p>VRRP(virtual router redundancy protocol，虚拟路由器冗余协议)将可以承担网关功能的一组路由器加入到备份组中，形成一台虚拟路由器，局域网内的终端设备只需将虚拟路由器配置为缺省网关即可。VRRP有两个版本，VRRPv2基于IPv4, VRRPv3基于IPv6。正统的VRRP实现起来可能有些复杂，通过MLAG结合VARP可以较为简单的实现VRRP的功能。拓扑如下。<br><img src="https://rancho333.gitee.io/pictures/varp_mlag_vrrp.png"></p>
+<h2 id="MLAG结合VARP实现VRRP"><a href="#MLAG结合VARP实现VRRP" class="headerlink" title="MLAG结合VARP实现VRRP"></a>MLAG结合VARP实现VRRP</h2><p>VRRP(virtual router redundancy protocol，虚拟路由器冗余协议)将可以承担网关功能的一组路由器加入到备份组中，形成一台虚拟路由器，局域网内的终端设备只需将虚拟路由器配置为缺省网关即可。VRRP有两个版本，VRRPv2基于IPv4, VRRPv3基于IPv6。正统的VRRP实现起来可能有些复杂，通过MLAG结合VARP可以较为简单的实现VRRP的功能。拓扑如下。<br><img src="https://rancho333.github.io/pictures/varp_mlag_vrrp.png"></p>
 <p>原理说明：device作为leaf switch, 下行接host，上行通过mlag连接到两台网关。策略配置之后，host发往网关的流量只会通过mlag中的一个端口发往switch A或switch B, 当mlag中一条线路down掉时，通过另一条线路通信，在switch A和switch B上运行VARP协议，通过配置相同的VIP和VMAC实现网关虚拟化。这里面有两个关键点。</p>
 <ul>
 <li>主机流量同一时间只会发往一台物理网关</li>
@@ -3333,7 +3333,7 @@
 </ol>
 <h1 id="Systemd概述"><a href="#Systemd概述" class="headerlink" title="Systemd概述"></a>Systemd概述</h1><p>Linux一直没有一个统一的管理平台，所以各种资料与学习都很零散，而且是一个分散的管理系统。Systemd是一个趋势，不然这么多发行版(Arch Linux、Debian系、Red Hat系)也不会去集成它了。</p>
 <p>Systemd的设计目标是：为系统的启动和管理提供一套完整的解决方案。</p>
-<p>Systemd的优点是功能强大，使用方便。缺点是体系庞大，非常复杂，与操作系统其它部分强耦合。<br><img src="https://rancho333.gitee.io/pictures/arch_of_systemd.png"></p>
+<p>Systemd的优点是功能强大，使用方便。缺点是体系庞大，非常复杂，与操作系统其它部分强耦合。<br><img src="https://rancho333.github.io/pictures/arch_of_systemd.png"></p>
 <h1 id="Systemd命令族"><a href="#Systemd命令族" class="headerlink" title="Systemd命令族"></a>Systemd命令族</h1><p>Systemd是一组命令的集合，涉及到系统管理的各个方面。</p>
 <h2 id="systemctl"><a href="#systemctl" class="headerlink" title="systemctl"></a>systemctl</h2><p><code>systemctl</code>是Systemd的主命令，用于系统管理。systemctl接受服务（.service），挂载点（.mount）,套接口（.socket）和设备（.device）作为单元。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">systemctl --version                 #查看systemd的版本</span><br><span class="line">systemctl reboot                    #重启系统</span><br><span class="line">systemctl poweroff                  #掉电</span><br><span class="line">systemctl halt                      #CPU停止工作</span><br><span class="line">systemctl suspend                   #暂停系统</span><br><span class="line"></span><br><span class="line">systemctl list-unit-files           #列出所有可用单元</span><br><span class="line">            [--type&#x3D;service]        #所有服务</span><br><span class="line">            [--type&#x3D;mount]          #所有系统挂载点</span><br><span class="line">            [--type&#x3D;socket]         #所有可用系统套接口</span><br><span class="line">systemctl list-units                #列出所有运行中的单元</span><br><span class="line">systemctl --failed                  #列出所有失败的单元</span><br><span class="line"></span><br><span class="line">systemctl status                    #显示系统状态</span><br><span class="line">            [XX.service]            #检查某个服务状态</span><br><span class="line">systemctl start XX.service          </span><br><span class="line">systemctl restart XX.service</span><br><span class="line">systemctl stop XX.service</span><br><span class="line">systemctl reload XX.service         #启动、重启、停止、重载服务</span><br><span class="line"></span><br><span class="line">systemctl is-active XX.service      #检查某个单元是否正在运行</span><br><span class="line">systemctl is-enabled XX.service     #检查某个单元是否启用</span><br><span class="line">systemctl is-failed XX.service      #检查某个单元是否启动失败</span><br><span class="line"></span><br><span class="line">systemctl enable XX.service         #在启动时启用服务</span><br><span class="line">systemctl disable XX.service        #在启动时禁止服务</span><br><span class="line">systemctl kill XX.service           #杀死服务</span><br><span class="line">systemctl show XX                   #检查某个服务的所有配置细节</span><br><span class="line"></span><br><span class="line">systemctl mask XX.service           #屏蔽服务</span><br><span class="line">systemctl unmask XX.service         #显示服务</span><br><span class="line"></span><br><span class="line">systemctl list-dependencies XX.service      #获取某个服务的依赖性列表</span><br><span class="line"></span><br><span class="line">systemctl get-default               #查看启动时的默认target</span><br><span class="line"></span><br><span class="line">systemctl daemon-reload             # 重新加载配置文件</span><br><span class="line">systemctl restart foobar            # 重启相关服务</span><br></pre></td></tr></table></figure>
@@ -3360,7 +3360,7 @@
 <h2 id="unit配置文件"><a href="#unit配置文件" class="headerlink" title="unit配置文件"></a>unit配置文件</h2><p>每一个unit都有一个配置文件，告诉systemd怎么启动这个unit。<br>systemd默认从<code>/etc/systemd/system</code>读取配置文件。这里面部分文件是符号链接，指向<code>/lib/systemd/system</code>或者<code>/usr/lib/systemd/system</code>。</p>
 <p><code>systemctl enable</code>的本质就是在上面两个目录的文件之间建立符号链接关系。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">systemctl enable XX.service</span><br><span class="line">等同于</span><br><span class="line">ln -s &#x2F;lib&#x2F;systemd&#x2F;system&#x2F;XX.service &#x2F;etc&#x2F;systemd&#x2F;system&#x2F;XX.service</span><br></pre></td></tr></table></figure>
-<p><img src="https://rancho333.gitee.io/pictures/systemd_enable.png"></p>
+<p><img src="https://rancho333.github.io/pictures/systemd_enable.png"></p>
 <p>如果配置文件里面设置了开机启动，<code>systemctl enable</code>命令相当于激活开机启动。</p>
 <p>配置文件的后缀名就是该unit的种类，systemd默认后缀名是<code>.service</code>，所以<code>bluetooth</code>等效于<code>bluetooth.service</code>。</p>
 <p><code>systemctl list-unit-files</code>会显示每个unit的状态，一共有四种：</p>
@@ -3370,7 +3370,7 @@
 <li>static: 该配置文件没有[install]部分，无法通过enable命令进行安装。只能做为其它unit的依赖(After字段或Requires字段)或者手动开启。相反的，基于这个特性，它无法通过disable关闭，一般用在必须启动的unit上。如写一个rc-local.service，实现开机后自动实现某些功能。</li>
 <li>masked：该配置文件被禁止建立启动链接</li>
 </ul>
-<h2 id="配置文件的格式"><a href="#配置文件的格式" class="headerlink" title="配置文件的格式"></a>配置文件的格式</h2><p>配置文件示例如下：<br><img src="https://rancho333.gitee.io/pictures/systemd_config_file.png"></p>
+<h2 id="配置文件的格式"><a href="#配置文件的格式" class="headerlink" title="配置文件的格式"></a>配置文件的格式</h2><p>配置文件示例如下：<br><img src="https://rancho333.github.io/pictures/systemd_config_file.png"></p>
 <p>配置文件分为Unit、Service、Install等区块，每个区块中都是key-value形式的配置。</p>
 <p><code>[Unit]</code>是配置文件的第一个区块，用来定义Unit的元数据，以及配置与其他Unit的关系，主要字段如下：</p>
 <ul>
@@ -3434,7 +3434,7 @@
 <h2 id="Unit区块中的启动顺序与依赖关系"><a href="#Unit区块中的启动顺序与依赖关系" class="headerlink" title="Unit区块中的启动顺序与依赖关系"></a>Unit区块中的启动顺序与依赖关系</h2><p>启动顺序由<code>Before</code>和<code>After</code>字段表示。Before表明应该在value表示的服务<em>之前</em>启动，After表示应该在value表示的服务<em>之后</em>启动。这两个字段只涉及到启动顺序而不设计依赖关系。</p>
 <p>举例来说，SONiC中的bgp服务需要用redis数据库存储数据。如果在配置文件中只定义在redis之后启动，而没有定义依赖关系。设备启动后，由于某些原因，redis挂掉了，这之后bgp就会无法建立数据库连接。</p>
 <p>设置依赖关系，需要使用<code>Wants</code>和<code>Requires</code>字段。Wants字段表明两者之间存在<em>弱依赖</em>关系，即如果value表明的服务启动失败或者停止运行，不影响主服务的继续执行。Requires字段则表明两者之间存在<em>强依赖</em>关系，即如果value表明的服务启动失败或者异常退出，那么主服务也必须退出。注意这两个字段只涉及依赖关系，与启动顺序无关，默认情况下不是同时启动的。</p>
-<p>依赖于某一服务才能正常运行，可以同时定义Requires和After字段，如下所示。<br><img src="https://rancho333.gitee.io/pictures/requires_after.png"></p>
+<p>依赖于某一服务才能正常运行，可以同时定义Requires和After字段，如下所示。<br><img src="https://rancho333.github.io/pictures/requires_after.png"></p>
 <h2 id="Services区块的小问题"><a href="#Services区块的小问题" class="headerlink" title="Services区块的小问题"></a>Services区块的小问题</h2><p>Services区块定义如何启动当前服务。</p>
 <p>在所有的启动设置之前加上一个连词号(-),表示<em>抑制错误</em>，即错误发生的时候，不影响其它命令的执行。比如，<code>EnvironmentFile=-/etc/sysconfig/sshd</code>（注意等号后面的那个连词号），就表示即使<code>/etc/sysconfig/sshd</code>文件不存在，也不会抛出错误。</p>
 <p><code>KillMode</code>字段定义了Systemd如何停止服务，value可以设置的值如下：</p>
@@ -3446,7 +3446,7 @@
 <h2 id="Install区块的小问题"><a href="#Install区块的小问题" class="headerlink" title="Install区块的小问题"></a>Install区块的小问题</h2><p>Install区块定义如何安装这个配置文件，即怎样做到开机启动。</p>
 <p><code>WanteBy</code>字段表示该服务所在的Target。systemd默认启动的Target可以通过<code>systemctl get-default</code>查看到。服务必须加到这个Target或这个Target的子Target中才能开机启动。</p>
 <p>常用的Target有两个，一个是<code>multi-user.target</code>，表示多用户命令行状态；另一个是<code>graphical.target</code>，表示图形用户状态，它依赖于<code>multi-user.target</code>，SONiC使用的是后者。官方文档有一张非常清晰的<a href="https://www.freedesktop.org/software/systemd/man/bootup.html#System%20Manager%20Bootup">Target依赖关系图</a></p>
-<h2 id="Target的配置文件"><a href="#Target的配置文件" class="headerlink" title="Target的配置文件"></a>Target的配置文件</h2><p>在<code>/lib/systemd/system</code>下可以找到Target的配置文件,以<code>graphical.target</code>为例：<br><img src="https://rancho333.gitee.io/pictures/graphical_target.png"><br>其中：</p>
+<h2 id="Target的配置文件"><a href="#Target的配置文件" class="headerlink" title="Target的配置文件"></a>Target的配置文件</h2><p>在<code>/lib/systemd/system</code>下可以找到Target的配置文件,以<code>graphical.target</code>为例：<br><img src="https://rancho333.github.io/pictures/graphical_target.png"><br>其中：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Requires字段：要求basic.target一起运行。</span><br><span class="line">Conflicts字段：冲突字段。如果rescue.service或rescue.target正在运行，multi-user.target就不能运行，反之亦然。</span><br><span class="line">After：表示multi-user.target在basic.target 、 rescue.service、 rescue.target之后启动，如果它们有启动的话。</span><br><span class="line">AllowIsolate：允许使用systemctl isolate命令切换到multi-user.target。</span><br></pre></td></tr></table></figure>
 
 <h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>一般而言，配置文件存放在<code>/lib/systemd/system</code>和<code>/usr/lib/systemd/system</code>目录下，通过<code>systemctl enable</code>在<code>/etc/systemd/system</code>创建符号链接指向前者，Systemd会执行etc下的文件，前提是文件中的Install配对了Target。</p>
@@ -3462,7 +3462,7 @@
     <url>/2020/12/18/sonic-testbed/</url>
     <content><![CDATA[<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>最初，SONiC的所有测试用例都是用ansible playbook写的。2019年开始使用pytest， 2020年9月份之后，只有用pytest写的测试用例才被采纳。<br>但是ansible依然很重要，pytest-ansible插件连接pytest与ansible。pytest通过ansible进行多设备协同工作。</p>
 <span id="more"></span>
-<h2 id="物理拓扑"><a href="#物理拓扑" class="headerlink" title="物理拓扑"></a>物理拓扑</h2><p><img src="https://rancho333.gitee.io/pictures/physical-topology.png"></p>
+<h2 id="物理拓扑"><a href="#物理拓扑" class="headerlink" title="物理拓扑"></a>物理拓扑</h2><p><img src="https://rancho333.github.io/pictures/physical-topology.png"></p>
 <ol>
 <li>DUT和leaf fanout的端口一一互联</li>
 <li>leaf fanout与DUT相连的端口进行VLAN隔离</li>
@@ -3477,7 +3477,7 @@
 <li>使能LACP/LLDP</li>
 <li>关闭STP功能</li>
 </ul>
-<h3 id="Testbed-server"><a href="#Testbed-server" class="headerlink" title="Testbed server"></a>Testbed server</h3><p><img src="https://rancho333.gitee.io/pictures/testbed-server.png"></p>
+<h3 id="Testbed-server"><a href="#Testbed-server" class="headerlink" title="Testbed server"></a>Testbed server</h3><p><img src="https://rancho333.github.io/pictures/testbed-server.png"></p>
 <h4 id="网络连接"><a href="#网络连接" class="headerlink" title="网络连接"></a>网络连接</h4><ul>
 <li>testbed server有两个网络接口<ul>
 <li>trunk端口连接root fanout</li>
@@ -3486,9 +3486,9 @@
 </li>
 </ul>
 <h3 id="VMs"><a href="#VMs" class="headerlink" title="VMs"></a>VMs</h3><p>VMs使用的是Arista的vEOS。它们用来设置测试协议，例如BGP、LACP、LLDP等。它们通过<code>testbed-cli.sh start-vms</code>进行创建。每一个VM使用2G内存并且拥有10个网络接口。<br>    * 8个前面板端口。这些端口用来连接到openvswitch网桥，连接到vlan interfaces.vlan interface通过物理接口连接到fanout。<br>    * 一个后背板端口。所有VMs通过这个背板口互联。<br>    * 一个管理网口。用来管理VMs.</p>
-<h3 id="PTF"><a href="#PTF" class="headerlink" title="PTF"></a>PTF</h3><p>PTF容器通过发送和接收数据包来验证DUT的数据面。<br>PTF with direct port<br><img src="https://rancho333.gitee.io/pictures/testbed-direct.png"></p>
+<h3 id="PTF"><a href="#PTF" class="headerlink" title="PTF"></a>PTF</h3><p>PTF容器通过发送和接收数据包来验证DUT的数据面。<br>PTF with direct port<br><img src="https://rancho333.github.io/pictures/testbed-direct.png"></p>
 <p>DUT的前面板口直连到一个PTF容器的端口。一般的PTF容器的eth0连接到DUT的Ethernet0，eth1连接到Ethernet4。这一般在PTF拓扑中用来连接DUT端口和PTF容器端口。</p>
-<p><img src="https://rancho333.gitee.io/pictures/testbed-injected.png"></p>
+<p><img src="https://rancho333.github.io/pictures/testbed-injected.png"></p>
 <p>DUT的前面板口和一个VM的接口直连。但是我们在这个连接上有个tap。从vlan interface中收到的包被发送给VMs和PTF容器。从VM和PTF容器中发出的包被送到vlan interface。这允许我们可以同时从PTF host往DUT注入包和维持VM与DUT之间的BGP会话。</p>
 <h3 id="SONiC-Tested-with-keysight-IxNetwork-as-Traffic-Generator"><a href="#SONiC-Tested-with-keysight-IxNetwork-as-Traffic-Generator" class="headerlink" title="SONiC Tested with keysight IxNetwork as Traffic Generator"></a>SONiC Tested with keysight IxNetwork as Traffic Generator</h3><p>TO BE DONE！！</p>
 <h2 id="Testbed设置"><a href="#Testbed设置" class="headerlink" title="Testbed设置"></a>Testbed设置</h2><p>下面讲述testbed的设置步骤以及拓扑的部署。</p>
@@ -3620,26 +3620,26 @@
 </ul>
 </li>
 </ul>
-<h3 id="当前的拓扑"><a href="#当前的拓扑" class="headerlink" title="当前的拓扑"></a>当前的拓扑</h3><h4 id="t1"><a href="#t1" class="headerlink" title="t1"></a>t1</h4><p><img src="https://rancho333.gitee.io/pictures/testbed-t1.png"></p>
+<h3 id="当前的拓扑"><a href="#当前的拓扑" class="headerlink" title="当前的拓扑"></a>当前的拓扑</h3><h4 id="t1"><a href="#t1" class="headerlink" title="t1"></a>t1</h4><p><img src="https://rancho333.github.io/pictures/testbed-t1.png"></p>
 <ul>
 <li>需要32个VMs</li>
 <li>所有的DUT端口直连VMs</li>
 <li>PTF容器只有注入端口</li>
 </ul>
-<h4 id="t1-lag"><a href="#t1-lag" class="headerlink" title="t1-lag"></a>t1-lag</h4><p><img src="https://rancho333.gitee.io/pictures/testbed-t1-lag.png"></p>
+<h4 id="t1-lag"><a href="#t1-lag" class="headerlink" title="t1-lag"></a>t1-lag</h4><p><img src="https://rancho333.github.io/pictures/testbed-t1-lag.png"></p>
 <ul>
 <li>需要24个VMs</li>
 <li>所有的DUT端口直连VMs</li>
 <li>PTF容器只有注入端口</li>
 </ul>
-<h4 id="ptf32"><a href="#ptf32" class="headerlink" title="ptf32"></a>ptf32</h4><p><img src="https://rancho333.gitee.io/pictures/testbed-ptf32.png"></p>
+<h4 id="ptf32"><a href="#ptf32" class="headerlink" title="ptf32"></a>ptf32</h4><p><img src="https://rancho333.github.io/pictures/testbed-ptf32.png"></p>
 <ul>
 <li>不需要VMs</li>
 <li>所有的DUT端口直连PTF容器</li>
 <li>PTF容器没有注入端口</li>
 </ul>
-<h4 id="ptf64"><a href="#ptf64" class="headerlink" title="ptf64"></a>ptf64</h4><p><img src="https://rancho333.gitee.io/pictures/testbed-ptf64.png"><br>和ptf32一样</p>
-<h4 id="t0"><a href="#t0" class="headerlink" title="t0"></a>t0</h4><p><img src="https://rancho333.gitee.io/pictures/testbed-t0.png"></p>
+<h4 id="ptf64"><a href="#ptf64" class="headerlink" title="ptf64"></a>ptf64</h4><p><img src="https://rancho333.github.io/pictures/testbed-ptf64.png"><br>和ptf32一样</p>
+<h4 id="t0"><a href="#t0" class="headerlink" title="t0"></a>t0</h4><p><img src="https://rancho333.github.io/pictures/testbed-t0.png"></p>
 <ul>
 <li>需要4个VMs</li>
 <li>4个DUT端口连接到VMs</li>
@@ -3803,7 +3803,7 @@
 </li>
 </ul>
 <h1 id="vlan介绍"><a href="#vlan介绍" class="headerlink" title="vlan介绍"></a>vlan介绍</h1><p>VLAN(virtual local area network)即虚拟局域网，是将一个物理的LAN在逻辑上划分多个广播域的通信技术。根据IEEE 802.1Q协议规定，在以太网数据帧的目的MAC地址和源MAC地址字段之后、协议字段之前加入4个字节的VLAN tag，用以标识VLAN信息，VLAN数据帧格式如下图所示。</p>
-<p><img src="https://rancho333.gitee.io/pictures/vlan_frame.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vlan_frame.png"></p>
 <p>对于交换机而言，其内部处理的数据帧都带有VLAN tag，现网中交换机连接的设备只会接收Untagged帧。交换机需要有识别Untagged帧并在收发时给帧添加、剥离VLAN标签的能力，交换机间的接口需要有同时识别和发送多个vlan数据帧的能力。</p>
 <p>根据接口对象和收发数据帧处理的不同，下面介绍4中链路类型，用以适应不同的连接和组网：</p>
 <ul>
@@ -3849,7 +3849,7 @@
 </tbody></table>
 <p>两个概念，vlan的透传和终结，vlan的透传就是某个vlan不仅在一台交换机上有效，它还要通过某种方式延伸到别的以太网交换机上，在别的设备上照样有效，vlan的透传可以使用802.1Q协议，trunk链路上使用。vlan的终结意思相对，某个vlan的有效域不能再延伸到别的设备，或者不能通过某条链路延伸到别的设备，可以使用pvlan技术实现，主要在vlan数据出端口到终端设备，或者上三层转发时剥离。这两者的本质就是保留vlan tag和去除vlan tag。</p>
 <h1 id="vxlan学习"><a href="#vxlan学习" class="headerlink" title="vxlan学习"></a>vxlan学习</h1><h2 id="什么是vxlan"><a href="#什么是vxlan" class="headerlink" title="什么是vxlan"></a>什么是vxlan</h2><p>vxlan(virtual extensible local area network)虚拟扩展局域网，是有IETF定义的NVO3(network virtualization over layer 3)标准技术之一。vxlan的本质是一种隧道技术，将L2的以太帧封装到UDP报文中在L3网络中传输。虽然从名字上看，vxlan是vlan的一种扩展协议，但是vxlan构建虚拟隧道的本领已经和vlan迥然不同了。vxlan报文格式如下图所示。</p>
-<p><img src="https://rancho333.gitee.io/pictures/vxlan_tag.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vxlan_tag.png"></p>
 <p>如上图所示，VTEP对VM发送的原始以太帧（original L2 frame）进行了如下的封装：</p>
 <table>
 <thead>
@@ -3884,7 +3884,7 @@
 <p>对于虚拟机动态迁移，不仅虚拟机的IP地址不变，而且虚拟机的运行状态也必须保持原状（如TCP会话状态），所以虚拟机动态迁移只能在一个二层域中进行。vxlan可以将整个数据中心基础网络虚拟化成一台巨大的“二层交换机”，所有的服务器都连结在这台二层交换机上。underlay网路具体如何转发，服务器完全无需关心。将虚拟机从“二层交换机”的一个端口换到另一个端口，完全无需变更IP地址。<br>使用这种理念的技术协议，除了vxlan外，还有NVGRE、STT等。</p>
 <p>传统网络中，vlan数量只有4000个左右，vxlan理论上可以支持16M的vxlan段，从而满足大规模不同网络之间的标识、隔离需求。</p>
 <h2 id="vxlan的隧道是如何建立的"><a href="#vxlan的隧道是如何建立的" class="headerlink" title="vxlan的隧道是如何建立的"></a>vxlan的隧道是如何建立的</h2><h3 id="vxlan中的VTEP和VNI"><a href="#vxlan中的VTEP和VNI" class="headerlink" title="vxlan中的VTEP和VNI"></a>vxlan中的VTEP和VNI</h3><p>下面了解一下vxlan网络模型以及一些常见的概念，如下图所示，两台服务器之间通过vxlan的网络进行通信。</p>
-<p><img src="https://rancho333.gitee.io/pictures/vxlan_network_module.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vxlan_network_module.png"></p>
 <p>如上图所示，vxlan报文在vtep两端有一个封装和解封装的操作。</p>
 <p>VTEP(vxlan tunnel endpoints, vxlan隧道端点)是vxlan网络的边缘设备，是vxlan隧道的起点个终点，vxlan对用户原始数据帧的封装和解封装均在VTEP上进行。VTEP既可以是一台独立的网络设备，也可以是服务器中的虚拟交换机。</p>
 <p>VNI(vxlan network identifier, vxlan网络标识符)是一种类似VLAN ID的用户标识，一个VNI代表了一个租户，属于不同的VNI虚拟机之间不能直接进行二层通信。在分布式网关的部署场景下，VNI可以分为二层VNI和三层VNI：</p>
@@ -3931,11 +3931,11 @@
 <li>二层网关：用于终端接入vxlan网络，也可用于同一vxlan网络的子网通信</li>
 <li>三层网关：用于vxlan网络中跨子网通信以及访问外部网络</li>
 </ul>
-<p>具体说明下。<br>vxlan三层网关。用于终结vxlan网络，将vxlan报文转换成传统三层报文发送至IP网络，适用于vxlan网络内服务器与远端之间的三层互访；同时也作不同vxlan网络互通，如下图所示.当服务器访问外部网络时，vxlan三层网关剥离对应vxlan报文封装，送入IP网络；当外部终端访问vxlan内的服务器时，vxlan根据目的IP地址所属vxlan及所属的VTEP，加上对应的vxlan报文头封装进入vxlan网络。vxlan之间的互访流量与此类似，vxlan网关剥离vxlan报文头，并基于目的IP地址所属vxlan及所属的VTEP，重新封装后送入另外的vxlan网络。<br><img src="https://rancho333.gitee.io/pictures/vxlan_l3_gateway.png"></p>
+<p>具体说明下。<br>vxlan三层网关。用于终结vxlan网络，将vxlan报文转换成传统三层报文发送至IP网络，适用于vxlan网络内服务器与远端之间的三层互访；同时也作不同vxlan网络互通，如下图所示.当服务器访问外部网络时，vxlan三层网关剥离对应vxlan报文封装，送入IP网络；当外部终端访问vxlan内的服务器时，vxlan根据目的IP地址所属vxlan及所属的VTEP，加上对应的vxlan报文头封装进入vxlan网络。vxlan之间的互访流量与此类似，vxlan网关剥离vxlan报文头，并基于目的IP地址所属vxlan及所属的VTEP，重新封装后送入另外的vxlan网络。<br><img src="https://rancho333.github.io/pictures/vxlan_l3_gateway.png"></p>
 <p>vxlan二层网关。用于终结vxlan网络。将vxlan报文转换成对应的传统二层网络送到传统以太网路，适用于vxlan网络内服务器与远端终端或远端服务器的二层互联。如在不同网络中做虚拟机迁移时，当业务需要传统网络中服务器与vxlan网络中服务器在同一个二层中，此时需要使用vxlan二层网关打通vxlan网络和二层网络。如下图所示。vxlan10网络中的服务器要和IP网络中vlan100的业务二层互通，此时就需要通过vxlan的二层网关进行互联。vxlan10的报文进入IP网络的流量，剥离vxlan报文头，根据vxlan的标签查询对应的vlan网络，并据此在二层报文中加入vlan的802.1Q报文送入IP网络；相反vlan100的业务流量进入vxlan也需要根据vlan获知对应的vxlan的vni，根据目的mac地址获知远端vtep的IP地址，基于以上信息进行vxlan封装后送入对应的vxlan网络。</p>
-<p><img src="https://rancho333.gitee.io/pictures/vxlan_l2_gateway.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vxlan_l2_gateway.png"></p>
 <h3 id="vxlan集中式网关与分布式网关"><a href="#vxlan集中式网关与分布式网关" class="headerlink" title="vxlan集中式网关与分布式网关"></a>vxlan集中式网关与分布式网关</h3><p>集中式网关指将三层网关集中部署在一台设备上,如下图所示，所有跨子网的流量都经过这个三层网关转发，实现流量的集中管理。</p>
-<p><img src="https://rancho333.gitee.io/pictures/vxlan_gateway.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vxlan_gateway.png"></p>
 <p>集中式网关的优点和缺点如下：</p>
 <ul>
 <li>优点：对跨子网流量进行集中管理，网关部署和管理比较简单</li>
@@ -3946,7 +3946,7 @@
 </li>
 </ul>
 <p>vxlan分布式网关是指在典型的”spine-leaf”组网结构下，将leaf节点作为vxlan隧道断点VTEP，每个leaf节点都可作为vxlan三层网关(同时也是vxlan二层网关)，spine节点不感知vxlan隧道，只作为vxlan报文的转发节点。如下图所示</p>
-<p><img src="https://rancho333.gitee.io/pictures/vxlan_gateway_2.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vxlan_gateway_2.png"></p>
 <p>部署分布式网关时：</p>
 <ul>
 <li>spine节点：关注于高速IP转发，强调的是设备的高速转发能力</li>
@@ -3962,9 +3962,9 @@
 <li>leaf节点只需要学习自身连接服务器的ARP表项，而不必像集中三层网关一样，需要学习所有服务器的ARP表项，解决了集中式三层网关带来的ARP表项瓶颈问题，网络规模扩展能力强</li>
 </ul>
 <h2 id="vxlan网络中报文时如何转发的"><a href="#vxlan网络中报文时如何转发的" class="headerlink" title="vxlan网络中报文时如何转发的"></a>vxlan网络中报文时如何转发的</h2><p>这里介绍集中式vxlan中相同子网内、不同子网间是如何进行通信的。对于分布式vxlan网络，在EVPN中介绍。<br>对于二三层转发通信细节不是很清楚的同学，建议学习下二层与三层ping中arp与icmp报文的交互细节。</p>
-<h3 id="集中式vxlan中同子网互通流程"><a href="#集中式vxlan中同子网互通流程" class="headerlink" title="集中式vxlan中同子网互通流程"></a>集中式vxlan中同子网互通流程</h3><p><img src="https://rancho333.gitee.io/pictures/vxlan_l2_ct.png"></p>
+<h3 id="集中式vxlan中同子网互通流程"><a href="#集中式vxlan中同子网互通流程" class="headerlink" title="集中式vxlan中同子网互通流程"></a>集中式vxlan中同子网互通流程</h3><p><img src="https://rancho333.github.io/pictures/vxlan_l2_ct.png"></p>
 <p>如上图所示，VM_A、VM_B、VM_C属于相同网段，且同属VNI 5000。C要与A进行通信，对于首次通信，需要通过ARP获取对方MAC。在vlan子网通信中，arp报文在vlan内广播。在vxlan相同子网中，ARP请求报文转发流程见下图</p>
-<p><img src="https://rancho333.gitee.io/pictures/vxlan_l2_arp_request.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vxlan_l2_arp_request.png"></p>
 <p>A向C进行MAC请求的过程如下：</p>
 <ol>
 <li>A发送ARP请求报文请求C的MAC</li>
@@ -3987,7 +3987,7 @@
 <li>B和C收到arp报文后，按照arp报文处理方式进行丢弃或应答。这里C向A发送ARP应答。</li>
 </ol>
 <p>ARP应答报文转发流程见下图</p>
-<p><img src="https://rancho333.gitee.io/pictures/vxlan_l2_arp_reply.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vxlan_l2_arp_reply.png"></p>
 <p>C向A发送ARP 应答报文的过程如下：</p>
 <ol>
 <li>A向C发送ARP应答报文</li>
@@ -4009,11 +4009,11 @@
 </li>
 </ol>
 <p>至此，A和C均已学习到了对方的MAC地址。</p>
-<h3 id="集中式vxlan不同子网互通流程"><a href="#集中式vxlan不同子网互通流程" class="headerlink" title="集中式vxlan不同子网互通流程"></a>集中式vxlan不同子网互通流程</h3><p><img src="https://rancho333.gitee.io/pictures/vxlan_l3_ct.png"></p>
+<h3 id="集中式vxlan不同子网互通流程"><a href="#集中式vxlan不同子网互通流程" class="headerlink" title="集中式vxlan不同子网互通流程"></a>集中式vxlan不同子网互通流程</h3><p><img src="https://rancho333.github.io/pictures/vxlan_l3_ct.png"></p>
 <p>A、B分属不同网段，且分别属于VNI 5000和VNI 6000。A、B对应的三层网关分别是VTEP_3上的BDIF 10和BDIF 20的IP地址。VTEP_3上存在到两个网段的路由。</p>
 <p>BDIF接口的功能与VLAN IF接口类似，是基于BD创建的三层逻辑接口，用以实现不同子网之间的通信，或vxlan网络与非vxlan网络之间的通信。</p>
 <p>对于首次通信，类比与underlay网络中跨网段通信。A请求网关BDIF 10 MAC，然后将数据包发送给网关BDIF 10，BDIF 10将数据包路由至BDIF 20，BDIF 20请求B的MAC，然后将数据包发送给B。具体流程如下：</p>
-<p><img src="https://rancho333.gitee.io/pictures/vxlan_l3_arp.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vxlan_l3_arp.png"></p>
 <p>数据报文转发流程如下：</p>
 <ol>
 <li>A将数据报文发送给网关。报文的源MAC是A MAC，目的MAC是网管BDIF 10的MAC；报文的源IP是A的IP，目的IP是B的IP</li>
@@ -4038,7 +4038,7 @@
 </ol>
 <p>vxlan网络与非vxlan网络之间的互通，也需要借助三层网关，但是不同在于：报文在vxlan网络侧会进行封装，而在非vxlan网络侧不需要进行封装。报文从vxlan侧进入网关并解封后，就按照普通单播报文的发送方式进行转发。</p>
 <h2 id="overlay网络的三种构建模式"><a href="#overlay网络的三种构建模式" class="headerlink" title="overlay网络的三种构建模式"></a>overlay网络的三种构建模式</h2><p>在数据中心，部分业务不适合进行虚拟化(如小机服务器，高性能数据库服务器),这些服务器会直接与物理交换机互联；对于服务器(虚拟机)，接入的可以是虚拟交换机(OpenvSwitch),也可以是物理交换机，因此存在如下图所示的三种接入模型。</p>
-<p><img src="https://rancho333.gitee.io/pictures/vxlan_network_module_2.png"></p>
+<p><img src="https://rancho333.github.io/pictures/vxlan_network_module_2.png"></p>
 <p>以上，在network overlay方案中，所有终端均采用物理交换机作为VTEP节点；host overlay方案中，所有终端均采用虚拟交换机作为VTEP节点；hybird overlay方案中，既有物理交换机接入，又有虚拟交换机接入，且软件VTEP和硬件VTEP之间可以基于标准协议互通。</p>
 <h2 id="vxlan与SDN"><a href="#vxlan与SDN" class="headerlink" title="vxlan与SDN"></a>vxlan与SDN</h2><p>vxlan只定义了转发平面的流程，对于控制平面还没有规范，一般采取三种方式：</p>
 <ol>
@@ -4139,10 +4139,10 @@
 </tr>
 </tbody></table>
 <p>关于辞职，当master路由器接口shutdown时，会立即发送优先级为0的通告，vrrp中优先级为0表示不参与虚拟组计算，收到的backups之间会立即重新选举出新的master，否则就要等待3秒的报文超时再选举，这样可以加快收敛时间。优先级为0的报文如下：</p>
-<p><img src="!%5B%5D(https://github.com/Rancho333/pictures_hub/blob/master/non_auto/vrrp_packet_priority_0.png?raw=true"></p>
+<p><img src="!%5B%5D(https://rancho333.github.io/pictures/vrrp_packet_priority_0.png"></p>
 <p>在HSRP中，tracking中触发支持shutdown，如果active路由器接口shutdown，那么standby只能等待10秒超时后变成active. VRRP tracking中不支持shutdown，嗯，也就是说只有路由接口手动shutdown或物理线路挂掉才会触发优先级为0的报文，而上行链路挂掉tracking无法触发？</p>
 <h1 id="实验说明"><a href="#实验说明" class="headerlink" title="实验说明"></a>实验说明</h1><p>实验拓扑图如下：</p>
-<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/vrrp_basic_topology.png?raw=true"></p>
+<p><img src="https://rancho333.github.io/pictures/vrrp_basic_topology.png"></p>
 <p>S2、S3、S4的interface vlan1加入虚拟组组成虚拟路由器，虚拟组对外提供网关服务。基本配置如下：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S2</span><br><span class="line">    interface Vlan1</span><br><span class="line">        ip address 192.168.1.1 255.255.255.0        &#x2F;&#x2F; svi配置IP地址</span><br><span class="line">        vrrp 1 ip 192.168.1.254                     &#x2F;&#x2F; svi加入虚拟组1，虚拟ip为192.168.1.254</span><br><span class="line">S3</span><br><span class="line">    interface Vlan1</span><br><span class="line">        ip address 192.168.1.2 255.255.255.0</span><br><span class="line">        vrrp 1 ip 192.168.1.254</span><br><span class="line">S4</span><br><span class="line">    interface Vlan1</span><br><span class="line">        ip address 192.168.1.3 255.255.255.0</span><br><span class="line">        vrrp 1 ip 192.168.1.254</span><br></pre></td></tr></table></figure>
 
@@ -4151,7 +4151,7 @@
 <p>vrrp的默认优先级也是100，超期时间单位是毫秒，有计算公式，是hello的三倍多点，<code>own</code>表示是否是虚拟组的拥有者，当物理接口ip和虚拟组ip一致时成为owner, 通过将优先级置位最大值255实，如将S3设置成owner</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S3(config-if)#ip address 192.168.1.254 255.255.255.0</span><br><span class="line">S3#show vrrp brief </span><br><span class="line">Interface          Grp Pri Time  Own Pre State   Master addr     Group addr</span><br><span class="line">Vl1                1   255 3003   Y   Y  Master  192.168.1.254   192.168.1.254</span><br></pre></td></tr></table></figure>
 <p>优先级为255的报文为：</p>
-<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/vrrp_packet_priority_255.png?raw=true"></p>
+<p><img src="https://rancho333.github.io/pictures/vrrp_packet_priority_255.png"></p>
 <p>owner不能被配置优先级。 vrrp默认开启preempt，所以<code>pre</code>是<code>Y</code>。注意vrrp组中除master外，其余都是backup，即master挂掉后，会从backup中重新选举出新的master。而hsrp中master挂掉后，standby接替，之后在candidate中选举出新的standby。</p>
 <p><strong>所以VRRP中只有master发送announcement，backup监听。hsrp中active和backup都需要发送hello报文。</strong></p>
 <p>当然，FHRP中一般搞两台路由器做网关冗余就行了。</p>
@@ -4178,7 +4178,7 @@
 <h1 id="原理介绍"><a href="#原理介绍" class="headerlink" title="原理介绍"></a>原理介绍</h1><p>一组交换机(实际上是交换机的三层接口)加入一个group中，这个group向外提供虚拟ip作为网关。这些交换机通过交换hsrp hello报文选举出active和standby，其它的交换机是candidates，active网关进行数据转发，当active挂掉之后，standby成为新的active，并从candidate中选举出新的standby。注意，HSRP是单活的。</p>
 <p>只有active才会对arp进行应答，standby忽略。选举出active后，active会立即向外发送免费ARP报文，在拓扑收敛场景下，这会立马环境中的arp缓存和旧的mac地址表。</p>
 <h2 id="简单配置说明"><a href="#简单配置说明" class="headerlink" title="简单配置说明"></a>简单配置说明</h2><p>拓扑图如下：</p>
-<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/hsrp_basic_topology.png?raw=true"></p>
+<p><img src="https://rancho333.github.io/pictures/hsrp_basic_topology.png"></p>
 <p>S8做接入交换机，网关设置在汇聚层，由S7和S9形成的虚拟IP<code>192.168.1.254</code>承担。配置如下：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S7</span><br><span class="line">interface Vlan1</span><br><span class="line"> ip address 192.168.1.1 255.255.255.0          &#x2F;&#x2F; 配置三层接口地址，hsrp报文原地址</span><br><span class="line"> standby 1 ip 192.168.1.254                    &#x2F;&#x2F; 加入虚拟组1，虚拟ip为192.168.1.254</span><br><span class="line"></span><br><span class="line">S9</span><br><span class="line">interface Vlan1</span><br><span class="line"> ip address 192.168.1.2 255.255.255.0</span><br><span class="line"> standby 1 ip 192.168.1.254</span><br></pre></td></tr></table></figure>
 <p>通过<code>show standby brief</code>可以查看hsrp状态。</p>
@@ -4186,7 +4186,7 @@
 
 <p>hsrp的配置非常简单，实际上就一条命令。注意standby命令的配置一定要加上group id，如果不加默认是给group 0做配置。如<code>standby ip 192.168.1.56</code>，表示端口加入虚拟组0，虚拟ip是192.168.1.56. 一个三层接口可以加入多个虚拟组。</p>
 <h2 id="HSRP报文说明"><a href="#HSRP报文说明" class="headerlink" title="HSRP报文说明"></a>HSRP报文说明</h2><p>HSRP hello报文格式如下</p>
-<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/hsrp_hello_packet.png?raw=true"></p>
+<p><img src="https://rancho333.github.io/pictures/hsrp_hello_packet.png"></p>
 <ul>
 <li>version: 0表示HSRP v1, 1表示HSRP v2</li>
 <li>op code: 0表示hello报文，1表示coup报文，3表示advertise报文</li>
@@ -4254,7 +4254,7 @@
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S7#show track brief </span><br><span class="line">Track Type        Instance                   Parameter        State Last Change</span><br><span class="line">1     ip sla      1                          state            Down  00:09:17</span><br><span class="line">2     interface   Ethernet0&#x2F;1                line-protocol    Up    00:07:55</span><br><span class="line">3     interface   Ethernet0&#x2F;2                line-protocol    Up    00:06:38</span><br><span class="line">4     list                                   boolean          Up    00:05:08</span><br></pre></td></tr></table></figure>
 <p>当HSRP有两个上行链路时，track 2、3分别监控两个上行链路，只用在hsrp中关联track4就行，减少关联对象。</p>
 <h2 id="HSRP结合PVSTP做不同网段流量的负载均衡"><a href="#HSRP结合PVSTP做不同网段流量的负载均衡" class="headerlink" title="HSRP结合PVSTP做不同网段流量的负载均衡"></a>HSRP结合PVSTP做不同网段流量的负载均衡</h2><p>实验拓扑如下：</p>
-<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/hsrp_pvstp.png?raw=true"></p>
+<p><img src="https://rancho333.github.io/pictures/hsrp_pvstp.png"></p>
 <p>HSRP与PVSTP同时使用时，做不同网段的负载均衡，应注意该网段(vlan)HSRP的active与PVSTP的根桥应在同一设备上，不然流量会集中到某一台设备上，导致该设备负载过大，而另一台没有流量需要转发。配置思路如下：</p>
 <ol>
 <li>划分vlan，配置交换机互联trunk<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S1</span><br><span class="line">    vlan 10,20</span><br><span class="line">    interface Ethernet0&#x2F;0</span><br><span class="line">        switchport access vlan 10</span><br><span class="line">    interface Ethernet0&#x2F;1</span><br><span class="line">         switchport trunk encapsulation dot1q</span><br><span class="line">         switchport mode trunk</span><br><span class="line">    interface Ethernet0&#x2F;2</span><br><span class="line">         switchport trunk encapsulation dot1q</span><br><span class="line">         switchport mode trunk</span><br><span class="line">    interface Ethernet0&#x2F;3</span><br><span class="line">         switchport access vlan 20</span><br><span class="line">S2, S3做类似配置</span><br></pre></td></tr></table></figure></li>
@@ -4262,7 +4262,7 @@
 <li>创建interface vlan; 设置hsrp，S2是vlan10所在网段的active，S3是vlan20所在网段 的active<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S2</span><br><span class="line">    interface Vlan10</span><br><span class="line">        ip address 192.168.1.1 255.255.255.0</span><br><span class="line">        standby 10 ip 192.168.1.254</span><br><span class="line">        standby 10 priority 101</span><br><span class="line">        standby 10 preempt</span><br><span class="line">S3</span><br><span class="line">    interface Vlan10</span><br><span class="line">        ip address 192.168.1.3 255.255.255.0</span><br><span class="line">        standby 10 ip 192.168.1.254</span><br><span class="line">        standby 20 preempt</span><br><span class="line">&#x2F;&#x2F;S2作为vlan10网段的active</span><br><span class="line"></span><br><span class="line">S2</span><br><span class="line">    interface Vlan20</span><br><span class="line">       ip address 192.168.2.1 255.255.255.0</span><br><span class="line">       standby 20 ip 192.168.2.254</span><br><span class="line">       standby 10 preempt</span><br><span class="line">S3</span><br><span class="line">    interface Vlan20</span><br><span class="line">       ip address 192.168.2.3 255.255.255.0</span><br><span class="line">       standby 20 ip 192.168.2.254</span><br><span class="line">       standby 20 priority 101</span><br><span class="line">       standby 20 preempt</span><br><span class="line">&#x2F;&#x2F; S3作为vlan20网段的active</span><br></pre></td></tr></table></figure>
 完成后的流量路径如下图所示：</li>
 </ol>
-<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/hsrp_pvstp_1.png?raw=true"></p>
+<p><img src="https://rancho333.github.io/pictures/hsrp_pvstp_1.png"></p>
 <p>在多实例中我们将不同vlan的根桥放置在不同的设备上，这样可以让不同实例的流量路径不一致，从而最大限度的利用带宽，减少流量拥塞，避免带宽浪费，同时也避免单一设备负载过高。</p>
 <p>网关一般设置在汇聚层，我们假象下，如果vlan的根桥是S2，而active是S3，那么vpc4的流量需要经过S1到S2再转到S3(S3的eth2是block的)，无疑多了一次转发，这是不必要的，我们应当避免。</p>
 ]]></content>
@@ -4291,12 +4291,12 @@
 <h3 id="AVF冗余"><a href="#AVF冗余" class="headerlink" title="AVF冗余"></a>AVF冗余</h3><p>当AVF挂掉后，会从其它的secondary virtual forwarder中选出一个继续使用挂掉avf的vmac，这样用户的流量就不会中断。<br>AVF默认开启抢占。</p>
 <h3 id="GLBP存在的问题"><a href="#GLBP存在的问题" class="headerlink" title="GLBP存在的问题"></a>GLBP存在的问题</h3><p>GLBP原本是思科私有协议，现在开源了，但是用的人并不多，因为glbp天生与stp不对付，glbp中需要各avf链路才有LB的效果，但是stp却极有可能阻塞其中的一些链路。</p>
 <h2 id="实验说明"><a href="#实验说明" class="headerlink" title="实验说明"></a>实验说明</h2><p>实验拓扑图如下：</p>
-<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/glbp_basic_topology.png?raw=true"></p>
+<p><img src="https://rancho333.github.io/pictures/glbp_basic_topology.png"></p>
 <p>S2、S3、S4在一个虚拟组内，通过interface vlan1为vlan1所在网段提供网关服务，虚拟网关ip为<code>192.168.1.254</code>，VPC5、VPC6、VPC7都在vlan1中。</p>
 <p>配置如下：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">S2:</span><br><span class="line">interface Vlan1</span><br><span class="line"> ip address 192.168.1.2 255.255.255.0</span><br><span class="line"> glbp 1 ip 192.168.1.254</span><br><span class="line"></span><br><span class="line">S3:</span><br><span class="line">interface Vlan1</span><br><span class="line"> ip address 192.168.1.3 255.255.255.0</span><br><span class="line"> glbp 1 ip 192.168.1.254</span><br><span class="line"></span><br><span class="line">S4:</span><br><span class="line">interface Vlan1</span><br><span class="line"> ip address 192.168.1.4 255.255.255.0</span><br><span class="line"> glbp 1 ip 192.168.1.254</span><br></pre></td></tr></table></figure>
 <p>通过<code>show glbp brief</code>查看glbp的状态：</p>
-<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/glbp_show_brief.png?raw=true"></p>
+<p><img src="https://rancho333.github.io/pictures/glbp_show_brief.png"></p>
 <p>对show的状态做一个简单说明：</p>
 <ul>
 <li><code>Grp</code>表示接口所在的glbp组id</li>

@@ -28,18 +28,18 @@
 <meta property="og:site_name" content="Rancho Blog">
 <meta property="og:description" content="写在前面《STP(802.1d)简述》中描述了STP协议实现loop-free的原理，举例说明了根桥及端口的选举规则，当发生链路故障时的收敛过程，最后列举了加快STP收敛的特性及安全特性。STP的最大收敛时间可达50秒左右，为了加快收敛时间，RSTP(rapid STP)诞生了。RSTP主要通过P&#x2F;A机制减少端口状态切换时间，通过处理inferior BPDU减少BPDU老化时间，并且集成了por">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_election.png?raw=true">
-<meta property="og:image" content="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_bpdu.png?raw=true">
-<meta property="og:image" content="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_pa_mechanism.png?raw=true">
-<meta property="og:image" content="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_pa_packet.png?raw=true">
-<meta property="og:image" content="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_convergence_experiment.png?raw=true">
-<meta property="og:image" content="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_convergence_ping.png?raw=true">
+<meta property="og:image" content="https://rancho333.github.io/pictures/rstp_election.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/rstp_bpdu.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/rstp_pa_mechanism.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/rstp_pa_packet.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/rstp_convergence_experiment.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/rstp_convergence_ping.png">
 <meta property="article:published_time" content="2022-07-07T07:49:15.000Z">
-<meta property="article:modified_time" content="2022-07-07T08:43:41.849Z">
+<meta property="article:modified_time" content="2022-07-29T07:43:30.524Z">
 <meta property="article:author" content="Rancho">
 <meta property="article:tag" content="STP">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_election.png?raw=true">
+<meta name="twitter:image" content="https://rancho333.github.io/pictures/rstp_election.png">
 
 <link rel="canonical" href="https://rancho333.github.io/2022/07/07/RSTP802-1w%E7%AE%80%E8%BF%B0/">
 
@@ -240,10 +240,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2022-07-07 15:49:15 / 修改时间：16:43:41" itemprop="dateCreated datePublished" datetime="2022-07-07T15:49:15+08:00">2022-07-07</time>
+              <time title="创建时间：2022-07-07 15:49:15" itemprop="dateCreated datePublished" datetime="2022-07-07T15:49:15+08:00">2022-07-07</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-07-29 15:43:30" itemprop="dateModified" datetime="2022-07-29T15:43:30+08:00">2022-07-29</time>
+              </span>
 
           
             <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
@@ -311,13 +317,13 @@
 </tr>
 </tbody></table>
 <p>究其原因，RSTP中通过P/A机制主动协商可以直接将端口从discarding状态转换到forwarding，而不是STP中通过定时器机制经过forward_delay后再切换状态。</p>
-<h2 id="端口角色"><a href="#端口角色" class="headerlink" title="端口角色"></a>端口角色</h2><p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_election.png?raw=true"></p>
+<h2 id="端口角色"><a href="#端口角色" class="headerlink" title="端口角色"></a>端口角色</h2><p><img src="https://rancho333.github.io/pictures/rstp_election.png"></p>
 <p>RSTP中增加了一种端口角色<code>backup port</code>. 如上图所示，S2的eth2端口为BP。非根交换机收到自己发出的BPDU时，对比端口上发出和收到的BPDU，如果发出的是<code>superior BPDU</code>，那么成为DP，否则成为BP。注意与AP端口的差异：</p>
 <ul>
 <li>AP是端口收到从<code>其它交换机</code>发来的superior BPDU，是RP的备份，这是uplinkfast实现的原理</li>
 <li>BP是端口收到从<code>自身交换机</code>发来的superior BPDU, 是DP的备份，uplinkfast对BP不生效，BP在现实网络中很少见，基本用不到。图中通过在S2和S3中加一个hub来实现，如果没有hub，S2的eth1和eth2都是DP。</li>
 </ul>
-<h2 id="BPDU的变化"><a href="#BPDU的变化" class="headerlink" title="BPDU的变化"></a>BPDU的变化</h2><p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_bpdu.png?raw=true"></p>
+<h2 id="BPDU的变化"><a href="#BPDU的变化" class="headerlink" title="BPDU的变化"></a>BPDU的变化</h2><p><img src="https://rancho333.github.io/pictures/rstp_bpdu.png"></p>
 <p>RSTP的BPDU与STP的主要在三个字段上有差异：</p>
 <ul>
 <li>protocol version identifier：stp为0，rstp为2. rstp向下兼容stp</li>
@@ -333,13 +339,13 @@
 <h3 id="BPDU的发送"><a href="#BPDU的发送" class="headerlink" title="BPDU的发送"></a>BPDU的发送</h3><p>STP中根桥周期(hello time)发送BPDU，非根桥从RP收到然后从DP中继出去。RSTP非根桥自己生成BPDU(根据缓存的根桥cache)，周期(hello time)通过DP向外发送</p>
 <h3 id="BPDU的超时"><a href="#BPDU的超时" class="headerlink" title="BPDU的超时"></a>BPDU的超时</h3><p>STP上如果端口有存储的BPDU，max_age时间内没有收到superior BPDU后便会对其超时。RSTP通过BPDU实现类似ospf中的keepalive机制，如果连续三个hello_time时间内没有从邻居收到BPDU，那么就认为该链路故障，并且立即清除所有MAC地址。</p>
 <h3 id="边缘端口"><a href="#边缘端口" class="headerlink" title="边缘端口"></a>边缘端口</h3><p>STP的收敛优化里面有<code>portfast</code>的概念，在rstp中则称之为<code>edge port</code>, 即连接主机的端口。开启edge port的端口不需要经历discarding、learning的过度，而是直接变成forwarding，端口up、down也不会产生TC。注意边缘端口的链路类型只能是p2p, 即全双工链路，区别于半双工链路(shared类型)。<br>需要注意的是RSTP中同样需要管理员手动指定edge port。uplinkfast和backbonefast特性则是自动运行的。</p>
-<h3 id="PA协商机制-重要区别"><a href="#PA协商机制-重要区别" class="headerlink" title="PA协商机制(重要区别)"></a>PA协商机制(重要区别)</h3><p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_pa_mechanism.png?raw=true"></p>
+<h3 id="PA协商机制-重要区别"><a href="#PA协商机制-重要区别" class="headerlink" title="PA协商机制(重要区别)"></a>PA协商机制(重要区别)</h3><p><img src="https://rancho333.github.io/pictures/rstp_pa_mechanism.png"></p>
 <p>PA机制的基本原理就是：将下游block之后，再将上游forwarding，这种过程向下传导，直至整个RSTP开始运转，下游block的时候依然可以传输BPDU，进行角色选举。需要把STP的选举机制联想起来，不要孤立的看待PA机制。<br>通过上图来介绍P/A协商机制的原理。</p>
 <ol>
 <li>当设备上电后，S1、S2均认为自己是根桥并向外发送BPDU(proposal flag置位)，端口状态均为blocking</li>
 <li>S2的eth0收到S1的eth0发来的superior BPDU，确定S1是根桥，S2的eth0成为RP(立即切换成forwarding)，将所有非边缘DP(eth1,eth2)状态置为block, 并通过非边缘DP发送BPDU(根桥是S1，proposal flag置位)，之后向根桥发送BPDU(TC置位, agreement置位，该BPDU是proposal BPDU的一个拷贝, 所以BID和sender BID都是S1，只是去掉了proposal的flag，增加了agreement的flag，这可以让接收到agreement的端口知道具体是那个端口发出的proposal)，具体报文如下图：</li>
 </ol>
-<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_pa_packet.png?raw=true"></p>
+<p><img src="https://rancho333.github.io/pictures/rstp_pa_packet.png"></p>
 <ol start="3">
 <li>S1收到agreement置位的BPDU后，将eth0由block置为forwarding，如果没有收到，则会通过discarding、learning切换到forwarding状态(比如下游设备运行STP时就会出现这种场景)</li>
 <li>以上为一个同步的完成流程，之后S2与S3，S2与S4之间会进行同样的同步协商动作。即S2向S3,S4发送proposal报文，S3,S4选出RP，block非边缘DP，并向下游发送proposal报文(改实例中没有)，S3,S4向S2发送agreement报文，并将自身RP置位forwarding，S2将收到agreement报文的DP置位forwarding状态</li>
@@ -373,7 +379,7 @@
 <li>邻居keepalive机制(3个hello time)</li>
 <li>集成backbonefast，配置边缘端口(uplinkfast实际是PA机制)</li>
 </ol>
-<h2 id="两个实验"><a href="#两个实验" class="headerlink" title="两个实验"></a>两个实验</h2><p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_convergence_experiment.png?raw=true"></p>
+<h2 id="两个实验"><a href="#两个实验" class="headerlink" title="两个实验"></a>两个实验</h2><p><img src="https://rancho333.github.io/pictures/rstp_convergence_experiment.png"></p>
 <p>实验拓扑如上，操作步骤如下：</p>
 <ol>
 <li>vpc1和vpc2在同一网段，vpc1持续ping vpc2</li>
@@ -383,7 +389,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Switch(config-if)#spanning-tree portfast edge        &#x2F;&#x2F; 将接口配置成边缘端口</span><br></pre></td></tr></table></figure>
 <p>如果没有配置，根据P/A协商机制，当S2的eth0 down掉后，eth1会在discarding、learning、forwarding状态间进行时延转换(30秒)。原因是从eth1发出的proposal报文没有收到agreement回复。<br>STP中portfast只是让端口跳过状态切换，并且状态变换不会产生TCN，但是RSTP中边缘端口和PA机制有相互作用，<em>注意</em>！</p>
 <h3 id="backbonefast特性测试"><a href="#backbonefast特性测试" class="headerlink" title="backbonefast特性测试"></a>backbonefast特性测试</h3><p>在S2上shutdown端口eth0，S2的eth2发送inferior BPDU，模拟backbonefast特性测试。ping结果如下：</p>
-<p><img src="https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_convergence_ping.png?raw=true"></p>
+<p><img src="https://rancho333.github.io/pictures/rstp_convergence_ping.png"></p>
 <p>没有发现丢包，只是shutdown瞬间一个包时延大了一些, 相较于STP开启backfast之后依然断流30秒(S3上eth0状态切换时延)，提升很巨大。S2上端口状态如下:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Switch#show spanning-tree | begin Interface</span><br><span class="line">Interface           Role Sts Cost      Prio.Nbr Type</span><br><span class="line">------------------- ---- --- --------- -------- --------------------------------</span><br><span class="line">Et0&#x2F;1               Desg FWD 100       128.2    P2p Edge </span><br><span class="line">Et0&#x2F;2               Root FWD 100       128.3    P2p </span><br><span class="line">Et0&#x2F;3               Desg BLK 100       128.4    P2p</span><br></pre></td></tr></table></figure>
 <p>可以看到eth2通过PA协商立即变成RP的forwarding状态，eth1上配置了边缘端口，不参与PA，所以依然是forwarding，eth3上没有配置边缘端口，处于blocking,经过30秒时延转换成forwarding。</p>

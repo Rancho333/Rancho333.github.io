@@ -28,18 +28,18 @@
 <meta property="og:site_name" content="Rancho Blog">
 <meta property="og:description" content="MPLS简介MPLS(multiprotocol label switching，多协议标签交换)起源于IPv4，最初是为了提高转发速度而提出的（早期路由是只能由软件处理的），其核心技术可扩展到多种网络协议，包括IPv6，IPX(internet packet exchange，网际报文交换)和CLNP(connectionless network protocol,无连接网络协议)等。MPLS中">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/mpls_packet.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/mpls_packet_location.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/mpls_lsr.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/mpls_network.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/mpls_node.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/mpls_vpn.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/mpls_packet.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/mpls_packet_location.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/mpls_lsr.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/mpls_network.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/mpls_node.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/mpls_vpn.png">
 <meta property="article:published_time" content="2021-02-09T02:27:51.000Z">
-<meta property="article:modified_time" content="2022-07-07T04:13:48.979Z">
+<meta property="article:modified_time" content="2022-07-29T07:27:31.557Z">
 <meta property="article:author" content="Rancho">
 <meta property="article:tag" content="通信协议">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://rancho333.gitee.io/pictures/mpls_packet.png">
+<meta name="twitter:image" content="https://rancho333.github.io/pictures/mpls_packet.png">
 
 <link rel="canonical" href="https://rancho333.github.io/2021/02/09/mpls%E5%AD%A6%E4%B9%A0/">
 
@@ -248,7 +248,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-07-07 12:13:48" itemprop="dateModified" datetime="2022-07-07T12:13:48+08:00">2022-07-07</time>
+                <time title="修改时间：2022-07-29 15:27:31" itemprop="dateModified" datetime="2022-07-29T15:27:31+08:00">2022-07-29</time>
               </span>
 
           
@@ -275,7 +275,7 @@
 <span id="more"></span>
 <h1 id="概念说明"><a href="#概念说明" class="headerlink" title="概念说明"></a>概念说明</h1><h2 id="转发等价类"><a href="#转发等价类" class="headerlink" title="转发等价类"></a>转发等价类</h2><p>MPLS作为一种分类转发技术，将具有相同转发处理方式的分组归位一类，称为FEC(forwarding equivalence class，转发等价类)。相同FEC的分组在MPLS中将获得完全相同的处理。<br>FEC的划分方式非常灵活，可以是源地址、目的地址、源端口、目的端口、协议类型或VPN等为划分依据的任意组合。例如，在传统的采用最长匹配算法的IP转发中，到同一个目的地址的所有报文就是一个FEC。</p>
 <h2 id="标签"><a href="#标签" class="headerlink" title="标签"></a>标签</h2><p>标签是一个长度固定，仅具有本地意义的短标识符，用于唯一标识一个分组所属的FEC。一个标签只能代表一个FEC。标签长度为4个字节，结构如下：</p>
-<p><img src="https://rancho333.gitee.io/pictures/mpls_packet.png"></p>
+<p><img src="https://rancho333.github.io/pictures/mpls_packet.png"></p>
 <p>字段解释如下：</p>
 <table>
 <thead>
@@ -302,10 +302,10 @@
 </tr>
 </tbody></table>
 <p>如果链路层协议具有标签域，如ATM的VPI/VCI,则标签封装在这些域中；否则，标签封装在链路层头和网络层数据之间的一个垫层。这样，任意链路层都能够支持标签。下图是标签在分组中的封装位置。</p>
-<p><img src="https://rancho333.gitee.io/pictures/mpls_packet_location.png"></p>
+<p><img src="https://rancho333.github.io/pictures/mpls_packet_location.png"></p>
 <h2 id="标签交换路由器"><a href="#标签交换路由器" class="headerlink" title="标签交换路由器"></a>标签交换路由器</h2><p>LSR(label switching router,标签交换路由器)是MPLS网络中的基本单元，所有LSR都支持MPLS技术。</p>
 <h2 id="标签交换路径"><a href="#标签交换路径" class="headerlink" title="标签交换路径"></a>标签交换路径</h2><p>一个转发等价类在MPLS网络中经过的路径称为LSP(label switched path，标签交换路径)。在一条LSP上，沿数据传送的方向，相邻的LSR分别称为上游LSR和下游LSR。如下图所示，R2是R1的下游LSR，相应的R1是R2的上有LSR。</p>
-<p><img src="https://rancho333.gitee.io/pictures/mpls_lsr.png"><br>LSP在功能上与ATM和帧中继(frame relay)的虚电路相同，是从MPLS网络的入口到出口的一个单向路径，LSP中的每个节点由LSR组成。</p>
+<p><img src="https://rancho333.github.io/pictures/mpls_lsr.png"><br>LSP在功能上与ATM和帧中继(frame relay)的虚电路相同，是从MPLS网络的入口到出口的一个单向路径，LSP中的每个节点由LSR组成。</p>
 <h2 id="标签分发协议"><a href="#标签分发协议" class="headerlink" title="标签分发协议"></a>标签分发协议</h2><p>LDP(label distribution protocol，标签分发协议)是MPLS的控制协议，它相当于传统网络中的信令协议，负责FEC的分类、标签的分配以及LSP的建立和维护等一系列操作。MPLS可以使用多种标签发布协议，包括专为标签发布而制定的协议，例如：LDP、CR-LDP(constraint-based routing using LDP,基于约束路由的LDP)；也包括现有协议扩展后支持标签发布的，例如：BGP、RSVP(resource reservation protocol，资源预留协议)。同时，还可以手工配置静态LSP。<br>LDP有两个重要的作用：</p>
 <ol>
 <li>给本地路由信息分配标签，进行绑定生成LIB表</li>
@@ -314,7 +314,7 @@
 <h2 id="LSP隧道技术"><a href="#LSP隧道技术" class="headerlink" title="LSP隧道技术"></a>LSP隧道技术</h2><p>MPLS支持LSP隧道技术。一条LSP的上游LSR和下游LSR，尽管他们之间的路径可能并不在路由协议所提供的路径上，但MPLS允许在他们之间建立一条新的LSP，这样，上游LSR和下游LSR分别就是这条LSP的起点和终点。这时，上游LSR和下游LSR间就是LSP隧道，它避免了采用传统的网络层封装隧道。如上图中LSP <code>R2-&gt;R21-&gt;R22-&gt;R3</code>就是R2、R3间的一条隧道。如果隧道经由的路由与逐跳从路由协议中取得的路由一致，这种隧道就称为逐跳路由隧道(Hop by Hop routed tunnel)，否则称为显示路由隧道(explicitly routed tunnel)。</p>
 <h2 id="多层标签栈"><a href="#多层标签栈" class="headerlink" title="多层标签栈"></a>多层标签栈</h2><p>如果分组在超过一层的LSP隧道中传送，就会有多层标签，形成标签栈(label stack)。在每一隧道的入口和出口，进行标签的入栈(push)和出栈(pop)操作。标签按照<code>后进先出</code>(last-in-first-out)方式组织标签，MPLS从栈顶开始处理标签。<br>MPLS对标签栈的深度没有限制，若一个分组的标签深度为m，则位于栈底的标签为1级标签，位于栈顶的标签为m级标签。未压入标签的分组可看作标签栈为空(即标签栈深度为0)的分组。</p>
 <h1 id="MPLS体系结构"><a href="#MPLS体系结构" class="headerlink" title="MPLS体系结构"></a>MPLS体系结构</h1><h2 id="MPLS网络结构"><a href="#MPLS网络结构" class="headerlink" title="MPLS网络结构"></a>MPLS网络结构</h2><p>如下图所示，MPLS网络的基本构成单元是LSR，由LSR构成的网络称为MPLS域。位于MPLS域边缘、连接其它用户网络的LSR称为LER(label edge router, 边缘LSR)，区域内部的LSR称为核心LSR。核心LSR可以是支持MPLS的路由器，也可以是由ATM交换机等升级而成的ATM-LSR。域内部的LSR之间使用MPLS通信，MPLS域的边缘由LER与传统IP技术进行适配。<br>分组在入口LER被压入标签后，沿着由一系列LSR构成的LSP传送，其中，入口LER被称为ingress，出口LER被称为egress，中间的节点则称为transit。</p>
-<p><img src="https://rancho333.gitee.io/pictures/mpls_network.png"><br>结合上图简要介绍MPLS基本工作过程：</p>
+<p><img src="https://rancho333.github.io/pictures/mpls_network.png"><br>结合上图简要介绍MPLS基本工作过程：</p>
 <ol>
 <li>首先，LDP和传统路由协议(如OSPF、ISIS等)一起，在各个LSR中为有业务需求的FEC建立路由表和LIB(label information base，标签信息表)</li>
 <li>入口LER接收分组，完成第三层功能，判定分组所属的FEC，并给分组加上标签，形成MPLS标签分组</li>
@@ -322,7 +322,7 @@
 <li>最后，在MPLS出口LER去掉分组中的标签，继续进行后面的IP转发</li>
 </ol>
 <p>MPLS并不是一种业务或者应用，它本质上是一种隧道技术，也是一种将标签交换转发和网络层路由技术集于一身的路由与交换技术平台，这个平台不仅支持多种高层协议与业务，而且，在一定程度上可以保证信息传输的安全性。</p>
-<h2 id="MPLS节点结构"><a href="#MPLS节点结构" class="headerlink" title="MPLS节点结构"></a>MPLS节点结构</h2><p><img src="https://rancho333.gitee.io/pictures/mpls_node.png"></p>
+<h2 id="MPLS节点结构"><a href="#MPLS节点结构" class="headerlink" title="MPLS节点结构"></a>MPLS节点结构</h2><p><img src="https://rancho333.github.io/pictures/mpls_node.png"></p>
 <p>如上图所示，MPLS节点由两部分组成：</p>
 <ul>
 <li>控制平面(control plane)：负责标签的分配、路由的选择、标签转发表的建立、标签交换路径的建立、拆除等工作</li>
@@ -331,7 +331,7 @@
 <p>对于普通的LSR，在转发平面只需要进行标签分组的转发，需要使用到LFIB。对于LER，在转发平面不仅需要进行标签分组的转发，也需要进行IP分组的转发，所以既会使用到LFIB，也会使用到FIB表。</p>
 <h2 id="MPLS与路由协议"><a href="#MPLS与路由协议" class="headerlink" title="MPLS与路由协议"></a>MPLS与路由协议</h2><p>LDP通过逐跳方式建立LSP时，利用沿途各LSR路由转发表中的信息来确定下一跳，而路由转发表中的信息一般是通过IGP、BGP等路由协议收集的。LDP并不直接和各种路由协议关联，只是间接使用路由信息。另一方面，通过对BGP、RSVP等已有协议进行扩展，也可以支持标签的分发。<br>在MPLS的应用中，也可能需要对某些路由协议进行扩展。例如，基于MPLS的VPN应用需要对BGP进行扩展，使BGP能够传播VPN的路由信息；基于MPLS的TE(traffic engineering,流量工程)需要对OSPF或IS-IS协议进行扩展，以便携带链路状态信息。</p>
 <h2 id="MPLS的应用"><a href="#MPLS的应用" class="headerlink" title="MPLS的应用"></a>MPLS的应用</h2><p>最初，MPLS技术结合了二层交换与三层路由技术，提高了路由查找速度。但随着ASIC的发展，路由查找速度已经不成为阻碍网络发展的瓶颈。这使得MPLS在提高转发速度方面不具备明显的优势。<br>但由于MPLS结合了IP网络强大的三层路由功能和传统二层网络高效的转发机制，在转发平面采用面向连接的方式，与现有二层网络转发方式非常相似，这些特点使得MPLS能够很容易的实现IP与ATM、帧中继等二层网络的无缝融合，并为QoS、TE、VPN等应用提供更好的解决方案。</p>
-<h3 id="基于MPLS的VPN"><a href="#基于MPLS的VPN" class="headerlink" title="基于MPLS的VPN"></a>基于MPLS的VPN</h3><p>传统的VPN一般是通过GRE、L2TP、PPTP等隧道协议来实现私有网络间数据流在公网上的传送，LSP本身就是公网上的隧道，因此，用MPLS来实现VPN有天然的优势。基于MPLS的VPN就是通过LSP将私有网络的不同分支连接起来，形成一个同一的网络。基于MPLS的VPN还支持对不同的VPN间的互通控制。<br><img src="https://rancho333.gitee.io/pictures/mpls_vpn.png"></p>
+<h3 id="基于MPLS的VPN"><a href="#基于MPLS的VPN" class="headerlink" title="基于MPLS的VPN"></a>基于MPLS的VPN</h3><p>传统的VPN一般是通过GRE、L2TP、PPTP等隧道协议来实现私有网络间数据流在公网上的传送，LSP本身就是公网上的隧道，因此，用MPLS来实现VPN有天然的优势。基于MPLS的VPN就是通过LSP将私有网络的不同分支连接起来，形成一个同一的网络。基于MPLS的VPN还支持对不同的VPN间的互通控制。<br><img src="https://rancho333.github.io/pictures/mpls_vpn.png"></p>
 <p>上图是基于MPLS的VPN的基本结构</p>
 <ul>
 <li>CE可以是路由器，也可以是交换机或主机</li>

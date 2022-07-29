@@ -29,7 +29,7 @@
 <meta property="og:description" content="SONiC简介不做过多赘述，SONiC本质就是一个Linux交换机网络操作系统，它有两个特点。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2021-02-25T05:36:57.000Z">
-<meta property="article:modified_time" content="2022-07-07T04:13:49.047Z">
+<meta property="article:modified_time" content="2022-07-29T07:27:31.737Z">
 <meta property="article:author" content="Rancho">
 <meta property="article:tag" content="SONiC">
 <meta name="twitter:card" content="summary">
@@ -241,7 +241,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-07-07 12:13:49" itemprop="dateModified" datetime="2022-07-07T12:13:49+08:00">2022-07-07</time>
+                <time title="修改时间：2022-07-29 15:27:31" itemprop="dateModified" datetime="2022-07-29T15:27:31+08:00">2022-07-29</time>
               </span>
 
           
@@ -326,7 +326,7 @@
 </ul>
 <h2 id="SONiC的上层应用"><a href="#SONiC的上层应用" class="headerlink" title="SONiC的上层应用"></a>SONiC的上层应用</h2><p>SONiC的服务跑在docker中，如PMON、syncd、frr等。关于这些服务是如何启动的？可以参见《SONIC中docker运行服务的单分析》，源码中注意下<code>docker_image_ctl.j2</code>文件，这是docker的启动管理模板。</p>
 <p>SONiC核心的功能就是交换路由，所以交换路由协议在里面是很重要的，与传统交换机相比，SONiC中的服务运行在docker中，使用redis集中式进行数据管理，其它并没有什么本质区别。</p>
-<p>后续考虑以vxlan为切入点，深入了解学习SONiC的系统架构，对于vxlan，参见<a target="_blank" rel="noopener" href="https://rancho333.gitee.io/2021/02/03/vxlan%E5%AD%A6%E4%B9%A0/">vxlan学习</a>。</p>
+<p>后续考虑以vxlan为切入点，深入了解学习SONiC的系统架构，对于vxlan，参见<a href="https://rancho333.github.io/2021/02/03/vxlan%E5%AD%A6%E4%B9%A0/">vxlan学习</a>。</p>
 <p>如何配置管理SONiC呢？传统的交换机会做一个命令行程序，指定用户登录后执行该程序，可以称之为CLI，在里面可以进入shell，也可以从shell退回CLI。社区版SONiC登录之后运行bash，用python做了一套简单的命令行，可以进行配置管理，这玩意解析速度极慢，使用体验极差。除此之外，还可以通过修改<code>config_db.json</code>然后重新加载或者直接使用<code>redis</code>命令行进行配置。当然SONiC支持SDN，可以通过openflow方式集中式管理配置。阿里在SONiC上面做了一套传统CLI，称之为<code>lambda-cli</code>，比社区版SONiC的命令行好用多了。</p>
 <h2 id="TestBed自动化测试"><a href="#TestBed自动化测试" class="headerlink" title="TestBed自动化测试"></a>TestBed自动化测试</h2><p>TBD</p>
 

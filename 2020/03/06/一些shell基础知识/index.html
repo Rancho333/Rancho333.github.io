@@ -28,19 +28,19 @@
 <meta property="og:site_name" content="Rancho Blog">
 <meta property="og:description" content="写在前面最开始接触到的命令行是windows的cmd，一次用它来查ip感觉很神奇。后来接触到Linux，vim，从起初的抵触不适应，到后来的得心应手。使用命令行，离计算机更近。这篇文章记录一下shell下面的一些细节。分为">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/grep.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/find.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/grep.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/block.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/ps.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/nohup.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/ds.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/grep.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/find.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/grep.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/block.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/ps.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/nohup.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/ds.png">
 <meta property="article:published_time" content="2020-03-06T08:35:48.000Z">
-<meta property="article:modified_time" content="2022-07-07T04:13:49.027Z">
+<meta property="article:modified_time" content="2022-07-29T07:27:31.709Z">
 <meta property="article:author" content="Rancho">
 <meta property="article:tag" content="shell">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://rancho333.gitee.io/pictures/grep.png">
+<meta name="twitter:image" content="https://rancho333.github.io/pictures/grep.png">
 
 <link rel="canonical" href="https://rancho333.github.io/2020/03/06/%E4%B8%80%E4%BA%9Bshell%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/">
 
@@ -249,7 +249,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-07-07 12:13:49" itemprop="dateModified" datetime="2022-07-07T12:13:49+08:00">2022-07-07</time>
+                <time title="修改时间：2022-07-29 15:27:31" itemprop="dateModified" datetime="2022-07-29T15:27:31+08:00">2022-07-29</time>
               </span>
 
           
@@ -281,24 +281,24 @@
 <li>有的命令和<code>sudo</code>一起用就<code>command not found</code></li>
 </ol>
 <h1 id="标准输入和参数的区别"><a href="#标准输入和参数的区别" class="headerlink" title="标准输入和参数的区别"></a>标准输入和参数的区别</h1><p>最初遇到这个问题的时候是在shell下面使用<code>管道</code>操作，例如：<code>find ./ -name &quot;*.c&quot; | xargs grep -rn zhw</code>,这条命令的含义是：在当前路径下的所有<code>.c</code>文件中查找<code>zhw</code>关键字，注意这里在管道的右侧加了关键字<code>xargs</code>，表示将<code>find</code>找到的结果作为<em>参数</em>传递给<code>grep</code>，grep是不接受标准输入的。</p>
-<p>标准输入就是编程语言中诸如<code>scanf</code>或者<code>readline</code>获取到的信息；而参数是指程序的<code>main</code>函数传入的<code>args</code>字符串数组。管道符和重定向符都是将数据作为程序的标准输入，下面这个示例：<br><img src="https://rancho333.gitee.io/pictures/grep.png"></p>
+<p>标准输入就是编程语言中诸如<code>scanf</code>或者<code>readline</code>获取到的信息；而参数是指程序的<code>main</code>函数传入的<code>args</code>字符串数组。管道符和重定向符都是将数据作为程序的标准输入，下面这个示例：<br><img src="https://rancho333.github.io/pictures/grep.png"></p>
 <ol>
 <li>grep要搜索的文件作为参数是可选的，<code>-r</code>可以在当前路径下递归查找</li>
 <li>find不加xargs和直接grep效果是一样的，说明没有指定查找文件，而使用xargs则指定了查找文件作为参数传递给grep</li>
 </ol>
-<p>这里多说一点：<br><img src="https://rancho333.gitee.io/pictures/find.png"><br>通常使用find命令查找特定的文件，然后再这些文件中用grep去匹配关键字，但是如果find的结果是空，那么通过xargs方式就相当于没有给grep指明特定查找文件（它就会在当前目录递归）,而通过<code>-exec</code>则表示对匹配的文件执行该参数所给出的shell命令，此时grep实际并没有执行，这才符合我们的预期结果。</p>
-<p>上面两个小例子，理解问题的本质是多么的重要，基础打牢固，花哨的东西就随便玩了！<br>除了<code>xargs</code>可以读取数据作为命令参数外，通过<code>$(cmd)</code>形式也能达到同样的效果，例如：<br><img src="https://rancho333.gitee.io/pictures/grep.png"></p>
+<p>这里多说一点：<br><img src="https://rancho333.github.io/pictures/find.png"><br>通常使用find命令查找特定的文件，然后再这些文件中用grep去匹配关键字，但是如果find的结果是空，那么通过xargs方式就相当于没有给grep指明特定查找文件（它就会在当前目录递归）,而通过<code>-exec</code>则表示对匹配的文件执行该参数所给出的shell命令，此时grep实际并没有执行，这才符合我们的预期结果。</p>
+<p>上面两个小例子，理解问题的本质是多么的重要，基础打牢固，花哨的东西就随便玩了！<br>除了<code>xargs</code>可以读取数据作为命令参数外，通过<code>$(cmd)</code>形式也能达到同样的效果，例如：<br><img src="https://rancho333.github.io/pictures/grep.png"></p>
 <p><code>$(cmd)</code>读取<code>cmd</code>命令输出的数据作为参数。</p>
-<p>最后说一下如何区分命令能够接受标准输入还是参数：如果命令能够让终端阻塞，说明该命令能接受标准输入，反之就是不接受。<code>rm</code>命令是不接受标准输入的。<br><img src="https://rancho333.gitee.io/pictures/block.png"></p>
+<p>最后说一下如何区分命令能够接受标准输入还是参数：如果命令能够让终端阻塞，说明该命令能接受标准输入，反之就是不接受。<code>rm</code>命令是不接受标准输入的。<br><img src="https://rancho333.github.io/pictures/block.png"></p>
 <h1 id="后台运行程序"><a href="#后台运行程序" class="headerlink" title="后台运行程序"></a>后台运行程序</h1><p>如果一些服务需要长时间运行，比如main函数里面有个<code>while(1)</code>的死循环，程序运行后命令行会阻塞。在命令后加上<code>&amp;</code>后程序就可以在后台运行而不会阻塞命令行。底层的原理或者说这是怎么实现的呢？</p>
 <p>每一个命令行终端都是一个shell进程，每当有命令需要执行是shell会fork一个子进程去执行命令，而shell进程会阻塞，等待子shell进程退出才重新响应。写一个很简单的demo</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">void main()                                                                                           </span><br><span class="line">&#123;</span><br><span class="line">    while(1)</span><br><span class="line">    &#123;&#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>加上<code>&amp;</code>后，只是让shell进程不再阻塞，可以继续响应你的新命令，但是当你关掉这个shell命令行中终端后，依附于它的所有子进程都会退出。如下：<br><img src="https://rancho333.gitee.io/pictures/ps.png"><br>但是如果<code>(cmd &amp;)</code>这样来运行命令，则是将<code>cmd</code>挂到一个<code>systemd</code>系统守护进程下，这样即使当终端退出后，对于刚才的命令也没有影响。如下：<br><img src="https://rancho333.gitee.io/pictures/nohup.png"><br>不过<code>nohup cmd &amp;</code>的做法似乎常见一些，原理类似。此外还可以试试<code>tmux</code>这个小工具，如果利用晚上的时候在服务器编译大型项目，这玩意挺好用的，不用担心断网（终端被kill）。</p>
+<p>加上<code>&amp;</code>后，只是让shell进程不再阻塞，可以继续响应你的新命令，但是当你关掉这个shell命令行中终端后，依附于它的所有子进程都会退出。如下：<br><img src="https://rancho333.github.io/pictures/ps.png"><br>但是如果<code>(cmd &amp;)</code>这样来运行命令，则是将<code>cmd</code>挂到一个<code>systemd</code>系统守护进程下，这样即使当终端退出后，对于刚才的命令也没有影响。如下：<br><img src="https://rancho333.github.io/pictures/nohup.png"><br>不过<code>nohup cmd &amp;</code>的做法似乎常见一些，原理类似。此外还可以试试<code>tmux</code>这个小工具，如果利用晚上的时候在服务器编译大型项目，这玩意挺好用的，不用担心断网（终端被kill）。</p>
 <h1 id="单引号和双引号的区别"><a href="#单引号和双引号的区别" class="headerlink" title="单引号和双引号的区别"></a>单引号和双引号的区别</h1><p>使用<code>set -x</code>命令，可以开启shell的命令回显。</p>
 <p>对于单引号：所见即所得，会将单引号内的内容原样输出</p>
 <p>对于双引号：把双引号内的内容输出出来；如果内容中有命令、变量等，会先把变量、命令解析出结果，然后在输出最终内容来。</p>
 <p>不加引号：不会将含有空格的字符串视为一个整体输出, 如果内容中有命令、变量等，会先把变量、命令解析出结果，然后在输出最终内容来，如果字符串中带有空格等特殊字符，则不能完整的输出，需要改加双引号，一般连续的字符串，数字，路径等可以用。所以在写shell脚本的时候一定注意使用小括号和双引号哈！</p>
-<p>示例如下：<br><img src="https://rancho333.gitee.io/pictures/ds.png"></p>
+<p>示例如下：<br><img src="https://rancho333.github.io/pictures/ds.png"></p>
 <h1 id="sudo-找不到命令"><a href="#sudo-找不到命令" class="headerlink" title="sudo 找不到命令"></a>sudo 找不到命令</h1><p>有时候普通用户可以印的命令，加上<code>sudo</code>之后却报错<code>command not found</code>，原因在于这个命令仅存在与该用户的环境变量PATH中。解决方法是：</p>
 <ol>
 <li>使用绝对路径调用命令</li>

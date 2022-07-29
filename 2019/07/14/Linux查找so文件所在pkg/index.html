@@ -28,19 +28,19 @@
 <meta property="og:site_name" content="Rancho Blog">
 <meta property="og:description" content="问题描述在Ubuntu16.04 server上安装typora时报错：Typora: error while loading shared libraries: libnss3.so">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/error.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/diff.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/update.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/where.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/not_found.png">
-<meta property="og:image" content="https://rancho333.gitee.io/pictures/search.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/error.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/diff.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/update.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/where.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/not_found.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/search.png">
 <meta property="article:published_time" content="2019-07-14T12:17:03.000Z">
-<meta property="article:modified_time" content="2022-07-07T04:13:48.878Z">
+<meta property="article:modified_time" content="2022-07-29T07:27:31.536Z">
 <meta property="article:author" content="Rancho">
 <meta property="article:tag" content="Linux">
 <meta property="article:tag" content="so文件">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://rancho333.gitee.io/pictures/error.png">
+<meta name="twitter:image" content="https://rancho333.github.io/pictures/error.png">
 
 <link rel="canonical" href="https://rancho333.github.io/2019/07/14/Linux%E6%9F%A5%E6%89%BEso%E6%96%87%E4%BB%B6%E6%89%80%E5%9C%A8pkg/">
 
@@ -249,7 +249,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-07-07 12:13:48" itemprop="dateModified" datetime="2022-07-07T12:13:48+08:00">2022-07-07</time>
+                <time title="修改时间：2022-07-29 15:27:31" itemprop="dateModified" datetime="2022-07-29T15:27:31+08:00">2022-07-29</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -283,11 +283,11 @@
       
         <h2 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h2><p>在Ubuntu16.04 server上安装typora时报错：<code>Typora: error while loading shared libraries: libnss3.so</code>  </p>
 <span id="more"></span>
-<p><img src="https://rancho333.gitee.io/pictures/error.png"><br>使用find在机器上的确没有找到该so文件，一般情况下对于name.so，安装一个name包就行了(so文件与pkg文件名相同)，但有的时候是不相同的，这时需要利用apt-file查找so文件所属的pkg.<br><img src="https://rancho333.gitee.io/pictures/diff.png"></p>
-<h2 id="安装apt-file"><a href="#安装apt-file" class="headerlink" title="安装apt-file"></a>安装apt-file</h2><p>安装命令：<code>sudo apt-get install apt-file</code><br>update：<code>apt-file update</code>,当/etc/apt/source.list文件发生变化时，需要重新update<br><img src="https://rancho333.gitee.io/pictures/update.png"></p>
-<h2 id="查找软件所依赖的so文件并安装依赖包"><a href="#查找软件所依赖的so文件并安装依赖包" class="headerlink" title="查找软件所依赖的so文件并安装依赖包"></a>查找软件所依赖的so文件并安装依赖包</h2><p>查看软件位置：<code>whereis typora</code><br><img src="https://rancho333.gitee.io/pictures/where.png"></p>
-<p>查找软件依赖so：<code>ldd /usr/bin/typora</code><br><img src="https://rancho333.gitee.io/pictures/not_found.png"></p>
-<p>对每一个标有<code>not found</code>的so文件执行如下：<br><img src="https://rancho333.gitee.io/pictures/search.png"></p>
+<p><img src="https://rancho333.github.io/pictures/error.png"><br>使用find在机器上的确没有找到该so文件，一般情况下对于name.so，安装一个name包就行了(so文件与pkg文件名相同)，但有的时候是不相同的，这时需要利用apt-file查找so文件所属的pkg.<br><img src="https://rancho333.github.io/pictures/diff.png"></p>
+<h2 id="安装apt-file"><a href="#安装apt-file" class="headerlink" title="安装apt-file"></a>安装apt-file</h2><p>安装命令：<code>sudo apt-get install apt-file</code><br>update：<code>apt-file update</code>,当/etc/apt/source.list文件发生变化时，需要重新update<br><img src="https://rancho333.github.io/pictures/update.png"></p>
+<h2 id="查找软件所依赖的so文件并安装依赖包"><a href="#查找软件所依赖的so文件并安装依赖包" class="headerlink" title="查找软件所依赖的so文件并安装依赖包"></a>查找软件所依赖的so文件并安装依赖包</h2><p>查看软件位置：<code>whereis typora</code><br><img src="https://rancho333.github.io/pictures/where.png"></p>
+<p>查找软件依赖so：<code>ldd /usr/bin/typora</code><br><img src="https://rancho333.github.io/pictures/not_found.png"></p>
+<p>对每一个标有<code>not found</code>的so文件执行如下：<br><img src="https://rancho333.github.io/pictures/search.png"></p>
 <p>找到pkg名称后，使用<code>sudo apt-get install pkg-name</code>安装即可。</p>
 
     </div>
