@@ -27,7 +27,7 @@ next: 7.8.0
 
 ## 使用next主题
 网上一搜大部分都是Hexo+next的使用，本着站在前人的肩膀上原则，使用next主题。  
-主题下载：`git clone https://gitee.com/Rancho333/hexo-theme-next.git themes/next`  
+主题下载：`git clone https://github.com/Rancho333/hexo-theme-next.git themes/next`  
 启用主题，打开站点配置文件，找到`theme`字段，修改为如下：  
 
 ``` bash
@@ -131,7 +131,7 @@ hexo new page tags
 后面的操作与添加`categories`属性类似，一篇文章可以添加多个`tags`  
 
 # 关于图片
-有时候会分享md文件给别人，这时候要求图片的标识是因特网可达的，而不能使用资源文件夹这种方式。可以将图片放在`public/pictures`文件夹中，`hexo clean`命令会删除该文件夹。图片调用：`![](https://rancho333.gitee.io/pictures/arp_protocol.png) `
+有时候会分享md文件给别人，这时候要求图片的标识是因特网可达的，而不能使用资源文件夹这种方式。可以将图片放在`public/pictures`文件夹中，`hexo clean`命令会删除该文件夹。图片调用：`![](https://rancho333.github.io/pictures/arp_protocol.png) `
 1. 将图片源文件放到`source/pictures`路径下（源码可以备份，`hexo clean`命令会删除public文件夹）
 2. `hexo g`会将`source`下面非下划线开头的文件或文件夹拷贝到`public`下面
 3. `public`里面的内容会上传到master分支，所以我们可以使用上面的链接进行访问

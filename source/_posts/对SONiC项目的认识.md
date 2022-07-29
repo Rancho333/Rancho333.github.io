@@ -73,7 +73,7 @@ SONiC的服务跑在docker中，如PMON、syncd、frr等。关于这些服务是
 
 SONiC核心的功能就是交换路由，所以交换路由协议在里面是很重要的，与传统交换机相比，SONiC中的服务运行在docker中，使用redis集中式进行数据管理，其它并没有什么本质区别。
 
-后续考虑以vxlan为切入点，深入了解学习SONiC的系统架构，对于vxlan，参见[vxlan学习](https://rancho333.gitee.io/2021/02/03/vxlan%E5%AD%A6%E4%B9%A0/)。
+后续考虑以vxlan为切入点，深入了解学习SONiC的系统架构，对于vxlan，参见[vxlan学习](https://rancho333.github.io/2021/02/03/vxlan%E5%AD%A6%E4%B9%A0/)。
 
 如何配置管理SONiC呢？传统的交换机会做一个命令行程序，指定用户登录后执行该程序，可以称之为CLI，在里面可以进入shell，也可以从shell退回CLI。社区版SONiC登录之后运行bash，用python做了一套简单的命令行，可以进行配置管理，这玩意解析速度极慢，使用体验极差。除此之外，还可以通过修改`config_db.json`然后重新加载或者直接使用`redis`命令行进行配置。当然SONiC支持SDN，可以通过openflow方式集中式管理配置。阿里在SONiC上面做了一套传统CLI，称之为`lambda-cli`，比社区版SONiC的命令行好用多了。
 

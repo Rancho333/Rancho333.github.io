@@ -29,14 +29,14 @@ VRRP(virtual router redundancy protocol)和`HSRP`非常相似，原理相同，�
 
 关于辞职，当master路由器接口shutdown时，会立即发送优先级为0的通告，vrrp中优先级为0表示不参与虚拟组计算，收到的backups之间会立即重新选举出新的master，否则就要等待3秒的报文超时再选举，这样可以加快收敛时间。优先级为0的报文如下：
 
-![](![](https://github.com/Rancho333/pictures_hub/blob/master/non_auto/vrrp_packet_priority_0.png?raw=true)
+![](![](https://rancho333.github.io/pictures/vrrp_packet_priority_0.png)
 
 在HSRP中，tracking中触发支持shutdown，如果active路由器接口shutdown，那么standby只能等待10秒超时后变成active. VRRP tracking中不支持shutdown，嗯，也就是说只有路由接口手动shutdown或物理线路挂掉才会触发优先级为0的报文，而上行链路挂掉tracking无法触发？
 
 # 实验说明
 实验拓扑图如下：
 
-![](https://github.com/Rancho333/pictures_hub/blob/master/non_auto/vrrp_basic_topology.png?raw=true)
+![](https://rancho333.github.io/pictures/vrrp_basic_topology.png)
 
 S2、S3、S4的interface vlan1加入虚拟组组成虚拟路由器，虚拟组对外提供网关服务。基本配置如下：
 ```
@@ -69,7 +69,7 @@ Vl1                1   255 3003   Y   Y  Master  192.168.1.254   192.168.1.254
 ```
 优先级为255的报文为：
 
-![](https://github.com/Rancho333/pictures_hub/blob/master/non_auto/vrrp_packet_priority_255.png?raw=true)
+![](https://rancho333.github.io/pictures/vrrp_packet_priority_255.png)
 
 owner不能被配置优先级。 vrrp默认开启preempt，所以`pre`是`Y`。注意vrrp组中除master外，其余都是backup，即master挂掉后，会从backup中重新选举出新的master。而hsrp中master挂掉后，standby接替，之后在candidate中选举出新的standby。
 

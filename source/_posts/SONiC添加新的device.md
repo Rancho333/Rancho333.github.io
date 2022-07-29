@@ -68,7 +68,7 @@ test:
 ```
 使用`dpkg -X target/debs/stretch/sonic-device-data_1.0-1_all.deb`或者在`fsroot/usr/share/sonic/device/`目录下可以发现`device`相关的文件。这些文件与设备目录上`/usr/share/sonic/device/`的文件相对应。
 在`sonic_debian_extension.sh`脚本中会将其释放到根文件系统中去。
-![](https://rancho333.gitee.io/pictures/device_data.png)
+![](https://rancho333.github.io/pictures/device_data.png)
 注意，在slave.mk中操作一下才能看到脚本，否则它做为中间文件，编译完成后会被自动删除。
 ```
 -       $(if $($*_DOCKERS),
@@ -96,7 +96,7 @@ endif
 ```
 我们在执行`make configure PLATFORM=platform`时会指定platform，从而找到对应的rules.mk。
 
-![](https://rancho333.gitee.io/pictures/rules_mk.png)
+![](https://rancho333.github.io/pictures/rules_mk.png)
 
 这里面关注三个文件
 ```
@@ -139,12 +139,12 @@ index 8cbf7269..edc51460 100644
 ```
 
 对于打包好的platform文件，会在`sonic_debian_extension.sh`中拷贝到文件系统中去
-![](https://rancho333.gitee.io/pictures/platform_module.png)
+![](https://rancho333.github.io/pictures/platform_module.png)
 
 上面这张图片上就是裁剪过后只会拷贝`cel-b3010`这一款机型的platform。有兴趣的同学可以研究下是如何实现的。
 
 在SONiC的安装镜像第一次启动时，会在`rc.local`中将其释放到文件系统中去.
-![](https://rancho333.gitee.io/pictures/platform_module_2.png)
+![](https://rancho333.github.io/pictures/platform_module_2.png)
 
 对于`platform-modules-*_amd64.deb`，里面包含了device的驱动，会在systemd中添加服务完成驱动的加载。这个deb的生成规则参见`platform/broadcom/sonic-platform-modules-cel/debian/`，主要修改如下几个文件：
 ```

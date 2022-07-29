@@ -37,14 +37,14 @@ MSTP中的选举规则和STP完全一致，快速收敛机制则和RSTP完全一
 - flags字段和rstp保持一致
 - BID字段中的扩展ID则为0
 其它字段简介如下：
-![](https://github.com/Rancho333/pictures_hub/blob/master/non_auto/mstp_bpdu.png?raw=true)
+![](https://rancho333.github.io/pictures/mstp_bpdu.png)
 
 MSTP配置比较复杂，特别是在多域使用尤其复杂，本文只通过单域对MSTP有一个简单的了解。
 
 # 实验说明
 经典的三角环形拓扑， 创建一个MSTP域，域内创建两个实例instance 1、2, vlan 10-15映射到实例1， vlan 16-20映射到实例2。实例0的根桥是S1，实例1的根桥是S2，实例2的根桥是S3. 拓扑图如下：
 
-![](https://github.com/Rancho333/pictures_hub/blob/920baf1e40926adc604b727854fd10b7861dc24e/non_auto/mstp_topology.png?raw=true)
+![](https://rancho333.github.io/pictures/mstp_topology.png)
 
 实验步骤如下：
 创建Vlan 10-20
@@ -101,22 +101,22 @@ Instance  Vlans mapped
 ```
 
 确认实例0中根桥及端口状态：
-![](https://github.com/Rancho333/pictures_hub/blob/master/non_auto/mstp_instance_0.png?raw=true)
+![](https://rancho333.github.io/pictures/mstp_instance_0.png)
 
 可以看到实例0中，S1是根桥，S3的eth0处于blocking状态。
 
 确认实例1中根桥及端口状态：
-![](https://github.com/Rancho333/pictures_hub/blob/master/non_auto/mstp_instance_1.png?raw=true)
+![](https://rancho333.github.io/pictures/mstp_instance_1.png)
 
 可以看到实例1中，S2是根桥，S3的eth1处于blocking状态。
 
 确认实例2中根桥及端口状态：
-![](https://github.com/Rancho333/pictures_hub/blob/master/non_auto/mstp_instance_2.png?raw=true)
+![](https://rancho333.github.io/pictures/mstp_instance_2.png)
 
 可以看到实例2中，S3是根桥，S2的eth0处于blocking状态。
 
 三个实例中对应的转发路径如下图所示：
-![](https://github.com/Rancho333/pictures_hub/blob/master/non_auto/mstp_instance_forward_path.png?raw=true)
+![](https://rancho333.github.io/pictures/mstp_instance_forward_path.png)
 
 可以看到不同实例的流量之间负载均衡。
 

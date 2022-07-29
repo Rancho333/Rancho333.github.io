@@ -5,7 +5,7 @@ tags: 通信协议
 ---
 
 ## 写在前面
-跟着上文[SONiC路由协议简述](https://rancho333.gitee.io/2021/04/08/SONiC%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/), 这篇文章记录一下OSPF协议的学习内容。
+跟着上文[SONiC路由协议简述](https://rancho333.github.io/2021/04/08/SONiC%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/), 这篇文章记录一下OSPF协议的学习内容。
 
 <!--more-->
 

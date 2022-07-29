@@ -18,22 +18,22 @@ tags:
 最初遇到这个问题的时候是在shell下面使用`管道`操作，例如：`find ./ -name "*.c" | xargs grep -rn zhw`,这条命令的含义是：在当前路径下的所有`.c`文件中查找`zhw`关键字，注意这里在管道的右侧加了关键字`xargs`，表示将`find`找到的结果作为*参数*传递给`grep`，grep是不接受标准输入的。
 
 标准输入就是编程语言中诸如`scanf`或者`readline`获取到的信息；而参数是指程序的`main`函数传入的`args`字符串数组。管道符和重定向符都是将数据作为程序的标准输入，下面这个示例：
-![](https://rancho333.gitee.io/pictures/grep.png)
+![](https://rancho333.github.io/pictures/grep.png)
 1. grep要搜索的文件作为参数是可选的，`-r`可以在当前路径下递归查找
 2. find不加xargs和直接grep效果是一样的，说明没有指定查找文件，而使用xargs则指定了查找文件作为参数传递给grep
 
 这里多说一点：
-![](https://rancho333.gitee.io/pictures/find.png)
+![](https://rancho333.github.io/pictures/find.png)
 通常使用find命令查找特定的文件，然后再这些文件中用grep去匹配关键字，但是如果find的结果是空，那么通过xargs方式就相当于没有给grep指明特定查找文件（它就会在当前目录递归）,而通过`-exec`则表示对匹配的文件执行该参数所给出的shell命令，此时grep实际并没有执行，这才符合我们的预期结果。
 
 上面两个小例子，理解问题的本质是多么的重要，基础打牢固，花哨的东西就随便玩了！
 除了`xargs`可以读取数据作为命令参数外，通过`$(cmd)`形式也能达到同样的效果，例如：
-![](https://rancho333.gitee.io/pictures/grep.png)
+![](https://rancho333.github.io/pictures/grep.png)
 
 `$(cmd)`读取`cmd`命令输出的数据作为参数。
 
 最后说一下如何区分命令能够接受标准输入还是参数：如果命令能够让终端阻塞，说明该命令能接受标准输入，反之就是不接受。`rm`命令是不接受标准输入的。
-![](https://rancho333.gitee.io/pictures/block.png)
+![](https://rancho333.github.io/pictures/block.png)
 
 # 后台运行程序
 如果一些服务需要长时间运行，比如main函数里面有个`while(1)`的死循环，程序运行后命令行会阻塞。在命令后加上`&`后程序就可以在后台运行而不会阻塞命令行。底层的原理或者说这是怎么实现的呢？
@@ -47,9 +47,9 @@ void main()
 }
 ```
 加上`&`后，只是让shell进程不再阻塞，可以继续响应你的新命令，但是当你关掉这个shell命令行中终端后，依附于它的所有子进程都会退出。如下：
-![](https://rancho333.gitee.io/pictures/ps.png)
+![](https://rancho333.github.io/pictures/ps.png)
 但是如果`(cmd &)`这样来运行命令，则是将`cmd`挂到一个`systemd`系统守护进程下，这样即使当终端退出后，对于刚才的命令也没有影响。如下：
-![](https://rancho333.gitee.io/pictures/nohup.png)
+![](https://rancho333.github.io/pictures/nohup.png)
 不过`nohup cmd &`的做法似乎常见一些，原理类似。此外还可以试试`tmux`这个小工具，如果利用晚上的时候在服务器编译大型项目，这玩意挺好用的，不用担心断网（终端被kill）。
 
 # 单引号和双引号的区别
@@ -62,7 +62,7 @@ void main()
 不加引号：不会将含有空格的字符串视为一个整体输出, 如果内容中有命令、变量等，会先把变量、命令解析出结果，然后在输出最终内容来，如果字符串中带有空格等特殊字符，则不能完整的输出，需要改加双引号，一般连续的字符串，数字，路径等可以用。所以在写shell脚本的时候一定注意使用小括号和双引号哈！
 
 示例如下：
-![](https://rancho333.gitee.io/pictures/ds.png)
+![](https://rancho333.github.io/pictures/ds.png)
 
 # sudo 找不到命令
 有时候普通用户可以印的命令，加上`sudo`之后却报错`command not found`，原因在于这个命令仅存在与该用户的环境变量PATH中。解决方法是：

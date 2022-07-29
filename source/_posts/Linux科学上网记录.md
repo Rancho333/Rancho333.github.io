@@ -166,7 +166,7 @@ docker默认是bridge的网络模式，端口是需要做转发映射的。为�
 也就是使用`docker run -e "http_proxy=http://localhost:8118" -e "https_proxy=http://localhost:8118" --net host`来启动一个container
 
 注意到上面`https_proxy`使用的代理和`http_proxy`是一样的，这是因为我在使用中发现有如下报错：
-![](https://rancho333.gitee.io/pictures/timeout.png)
+![](https://rancho333.github.io/pictures/timeout.png)
 更改完之后就好了，原理暂时不清楚，看机缘更新吧！
 
 参考资料：

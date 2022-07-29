@@ -47,9 +47,9 @@ codename是ubuntu不同版本的代号
 deb后面的内容有三大部分：deb URI section1 section2  
 以`deb http://us.archive.ubuntu.com/ubuntu/ xenial main restricted`为例进行说明。  
 URI是库所在的地址，支持http，fpt以及本地路径,访问`http://us.archive.ubuntu.com/ubuntu/`可以看到如下信息：
-![](https://rancho333.gitee.io/pictures/ubuntu.png)
+![](https://rancho333.github.io/pictures/ubuntu.png)
 `dists`和`pool`这两个目录比较重要。`dists`目录包含了当前库的所有软件包的索引。这些索引通过codename分布在不同的文件夹中。例如`xenial`所在的目录。  
-![](https://rancho333.gitee.io/pictures/xenial.png)
+![](https://rancho333.github.io/pictures/xenial.png)
 上图中的文件夹名其实就是对应了section1，我们可以根据需要填写不同的section1.
 这里面的文件都是用以下格式命名的：  
 
@@ -62,7 +62,7 @@ codename-updates	  #recommanded updates
 ```
 
 打开其中一个任一文件夹，例如`xenial-updates`:  
-![](https://rancho333.gitee.io/pictures/xenial.png)
+![](https://rancho333.github.io/pictures/xenial.png)
 里面有`main,multiverse,restricted,universe`文件夹，这些文件夹对应deb后面的section2,里面包含了不同软件包的索引。它们的区别在于：  
 
 ```
@@ -73,7 +73,7 @@ multiverse: 非自由软件，完全不提供支持和补丁
 ```
 
 打开main目录下的binary-i386子目录下的Packages.gz文件，可以看到如下内容：  
-![](https://rancho333.gitee.io/pictures/packages.png)
+![](https://rancho333.github.io/pictures/packages.png)
 说明：Packages.gz这个文件其实就是一个“索引”文件,里面记录了各种包的包名(Package)、运行平台(Architecture)、版本号（Version）、依赖关系(Depends)、deb包地址(Filename)等。Filename指向的是源服务器pool目录下的某个deb。猜测：`apt-get install`某个软件是，其实就是基于这些Packages.gz来计算依赖关系，然后根据其中的filename地址来下载所需的deb，最后执行`dpkg -i pacckage.deb`来完成软件包的安装。  
 
 ## 替换源

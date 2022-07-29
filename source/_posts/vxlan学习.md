@@ -30,7 +30,7 @@ vxlan是overlay层的应用，vlan是underlay层的应用。这篇文档是vxlan
 
 VLAN(virtual local area network)即虚拟局域网，是将一个物理的LAN在逻辑上划分多个广播域的通信技术。根据IEEE 802.1Q协议规定，在以太网数据帧的目的MAC地址和源MAC地址字段之后、协议字段之前加入4个字节的VLAN tag，用以标识VLAN信息，VLAN数据帧格式如下图所示。
 
-![](https://rancho333.gitee.io/pictures/vlan_frame.png)
+![](https://rancho333.github.io/pictures/vlan_frame.png)
 
 对于交换机而言，其内部处理的数据帧都带有VLAN tag，现网中交换机连接的设备只会接收Untagged帧。交换机需要有识别Untagged帧并在收发时给帧添加、剥离VLAN标签的能力，交换机间的接口需要有同时识别和发送多个vlan数据帧的能力。
 
@@ -59,7 +59,7 @@ VLAN(virtual local area network)即虚拟局域网，是将一个物理的LAN在
 
 vxlan(virtual extensible local area network)虚拟扩展局域网，是有IETF定义的NVO3(network virtualization over layer 3)标准技术之一。vxlan的本质是一种隧道技术，将L2的以太帧封装到UDP报文中在L3网络中传输。虽然从名字上看，vxlan是vlan的一种扩展协议，但是vxlan构建虚拟隧道的本领已经和vlan迥然不同了。vxlan报文格式如下图所示。
 
-![](https://rancho333.gitee.io/pictures/vxlan_tag.png)
+![](https://rancho333.github.io/pictures/vxlan_tag.png)
 
 如上图所示，VTEP对VM发送的原始以太帧（original L2 frame）进行了如下的封装：
 
@@ -88,7 +88,7 @@ vxlan的主要应用场景是数据中心。vxlan可以满足数据中心的三�
 
 下面了解一下vxlan网络模型以及一些常见的概念，如下图所示，两台服务器之间通过vxlan的网络进行通信。
 
-![](https://rancho333.gitee.io/pictures/vxlan_network_module.png)
+![](https://rancho333.github.io/pictures/vxlan_network_module.png)
 
 如上图所示，vxlan报文在vtep两端有一个封装和解封装的操作。
 
@@ -180,17 +180,17 @@ IPv6 Peer List : -
 
 具体说明下。
 vxlan三层网关。用于终结vxlan网络，将vxlan报文转换成传统三层报文发送至IP网络，适用于vxlan网络内服务器与远端之间的三层互访；同时也作不同vxlan网络互通，如下图所示.当服务器访问外部网络时，vxlan三层网关剥离对应vxlan报文封装，送入IP网络；当外部终端访问vxlan内的服务器时，vxlan根据目的IP地址所属vxlan及所属的VTEP，加上对应的vxlan报文头封装进入vxlan网络。vxlan之间的互访流量与此类似，vxlan网关剥离vxlan报文头，并基于目的IP地址所属vxlan及所属的VTEP，重新封装后送入另外的vxlan网络。
-![](https://rancho333.gitee.io/pictures/vxlan_l3_gateway.png)
+![](https://rancho333.github.io/pictures/vxlan_l3_gateway.png)
 
 vxlan二层网关。用于终结vxlan网络。将vxlan报文转换成对应的传统二层网络送到传统以太网路，适用于vxlan网络内服务器与远端终端或远端服务器的二层互联。如在不同网络中做虚拟机迁移时，当业务需要传统网络中服务器与vxlan网络中服务器在同一个二层中，此时需要使用vxlan二层网关打通vxlan网络和二层网络。如下图所示。vxlan10网络中的服务器要和IP网络中vlan100的业务二层互通，此时就需要通过vxlan的二层网关进行互联。vxlan10的报文进入IP网络的流量，剥离vxlan报文头，根据vxlan的标签查询对应的vlan网络，并据此在二层报文中加入vlan的802.1Q报文送入IP网络；相反vlan100的业务流量进入vxlan也需要根据vlan获知对应的vxlan的vni，根据目的mac地址获知远端vtep的IP地址，基于以上信息进行vxlan封装后送入对应的vxlan网络。
 
-![](https://rancho333.gitee.io/pictures/vxlan_l2_gateway.png)
+![](https://rancho333.github.io/pictures/vxlan_l2_gateway.png)
 
 ### vxlan集中式网关与分布式网关
 
 集中式网关指将三层网关集中部署在一台设备上,如下图所示，所有跨子网的流量都经过这个三层网关转发，实现流量的集中管理。
 
-![](https://rancho333.gitee.io/pictures/vxlan_gateway.png)
+![](https://rancho333.github.io/pictures/vxlan_gateway.png)
 
 集中式网关的优点和缺点如下：
 - 优点：对跨子网流量进行集中管理，网关部署和管理比较简单
@@ -200,7 +200,7 @@ vxlan二层网关。用于终结vxlan网络。将vxlan报文转换成对应的�
 
 vxlan分布式网关是指在典型的"spine-leaf"组网结构下，将leaf节点作为vxlan隧道断点VTEP，每个leaf节点都可作为vxlan三层网关(同时也是vxlan二层网关)，spine节点不感知vxlan隧道，只作为vxlan报文的转发节点。如下图所示
 
-![](https://rancho333.gitee.io/pictures/vxlan_gateway_2.png)
+![](https://rancho333.github.io/pictures/vxlan_gateway_2.png)
 
 部署分布式网关时：
 - spine节点：关注于高速IP转发，强调的是设备的高速转发能力
@@ -219,11 +219,11 @@ vxlan分布式网关具有如下特点：
 
 ### 集中式vxlan中同子网互通流程
 
-![](https://rancho333.gitee.io/pictures/vxlan_l2_ct.png)
+![](https://rancho333.github.io/pictures/vxlan_l2_ct.png)
 
 如上图所示，VM_A、VM_B、VM_C属于相同网段，且同属VNI 5000。C要与A进行通信，对于首次通信，需要通过ARP获取对方MAC。在vlan子网通信中，arp报文在vlan内广播。在vxlan相同子网中，ARP请求报文转发流程见下图
 
-![](https://rancho333.gitee.io/pictures/vxlan_l2_arp_request.png)
+![](https://rancho333.github.io/pictures/vxlan_l2_arp_request.png)
 
 A向C进行MAC请求的过程如下：
 1. A发送ARP请求报文请求C的MAC
@@ -241,7 +241,7 @@ A向C进行MAC请求的过程如下：
 
 ARP应答报文转发流程见下图
 
-![](https://rancho333.gitee.io/pictures/vxlan_l2_arp_reply.png)
+![](https://rancho333.github.io/pictures/vxlan_l2_arp_reply.png)
 
 C向A发送ARP 应答报文的过程如下：
 1. A向C发送ARP应答报文
@@ -260,7 +260,7 @@ C向A发送ARP 应答报文的过程如下：
 
 ### 集中式vxlan不同子网互通流程
 
-![](https://rancho333.gitee.io/pictures/vxlan_l3_ct.png)
+![](https://rancho333.github.io/pictures/vxlan_l3_ct.png)
 
 A、B分属不同网段，且分别属于VNI 5000和VNI 6000。A、B对应的三层网关分别是VTEP_3上的BDIF 10和BDIF 20的IP地址。VTEP_3上存在到两个网段的路由。
 
@@ -268,7 +268,7 @@ BDIF接口的功能与VLAN IF接口类似，是基于BD创建的三层逻辑接�
 
 对于首次通信，类比与underlay网络中跨网段通信。A请求网关BDIF 10 MAC，然后将数据包发送给网关BDIF 10，BDIF 10将数据包路由至BDIF 20，BDIF 20请求B的MAC，然后将数据包发送给B。具体流程如下：
 
-![](https://rancho333.gitee.io/pictures/vxlan_l3_arp.png)
+![](https://rancho333.github.io/pictures/vxlan_l3_arp.png)
 
 数据报文转发流程如下：
 1. A将数据报文发送给网关。报文的源MAC是A MAC，目的MAC是网管BDIF 10的MAC；报文的源IP是A的IP，目的IP是B的IP
@@ -291,7 +291,7 @@ vxlan网络与非vxlan网络之间的互通，也需要借助三层网关，但�
 
 在数据中心，部分业务不适合进行虚拟化(如小机服务器，高性能数据库服务器),这些服务器会直接与物理交换机互联；对于服务器(虚拟机)，接入的可以是虚拟交换机(OpenvSwitch),也可以是物理交换机，因此存在如下图所示的三种接入模型。
 
-![](https://rancho333.gitee.io/pictures/vxlan_network_module_2.png)
+![](https://rancho333.github.io/pictures/vxlan_network_module_2.png)
 
 以上，在network overlay方案中，所有终端均采用物理交换机作为VTEP节点；host overlay方案中，所有终端均采用虚拟交换机作为VTEP节点；hybird overlay方案中，既有物理交换机接入，又有虚拟交换机接入，且软件VTEP和硬件VTEP之间可以基于标准协议互通。
 

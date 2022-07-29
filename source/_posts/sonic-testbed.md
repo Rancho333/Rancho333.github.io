@@ -10,7 +10,7 @@ tags: SONiC
 
 <!--more-->
 ## 物理拓扑
-![](https://rancho333.gitee.io/pictures/physical-topology.png)
+![](https://rancho333.github.io/pictures/physical-topology.png)
 
 1. DUT和leaf fanout的端口一一互联
 2. leaf fanout与DUT相连的端口进行VLAN隔离
@@ -26,7 +26,7 @@ tags: SONiC
 * 关闭STP功能
 
 ### Testbed server
-![](https://rancho333.gitee.io/pictures/testbed-server.png)
+![](https://rancho333.github.io/pictures/testbed-server.png)
 
 #### 网络连接
 * testbed server有两个网络接口
@@ -42,11 +42,11 @@ VMs使用的是Arista的vEOS。它们用来设置测试协议，例如BGP、LACP
 ### PTF
 PTF容器通过发送和接收数据包来验证DUT的数据面。
 PTF with direct port
-![](https://rancho333.gitee.io/pictures/testbed-direct.png)
+![](https://rancho333.github.io/pictures/testbed-direct.png)
 
 DUT的前面板口直连到一个PTF容器的端口。一般的PTF容器的eth0连接到DUT的Ethernet0，eth1连接到Ethernet4。这一般在PTF拓扑中用来连接DUT端口和PTF容器端口。
 
-![](https://rancho333.gitee.io/pictures/testbed-injected.png)
+![](https://rancho333.github.io/pictures/testbed-injected.png)
 
 DUT的前面板口和一个VM的接口直连。但是我们在这个连接上有个tap。从vlan interface中收到的包被发送给VMs和PTF容器。从VM和PTF容器中发出的包被送到vlan interface。这允许我们可以同时从PTF host往DUT注入包和维持VM与DUT之间的BGP会话。
 
@@ -332,29 +332,29 @@ ARISTA01T1>
 
 ### 当前的拓扑
 #### t1
-![](https://rancho333.gitee.io/pictures/testbed-t1.png)
+![](https://rancho333.github.io/pictures/testbed-t1.png)
 - 需要32个VMs
 - 所有的DUT端口直连VMs
 - PTF容器只有注入端口
 
 #### t1-lag
-![](https://rancho333.gitee.io/pictures/testbed-t1-lag.png)
+![](https://rancho333.github.io/pictures/testbed-t1-lag.png)
 - 需要24个VMs
 - 所有的DUT端口直连VMs
 - PTF容器只有注入端口
 
 #### ptf32
-![](https://rancho333.gitee.io/pictures/testbed-ptf32.png)
+![](https://rancho333.github.io/pictures/testbed-ptf32.png)
 - 不需要VMs
 - 所有的DUT端口直连PTF容器
 - PTF容器没有注入端口
 
 #### ptf64
-![](https://rancho333.gitee.io/pictures/testbed-ptf64.png)
+![](https://rancho333.github.io/pictures/testbed-ptf64.png)
 和ptf32一样
 
 #### t0
-![](https://rancho333.gitee.io/pictures/testbed-t0.png)
+![](https://rancho333.github.io/pictures/testbed-t0.png)
 - 需要4个VMs
 - 4个DUT端口连接到VMs
 - PTF容器有4个注入端口与28个直连端口

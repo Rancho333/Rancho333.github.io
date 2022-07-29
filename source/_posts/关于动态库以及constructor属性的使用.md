@@ -46,7 +46,7 @@ void main()
 ```
 使用命令`gcc demo.c -o demo -L./ -lcons`进行编译，其中`-L`指明了查找动态库的路径，`-lcons`指明动态库的名字，它的组成是`-l`加上动态库真实名字的`lib`与`.so`之间的字符串，如`libcons.so`就是`-l+cons`。
 使用`ldd demo`查看程序所依赖动态库的具体情况（是否存在，查找路径等）：
-![](https://rancho333.gitee.io/pictures/ldd.png)
+![](https://rancho333.github.io/pictures/ldd.png)
 
 发现demo与libcons.so之间并未产生依赖关系，这里猜测是demo.c中并没有显示的使用到libcons.so中的资源，所以即使加上`-lcons`编译选项，编译器也会对之进行优化。那么我们修改demo.c中的代码为：
 ```
@@ -59,12 +59,12 @@ void main()
 }
 ```
 这里加上对函数`after_main`的调用，再使用ldd查看：
-![](https://rancho333.gitee.io/pictures/ldd.png)
+![](https://rancho333.github.io/pictures/ldd.png)
 
 发现ldd中虽然已经有了libcons.so的信息，但是是`not found`，执行`demo`当然也会报这个库找不到。这是因为我们的库所在的路径并没有加到*查找库所在路径*的环境中，类似于shell的命令查找规则*PATH*环境变量，这里可以将路径添加到环境变量中或者将库拷贝到已知的查找路径中。用户添加的一般拷到`/usr/lib`下，这里再回到上面编译demo.c的地方，如果事先将库拷到系统路径中，那么久不用加`-L`指定路径了。如果是做嵌入式开发，记得一定要把库拷到开发板上哦。动态库在程序编译和执行的时候都会用的。
 
 再次ldd看下并执行：
-![](https://rancho333.gitee.io/pictures/ldd.png)
+![](https://rancho333.github.io/pictures/ldd.png)
 
 可以正常执行打印出函数名字了，但是有点奇怪的是没有调用befor_main函数为什么也会打印出来呢。
 

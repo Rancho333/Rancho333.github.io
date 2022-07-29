@@ -37,7 +37,7 @@ hexo init <folder>
 cd <folder>
 ```
 完成之后，指定文件夹的目录如下：  
-![](https://rancho333.gitee.io/pictures/hexo_tree.png)
+![](https://rancho333.github.io/pictures/hexo_tree.png)
 这里面不包含pbulic文件夹，会在执行第一次`hexo g`命令后生成，并且在执行`hexo d`命令后会生成`.deploy_git`文件夹，这两个文件夹中的内容是相同的，是最终部署到github.io中的文件。  
 然后执行`npm install`产生node_modules文件夹，至此，服务端的基本初始化完成。 
 修改`_config.yml`配置文件如下：  
@@ -90,7 +90,7 @@ git checkout hexo
 2. 安装依赖`npm install -g hexo-cli、npm install、npm install hexo-deployer-git`,注意不需要执行`hexo init`  
 
 ## 重新部署的问题
-虽然之前将hexo的源码也备份到了远程仓库，但是一旦主机环境发生改变，得重新安装对应的依赖，这也带来一定的不稳定隐患，现在将开发环境打包到docker，发布到[docker hub](https://hub.docker.com/repository/docker/rancho123/ubuntu)中, 后续个人的工作环境会持续集成进去。一些Linux通用配置（vim, bash）则存放到[gitee](https://gitee.com/Rancho333/vim_cfg)上。
+虽然之前将hexo的源码也备份到了远程仓库，但是一旦主机环境发生改变，得重新安装对应的依赖，这也带来一定的不稳定隐患，现在将开发环境打包到docker，发布到[docker hub](https://hub.docker.com/repository/docker/rancho123/ubuntu)中, 后续个人的工作环境会持续集成进去。一些Linux通用配置（vim, bash）则存放到[github](https://github.com/Rancho333/vim_cfg)上。
 
 之前主题文件`next`是用一个单独repository来进行管理，自己的修改可以提交，但是分成两个仓库不方便。所以现在将next主题源码也集成到hexo中。所以现在如果重新部署blog环境，需要做3件事：
 1. `https://github.com/Rancho333/Rancho333.github.io.git`下载源码(包含hexo+theme)

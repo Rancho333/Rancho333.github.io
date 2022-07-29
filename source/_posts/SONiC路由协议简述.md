@@ -38,7 +38,7 @@ target/docker-fpm-frr-dbg.gz
 ## SONiC中路由模块的交互
 SONiC中路由模块交互如下图所示：
 
-![](https://rancho333.gitee.io/pictures/frr-sonic.png) 
+![](https://rancho333.github.io/pictures/frr-sonic.png) 
 
 1. 在BGP容器初始化时， zebra通过TCP socket连接到`fpmsyncd`。在稳定状态下，zebra、linux kernel、APPL_DB、ASIC_DB、ASIC中的路由表应该是完全一致的。
 这里做一点说明，OSPF、BGP等路由进程会将自己选择出的路由发送给zebra，zebra通过计算筛选之后会通过netlink将之同步给kernel，同时zebra通过FPM(forwarding plane manger)将之同步给ASIC。zebra中运行FPM client，通过TCP socket与FPM server进行通信。FPM client端代码如下：
@@ -62,7 +62,7 @@ FRR定义了FPM的数据格式，类似于协议报文，用户自己实现FPM s
 3. zebra根据自身的计算策略过滤该路由，如果通过zebra则生成route-netlink信息将路由信息发送给kernel
 
 4. 同时，zebra通过FPM接口将route-netlink信息发送给`fpmsyncd`，2,3,4的大致流程参见下图：
-![](https://rancho333.gitee.io/pictures/frr-bgpd.png) 
+![](https://rancho333.github.io/pictures/frr-bgpd.png) 
 
 5. Fpmsyncd处理该信息并将之放入`APPL_DB`
 SONiC中FPM server在`fpmsyncd`中实现，源码在`sonic-swss`中：
@@ -101,7 +101,7 @@ priority=8
 
 FRR与SONiC的完整交互流程图示如下：
 
-![](https://rancho333.gitee.io/pictures/route-flow.png)
+![](https://rancho333.github.io/pictures/route-flow.png)
 
 ## 静态路由的实现
 基于以上的SONiC路由实现流程，我们可以实现一个`FPM client`，按照ZAPI的格式封装netlink路由数据发送给`fpmsyncd`，之后在各个数据中转节点验证路由是否按设定的流程转发最终生效到ASIC。这样可以脱离`FRR`的协议栈逻辑，只借用FPM模块。
@@ -113,23 +113,23 @@ ip route 192.168.2.0/24 PortChannel0001
 ```
 验证一下命令是否生效：
 
-![](https://rancho333.gitee.io/pictures/show-ip-route.png)
+![](https://rancho333.github.io/pictures/show-ip-route.png)
 
 看下在kernel中是否生效：
 
-![](https://rancho333.gitee.io/pictures/ip-route-show.png)
+![](https://rancho333.github.io/pictures/ip-route-show.png)
 
 查看是否同步到`APPL_DB`中：
 
-![](https://rancho333.gitee.io/pictures/appl-db.png)
+![](https://rancho333.github.io/pictures/appl-db.png)
 
 查看是否同步到`ASIC_DB`中：
 
-![](https://rancho333.gitee.io/pictures/asic-db.png)
+![](https://rancho333.github.io/pictures/asic-db.png)
 
 查看是否下发到`ASIC`中：
 
-![](https://rancho333.gitee.io/pictures/asic-route.png)
+![](https://rancho333.github.io/pictures/asic-route.png)
 
 可以看到路由信息按照`SONiC中路由模块的交互`中描述的进行处理下发。
 
@@ -142,7 +142,7 @@ ip route 192.168.2.0/24 PortChannel0001
 
 SONiC默认只启动了`bgpd`和`staticd`这两个路由进程，尝试手动开启`ospf`、`rip`、`pim`并为发现异常：
 
-![](https://rancho333.gitee.io/pictures/frr-routes.png)
+![](https://rancho333.github.io/pictures/frr-routes.png)
 
 SONIC本身并未对FRR做什么修改，只是增加了一个FPM server模块，整个路由通路是没有问题的，理论上是*完全可以支持FRR中的其它路由协议*的，很好奇为什么微软不顺手把这些做了？
 难道是因为数据中心中只要BGP+ECMP+VxLAN?
@@ -152,7 +152,7 @@ SONIC本身并未对FRR做什么修改，只是增加了一个FPM server模块�
 
 2. OSPF、PIM基于IP，使用protocol创建socket与keenel进行通信，RIP基于UDP，BGP基于TCP。ospf创建socket如下：
 
-![](https://rancho333.gitee.io/pictures/ospf-sock.png)
+![](https://rancho333.github.io/pictures/ospf-sock.png)
 控制报文调试1周，这玩意要是顺利应该就几分钟，大概率没啥问题。
 
 3. 看代码，了解协议状态机，了解常见的测试拓扑，搭建测试拓扑，生成路由信息，2周

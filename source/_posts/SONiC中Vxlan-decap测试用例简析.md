@@ -5,7 +5,7 @@ tags: SONiC
 ---
 
 ## 写在前面
-本文简要分析SONiC testbed中Vxlan decap测试用例的实现，作为对[vxlan学习](https://rancho333.gitee.io/2021/02/03/vxlan%E5%AD%A6%E4%B9%A0/)的补充。
+本文简要分析SONiC testbed中Vxlan decap测试用例的实现，作为对[vxlan学习](https://rancho333.github.io/2021/02/03/vxlan%E5%AD%A6%E4%B9%A0/)的补充。
 <!--more-->
 
 ## 背景简述
@@ -28,7 +28,7 @@ vnet_utils.py
 2. RegularLAGtoVLAN: 发送常规报文给portchannel接口，应该在对应的vlan接口上看到该报文。
 3. RegularVLANtoLAG: 发送常规报文给vlan成员接口，应该在portchannel接口上看到该报文。
 
-![](https://rancho333.gitee.io/pictures/vxlan_tests.png)
+![](https://rancho333.github.io/pictures/vxlan_tests.png)
 
 ## 测试参数
 共有6个测试参数。

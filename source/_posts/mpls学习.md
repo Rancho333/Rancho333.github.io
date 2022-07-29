@@ -18,7 +18,7 @@ FEC的划分方式非常灵活，可以是源地址、目的地址、源端口�
 ## 标签
 标签是一个长度固定，仅具有本地意义的短标识符，用于唯一标识一个分组所属的FEC。一个标签只能代表一个FEC。标签长度为4个字节，结构如下：
 
-![](https://rancho333.gitee.io/pictures/mpls_packet.png)
+![](https://rancho333.github.io/pictures/mpls_packet.png)
 
 字段解释如下：
 
@@ -31,7 +31,7 @@ FEC的划分方式非常灵活，可以是源地址、目的地址、源端口�
 
 如果链路层协议具有标签域，如ATM的VPI/VCI,则标签封装在这些域中；否则，标签封装在链路层头和网络层数据之间的一个垫层。这样，任意链路层都能够支持标签。下图是标签在分组中的封装位置。
 
-![](https://rancho333.gitee.io/pictures/mpls_packet_location.png)
+![](https://rancho333.github.io/pictures/mpls_packet_location.png)
 
 ## 标签交换路由器
 LSR(label switching router,标签交换路由器)是MPLS网络中的基本单元，所有LSR都支持MPLS技术。
@@ -39,7 +39,7 @@ LSR(label switching router,标签交换路由器)是MPLS网络中的基本单元
 ## 标签交换路径
 一个转发等价类在MPLS网络中经过的路径称为LSP(label switched path，标签交换路径)。在一条LSP上，沿数据传送的方向，相邻的LSR分别称为上游LSR和下游LSR。如下图所示，R2是R1的下游LSR，相应的R1是R2的上有LSR。
 
-![](https://rancho333.gitee.io/pictures/mpls_lsr.png)
+![](https://rancho333.github.io/pictures/mpls_lsr.png)
 LSP在功能上与ATM和帧中继(frame relay)的虚电路相同，是从MPLS网络的入口到出口的一个单向路径，LSP中的每个节点由LSR组成。
 
 ## 标签分发协议
@@ -61,7 +61,7 @@ MPLS对标签栈的深度没有限制，若一个分组的标签深度为m，则
 如下图所示，MPLS网络的基本构成单元是LSR，由LSR构成的网络称为MPLS域。位于MPLS域边缘、连接其它用户网络的LSR称为LER(label edge router, 边缘LSR)，区域内部的LSR称为核心LSR。核心LSR可以是支持MPLS的路由器，也可以是由ATM交换机等升级而成的ATM-LSR。域内部的LSR之间使用MPLS通信，MPLS域的边缘由LER与传统IP技术进行适配。
 分组在入口LER被压入标签后，沿着由一系列LSR构成的LSP传送，其中，入口LER被称为ingress，出口LER被称为egress，中间的节点则称为transit。
 
-![](https://rancho333.gitee.io/pictures/mpls_network.png)
+![](https://rancho333.github.io/pictures/mpls_network.png)
 结合上图简要介绍MPLS基本工作过程：
 1. 首先，LDP和传统路由协议(如OSPF、ISIS等)一起，在各个LSR中为有业务需求的FEC建立路由表和LIB(label information base，标签信息表)
 2. 入口LER接收分组，完成第三层功能，判定分组所属的FEC，并给分组加上标签，形成MPLS标签分组
@@ -72,7 +72,7 @@ MPLS并不是一种业务或者应用，它本质上是一种隧道技术，也�
 
 ## MPLS节点结构
 
-![](https://rancho333.gitee.io/pictures/mpls_node.png)
+![](https://rancho333.github.io/pictures/mpls_node.png)
 
 如上图所示，MPLS节点由两部分组成：
 - 控制平面(control plane)：负责标签的分配、路由的选择、标签转发表的建立、标签交换路径的建立、拆除等工作
@@ -90,7 +90,7 @@ LDP通过逐跳方式建立LSP时，利用沿途各LSR路由转发表中的信�
 
 ### 基于MPLS的VPN
 传统的VPN一般是通过GRE、L2TP、PPTP等隧道协议来实现私有网络间数据流在公网上的传送，LSP本身就是公网上的隧道，因此，用MPLS来实现VPN有天然的优势。基于MPLS的VPN就是通过LSP将私有网络的不同分支连接起来，形成一个同一的网络。基于MPLS的VPN还支持对不同的VPN间的互通控制。
-![](https://rancho333.gitee.io/pictures/mpls_vpn.png)
+![](https://rancho333.github.io/pictures/mpls_vpn.png)
 
 上图是基于MPLS的VPN的基本结构
 - CE可以是路由器，也可以是交换机或主机

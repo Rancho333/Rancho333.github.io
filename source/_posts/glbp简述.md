@@ -52,7 +52,7 @@ GLBP原本是思科私有协议，现在开源了，但是用的人并不多，�
 ## 实验说明
 实验拓扑图如下：
 
-![](https://github.com/Rancho333/pictures_hub/blob/master/non_auto/glbp_basic_topology.png?raw=true)
+![](https://rancho333.github.io/pictures/glbp_basic_topology.png)
 
 S2、S3、S4在一个虚拟组内，通过interface vlan1为vlan1所在网段提供网关服务，虚拟网关ip为`192.168.1.254`，VPC5、VPC6、VPC7都在vlan1中。
 
@@ -75,7 +75,7 @@ interface Vlan1
 ```
 通过`show glbp brief`查看glbp的状态：
 
-![](https://github.com/Rancho333/pictures_hub/blob/master/non_auto/glbp_show_brief.png?raw=true)
+![](https://rancho333.github.io/pictures/glbp_show_brief.png)
 
 对show的状态做一个简单说明：
 - `Grp`表示接口所在的glbp组id

@@ -8,14 +8,14 @@ tags:
 
 ## 写在前面
 
-承接上文[SONiC路由协议简述](https://rancho333.gitee.io/2021/04/08/SONiC%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/)，这边文章记录SONiC上使能OSPF的过程。
+承接上文[SONiC路由协议简述](https://rancho333.github.io/2021/04/08/SONiC%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/)，这边文章记录SONiC上使能OSPF的过程。
 <!--more-->
 ## 实验过程
 
 ### 拓扑说明
 拓扑图如下：
 
-![](https://rancho333.gitee.io/pictures/ospf-topology.png)
+![](https://rancho333.github.io/pictures/ospf-topology.png)
 
 实验预期：
 1. 三台设备上能建立ospf邻居，完成LSDB交换，建立ospf路由
@@ -67,7 +67,7 @@ zebra会通过netlink获取接口配置，反之在vty中配置接口ip不能同
 
 配置完成之后，在vty中可以看到使能了ospf的接口：
 
-![](https://rancho333.gitee.io/pictures/ospf-interface.png)
+![](https://rancho333.github.io/pictures/ospf-interface.png)
 
 注意将接口的mtu配置成1500或者在ospf中关闭mtu check。
 
@@ -84,26 +84,26 @@ fp show entry 3000                        （验证配置）
 ```
 应当在ASIC中看到使能的配置：
 
-![](https://rancho333.gitee.io/pictures/ospf-asic.png)
+![](https://rancho333.github.io/pictures/ospf-asic.png)
 
 sonic中提供了copp功能配置sdk下发这些报文上CPU等的控制操作，受当前实验版本限制暂不做这方面深入研究。
 
 ### 功能验证
 查看邻居状态：
 
-![](https://rancho333.gitee.io/pictures/ospf-neighbour.png)
+![](https://rancho333.github.io/pictures/ospf-neighbour.png)
 
 查看数据库信息：
 
-![](https://rancho333.gitee.io/pictures/ospf-database.png)
+![](https://rancho333.github.io/pictures/ospf-database.png)
 
 查看路由表：
 
-![](https://rancho333.gitee.io/pictures/ospf-route.png)
+![](https://rancho333.github.io/pictures/ospf-route.png)
 
 ping测试：
 
-![](https://rancho333.gitee.io/pictures/ospf-ping.png)
+![](https://rancho333.github.io/pictures/ospf-ping.png)
 
 ## 小结
 

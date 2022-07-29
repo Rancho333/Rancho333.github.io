@@ -26,7 +26,7 @@ STP中的disabled、blocking、listening三种状态合并到RSTP的discarding�
 
 ## 端口角色
 
-![](https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_election.png?raw=true)
+![](https://rancho333.github.io/pictures/rstp_election.png)
 
 RSTP中增加了一种端口角色`backup port`. 如上图所示，S2的eth2端口为BP。非根交换机收到自己发出的BPDU时，对比端口上发出和收到的BPDU，如果发出的是`superior BPDU`，那么成为DP，否则成为BP。注意与AP端口的差异：
 - AP是端口收到从`其它交换机`发来的superior BPDU，是RP的备份，这是uplinkfast实现的原理
@@ -34,7 +34,7 @@ RSTP中增加了一种端口角色`backup port`. 如上图所示，S2的eth2端�
 
 ## BPDU的变化
 
-![](https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_bpdu.png?raw=true)
+![](https://rancho333.github.io/pictures/rstp_bpdu.png)
 
 RSTP的BPDU与STP的主要在三个字段上有差异：
 - protocol version identifier：stp为0，rstp为2. rstp向下兼容stp
@@ -57,14 +57,14 @@ STP的收敛优化里面有`portfast`的概念，在rstp中则称之为`edge por
 
 ### PA协商机制(重要区别)
 
-![](https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_pa_mechanism.png?raw=true)
+![](https://rancho333.github.io/pictures/rstp_pa_mechanism.png)
 
 PA机制的基本原理就是：将下游block之后，再将上游forwarding，这种过程向下传导，直至整个RSTP开始运转，下游block的时候依然可以传输BPDU，进行角色选举。需要把STP的选举机制联想起来，不要孤立的看待PA机制。
 通过上图来介绍P/A协商机制的原理。
 1. 当设备上电后，S1、S2均认为自己是根桥并向外发送BPDU(proposal flag置位)，端口状态均为blocking
 2. S2的eth0收到S1的eth0发来的superior BPDU，确定S1是根桥，S2的eth0成为RP(立即切换成forwarding)，将所有非边缘DP(eth1,eth2)状态置为block, 并通过非边缘DP发送BPDU(根桥是S1，proposal flag置位)，之后向根桥发送BPDU(TC置位, agreement置位，该BPDU是proposal BPDU的一个拷贝, 所以BID和sender BID都是S1，只是去掉了proposal的flag，增加了agreement的flag，这可以让接收到agreement的端口知道具体是那个端口发出的proposal)，具体报文如下图：
 
-![](https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_pa_packet.png?raw=true)
+![](https://rancho333.github.io/pictures/rstp_pa_packet.png)
 
 3. S1收到agreement置位的BPDU后，将eth0由block置为forwarding，如果没有收到，则会通过discarding、learning切换到forwarding状态(比如下游设备运行STP时就会出现这种场景)
 4. 以上为一个同步的完成流程，之后S2与S3，S2与S4之间会进行同样的同步协商动作。即S2向S3,S4发送proposal报文，S3,S4选出RP，block非边缘DP，并向下游发送proposal报文(改实例中没有)，S3,S4向S2发送agreement报文，并将自身RP置位forwarding，S2将收到agreement报文的DP置位forwarding状态
@@ -102,7 +102,7 @@ RSTP比STP收敛更快的原因是：
 
 ## 两个实验
 
-![](https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_convergence_experiment.png?raw=true)
+![](https://rancho333.github.io/pictures/rstp_convergence_experiment.png)
 
 实验拓扑如上，操作步骤如下：
 1. vpc1和vpc2在同一网段，vpc1持续ping vpc2
@@ -118,7 +118,7 @@ STP中portfast只是让端口跳过状态切换，并且状态变换不会产生
 ### backbonefast特性测试
 在S2上shutdown端口eth0，S2的eth2发送inferior BPDU，模拟backbonefast特性测试。ping结果如下：
 
-![](https://github.com/Rancho333/pictures_hub/blob/master/non_auto/rstp_convergence_ping.png?raw=true)
+![](https://rancho333.github.io/pictures/rstp_convergence_ping.png)
 
 没有发现丢包，只是shutdown瞬间一个包时延大了一些, 相较于STP开启backfast之后依然断流30秒(S3上eth0状态切换时延)，提升很巨大。S2上端口状态如下:
 ```

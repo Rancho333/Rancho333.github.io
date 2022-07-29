@@ -118,16 +118,16 @@ void weak1(void){
 ## 不同编译组合及其输出情况
 ### 单独编译main.c
 此处弱符号函数链接不成功，但是不会报编译错误，函数名所代表的地址为`nil`
-![](https://rancho333.gitee.io/pictures/main.png)
+![](https://rancho333.github.io/pictures/main.png)
 如果这里依然调用它，那么便会如前面文章中提到的一样产生段错。
-![](https://rancho333.gitee.io/pictures/segmentation_fault.png)
+![](https://rancho333.github.io/pictures/segmentation_fault.png)
 
 ### 编译main.c+weak.c
 弱符号链接成功，可以正常调用。
-![](https://rancho333.gitee.io/pictures/weak.png)
+![](https://rancho333.github.io/pictures/weak.png)
 
 ### 编译main.c+weak.c+strong.c
 当出现强符号定义时，弱符号定义不起作用
-![](https://rancho333.gitee.io/pictures/strong.png)
+![](https://rancho333.github.io/pictures/strong.png)
 
 

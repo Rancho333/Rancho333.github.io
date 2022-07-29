@@ -16,7 +16,7 @@ HSRP(hot standby routing protocol)和GLBP(gateway load balancing protocol)是cis
 ## 简单配置说明
 拓扑图如下：
 
-![](https://github.com/Rancho333/pictures_hub/blob/master/non_auto/hsrp_basic_topology.png?raw=true)
+![](https://rancho333.github.io/pictures/hsrp_basic_topology.png)
 
 S8做接入交换机，网关设置在汇聚层，由S7和S9形成的虚拟IP`192.168.1.254`承担。配置如下：
 ```
@@ -44,7 +44,7 @@ hsrp的配置非常简单，实际上就一条命令。注意standby命令的配
 ## HSRP报文说明
 HSRP hello报文格式如下
 
-![](https://github.com/Rancho333/pictures_hub/blob/master/non_auto/hsrp_hello_packet.png?raw=true)
+![](https://rancho333.github.io/pictures/hsrp_hello_packet.png)
 
 - version: 0表示HSRP v1, 1表示HSRP v2
 - op code: 0表示hello报文，1表示coup报文，3表示advertise报文
@@ -152,7 +152,7 @@ Track Type        Instance                   Parameter        State Last Change
 ## HSRP结合PVSTP做不同网段流量的负载均衡
 实验拓扑如下：
 
-![](https://github.com/Rancho333/pictures_hub/blob/master/non_auto/hsrp_pvstp.png?raw=true)
+![](https://rancho333.github.io/pictures/hsrp_pvstp.png)
 
 HSRP与PVSTP同时使用时，做不同网段的负载均衡，应注意该网段(vlan)HSRP的active与PVSTP的根桥应在同一设备上，不然流量会集中到某一台设备上，导致该设备负载过大，而另一台没有流量需要转发。配置思路如下：
 1. 划分vlan，配置交换机互联trunk
@@ -208,7 +208,7 @@ S3
 ```
 完成后的流量路径如下图所示：
 
-![](https://github.com/Rancho333/pictures_hub/blob/master/non_auto/hsrp_pvstp_1.png?raw=true)
+![](https://rancho333.github.io/pictures/hsrp_pvstp_1.png)
 
 在多实例中我们将不同vlan的根桥放置在不同的设备上，这样可以让不同实例的流量路径不一致，从而最大限度的利用带宽，减少流量拥塞，避免带宽浪费，同时也避免单一设备负载过高。
 

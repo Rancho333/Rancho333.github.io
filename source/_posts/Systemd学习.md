@@ -28,7 +28,7 @@ Linux一直没有一个统一的管理平台，所以各种资料与学习都很
 Systemd的设计目标是：为系统的启动和管理提供一套完整的解决方案。
 
 Systemd的优点是功能强大，使用方便。缺点是体系庞大，非常复杂，与操作系统其它部分强耦合。
-![](https://rancho333.gitee.io/pictures/arch_of_systemd.png)
+![](https://rancho333.github.io/pictures/arch_of_systemd.png)
 
 # Systemd命令族
 Systemd是一组命令的集合，涉及到系统管理的各个方面。
@@ -118,7 +118,7 @@ systemctl enable XX.service
 等同于
 ln -s /lib/systemd/system/XX.service /etc/systemd/system/XX.service
 ```
-![](https://rancho333.gitee.io/pictures/systemd_enable.png)
+![](https://rancho333.github.io/pictures/systemd_enable.png)
 
 如果配置文件里面设置了开机启动，`systemctl enable`命令相当于激活开机启动。
 
@@ -133,7 +133,7 @@ ln -s /lib/systemd/system/XX.service /etc/systemd/system/XX.service
 ## 配置文件的格式
 
 配置文件示例如下：
-![](https://rancho333.gitee.io/pictures/systemd_config_file.png)
+![](https://rancho333.github.io/pictures/systemd_config_file.png)
 
 配置文件分为Unit、Service、Install等区块，每个区块中都是key-value形式的配置。
 
@@ -264,7 +264,7 @@ journalctl --vacuum-time=1years             # 指定日志文件保存多久
 设置依赖关系，需要使用`Wants`和`Requires`字段。Wants字段表明两者之间存在*弱依赖*关系，即如果value表明的服务启动失败或者停止运行，不影响主服务的继续执行。Requires字段则表明两者之间存在*强依赖*关系，即如果value表明的服务启动失败或者异常退出，那么主服务也必须退出。注意这两个字段只涉及依赖关系，与启动顺序无关，默认情况下不是同时启动的。
 
 依赖于某一服务才能正常运行，可以同时定义Requires和After字段，如下所示。
-![](https://rancho333.gitee.io/pictures/requires_after.png)
+![](https://rancho333.github.io/pictures/requires_after.png)
 
 ## Services区块的小问题
 Services区块定义如何启动当前服务。
@@ -300,7 +300,7 @@ Install区块定义如何安装这个配置文件，即怎样做到开机启动�
 
 ## Target的配置文件
 在`/lib/systemd/system`下可以找到Target的配置文件,以`graphical.target`为例：
-![](https://rancho333.gitee.io/pictures/graphical_target.png)
+![](https://rancho333.github.io/pictures/graphical_target.png)
 其中：
 ```
 Requires字段：要求basic.target一起运行。

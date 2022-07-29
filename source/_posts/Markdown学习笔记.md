@@ -132,13 +132,13 @@ md和HTML语法兼容，可以通过HTML的标签来实现效果，如下：
 <链接地址>  
 ```
 如：  
-这是我的Blog [Rancho](https://rancho333.gitee.io/)    
+这是我的Blog [Rancho](https://rancho333.github.io/)    
 ## Markdown图片    
 使用方法如下:    
 ```
-![](https://rancho333.gitee.io/pictures/Rancho.png)  
+![](https://rancho333.github.io/pictures/Rancho.png)  
 ```
-![](https://rancho333.gitee.io/pictures/Rancho.png)  
+![](https://rancho333.github.io/pictures/Rancho.png)  
 md没法指定图片的高度与宽度，可以使用`<image>`标签  
 
 使用资源文件夹后，将图片资源放置在对应的文章资源文件夹里面，可以通过：

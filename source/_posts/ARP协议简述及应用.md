@@ -19,7 +19,7 @@ ARP(Address Resolution Protocol，地址解析协议)是将IP地址解析为以�
 
 ## ARP报文的结构
 
-![](https://rancho333.gitee.io/pictures/arp_protocol.png) 
+![](https://rancho333.github.io/pictures/arp_protocol.png) 
 
 对于各个字段的解释如下
 
@@ -40,10 +40,10 @@ ARP(Address Resolution Protocol，地址解析协议)是将IP地址解析为以�
 
 在Linux上可以通过tcpdump工具抓取ARP包
 
-![](https://rancho333.gitee.io/pictures/arp_data_raw.png)
+![](https://rancho333.github.io/pictures/arp_data_raw.png)
 使用wireshark工具可以更为方便的查看报文中的各个字段：
 
-![](https://rancho333.gitee.io/pictures/arp_data.png) 
+![](https://rancho333.github.io/pictures/arp_data.png) 
 
 ## ARP地址解析过程
 
@@ -114,7 +114,7 @@ ARP协议的状态机比较简单，但是应用起来是比较有意思的，�
 ## 二层通信与三层通信中ARP的应用
 二三层设备互通中arp是怎样工作的？
 
-![](https://rancho333.gitee.io/pictures/ping_arp.png)
+![](https://rancho333.github.io/pictures/ping_arp.png)
 如图所示，两个vlan通过interface vlan路由接口实现互通。下文说明中，交换机和终端设备均为初始状态，不含有arp表项。
 
 ### A和B之间的互通(二层)
@@ -159,14 +159,14 @@ ARP协议的状态机比较简单，但是应用起来是比较有意思的，�
 ### 普通代理ARP
 处于同一网段内的主机，当连接到设备的不同三层接口时，可以利用设备的代理ARP功能，通过三层转发实现互通。
 拓扑如下图所示。设备Router通过两个三层接口Eth1/1和Eth1/2连接两个网络，两个三层接口的IP地址不在同一个网段，但是两个网络内的主机Host A和Host B的地址通过掩码的控制，既与相连设备的接口地址在同一网段，同时二者也处于同一个网段。
-![](https://rancho333.gitee.io/pictures/general_arp_agent.png)
+![](https://rancho333.github.io/pictures/general_arp_agent.png)
 这种组网场景下，当Host A需要与Host B通信时，由于dst ip与src ip在同一网段，因此Host A会直接对Host B进行ARP请求。但是，两台主机不在同一个广播域中，Host B无法收到Host A的ARP请求报文，当然也就无法应答。
 通过在Router上启用代理ARP功能，可以解决此问题。启用代理ARP后,Router可以应答Host A的ARP请求。同时，Router相当于Host B的代理，把从其它主机发送过来的报文转发给它。
 代理ARP的优点是，它可以只被应用在一个设备上（此时设备的作用相当于网关），不会影响到网络中其它设备的路由表。代理ARP功能可以在IP主机没有配置缺省网关或者IP主机没有任何路由能力的情况下使用。
 
 ### 本地代理ARP
 拓扑如图所示。Host A与Host B属于同一个VLAN 2,但他们分别连接到被二层隔离的端口Eth1/3和Eth1/1上，通过在Router上启用本地代理ARP功能，可以实现Host A和Host B的三层互通。
-![](https://rancho333.gitee.io/pictures/local_arp_agent.png)
+![](https://rancho333.github.io/pictures/local_arp_agent.png)
 
 本地代理ARP可以在下列三种情况下实现主机之间的三层互通：
 - 想要互通的主机分别连接到同一个VLAN中的不同的二层隔离端口下
@@ -227,7 +227,7 @@ ARP的主动确认功能主要应用于网关设备上，防止攻击者仿冒�
 
 ## MLAG结合VARP实现VRRP
 VRRP(virtual router redundancy protocol，虚拟路由器冗余协议)将可以承担网关功能的一组路由器加入到备份组中，形成一台虚拟路由器，局域网内的终端设备只需将虚拟路由器配置为缺省网关即可。VRRP有两个版本，VRRPv2基于IPv4, VRRPv3基于IPv6。正统的VRRP实现起来可能有些复杂，通过MLAG结合VARP可以较为简单的实现VRRP的功能。拓扑如下。
-![](https://rancho333.gitee.io/pictures/varp_mlag_vrrp.png)
+![](https://rancho333.github.io/pictures/varp_mlag_vrrp.png)
 
 原理说明：device作为leaf switch, 下行接host，上行通过mlag连接到两台网关。策略配置之后，host发往网关的流量只会通过mlag中的一个端口发往switch A或switch B, 当mlag中一条线路down掉时，通过另一条线路通信，在switch A和switch B上运行VARP协议，通过配置相同的VIP和VMAC实现网关虚拟化。这里面有两个关键点。
 - 主机流量同一时间只会发往一台物理网关

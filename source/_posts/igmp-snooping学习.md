@@ -18,18 +18,18 @@ caegories:
 
 很多情况下，组播报文要不可避免的经过一些二层交换设备，尤其是在局域网环境里。如下图：
 
-![](https://rancho333.gitee.io/pictures/environment.png)
+![](https://rancho333.github.io/pictures/environment.png)
 
 上图中switch会将组播报文当做广播在vlan内进行flood，这是因为组播报文的目的地址为组播地址，在二层设备上学习不到这一类的MAC表项，这样不但浪费网络带宽，而且影响网络信息安全。配置igsp后，二层组播设备可以侦听和分析组播用户和上游路由器之间的IGMP报文，根据这些信息建立二层组播转发表项，控制组播数据报文的转发。
 
 ## IGSP基本原理
 
 IGSP是二层组播的基本功能，可以实现组播数据在链路层的转发和控制。当主机和上游三层设备之间传递IGMP协议报文通过二层组播设备时，IGSP分析报文携带的信息，根据这些信息建立和维护组播转发表，从而指导组播数据在数据链路层按需转发。
-![](https://rancho333.gitee.io/pictures/mc_data.png)
+![](https://rancho333.github.io/pictures/mc_data.png)
 
 ## IGSP相关概念
 
-![](https://rancho333.gitee.io/pictures/concept.png)
+![](https://rancho333.github.io/pictures/concept.png)
 如上图所示，三层设备router从组播源接收数据并向下游转发，在二层组播涉笔Switch A和Switch B上分别运行IGSP，Host A,B,C为组播成员。下面说下IGSP中的几个重要概念。
 
 * 路由器端口（Router Port）
