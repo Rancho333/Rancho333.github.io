@@ -6,6 +6,7 @@ tags: vpn
 
 # 写在前面
 承接上文[vpn技术简述](https://rancho333.github.io/2022/07/28/vpn%E6%8A%80%E6%9C%AF%E7%AE%80%E8%BF%B0/)，本文探讨下GRE(general routing encapsulation),通用路由封装技术， GRE是VPN的一种简单实现。
+<!--more-->
 
 # GRE介绍
 在探讨一种网络技术之前，必然需要了解该技术的应用背景，解决什么问题。internet虽然统一了今天的网络世界，但是私有网络，异构网络依然存在，他们有着通过internet互联的需求，这就是GRE需要解决的问题。
