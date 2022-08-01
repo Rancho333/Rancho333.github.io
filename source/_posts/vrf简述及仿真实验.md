@@ -119,7 +119,7 @@ vrf-leak可以通过static和dynamic两种方式实现，在此进行static实�
   2. 删除VRF中默认路由时出错
 
 ## 创建VRF时需要关注的几个对象
-![](https://rancho333.github.io/pictures/vrf_about_obiects.png)
+![](https://rancho333.github.io/pictures/vrf_about_objects.png)
 
 注意：
   1. 一个VRF中包含一个或多个L3 接口，创建接口会增加该VRF的reference count
