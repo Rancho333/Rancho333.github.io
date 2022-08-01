@@ -4710,6 +4710,8 @@
     <title>GRE简述</title>
     <url>/2022/07/29/GRE%E7%AE%80%E8%BF%B0/</url>
     <content><![CDATA[<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>承接上文<a href="https://rancho333.github.io/2022/07/28/vpn%E6%8A%80%E6%9C%AF%E7%AE%80%E8%BF%B0/">vpn技术简述</a>，本文探讨下GRE(general routing encapsulation),通用路由封装技术， GRE是VPN的一种简单实现。</p>
+<span id="more"></span>
+
 <h1 id="GRE介绍"><a href="#GRE介绍" class="headerlink" title="GRE介绍"></a>GRE介绍</h1><p>在探讨一种网络技术之前，必然需要了解该技术的应用背景，解决什么问题。internet虽然统一了今天的网络世界，但是私有网络，异构网络依然存在，他们有着通过internet互联的需求，这就是GRE需要解决的问题。</p>
 <ul>
 <li>私有网络无法通过internet互通</li>
