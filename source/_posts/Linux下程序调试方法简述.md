@@ -64,7 +64,7 @@ iv_signal_init在main函数之前会执行并挂掉，将之注释掉测试通�
 ![](https://rancho333.github.io/pictures/so.png)
 
 如果app的依赖库找不到，报错格式一般如下：
-![](https://rancho333.github.io/pictures/so.png)
+![](https://rancho333.github.io/pictures/so_not_find.png)
 
 这里面缺少一些动态库，二进制可执行文件，分3种情况：
 1. 文件不存在

@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# check image exist
+# for image check
+#first check if image does exist
+# second check if image duplicate use
 find ./source/_posts/ -name "*.md" | xargs grep -rn png | grep -v "使用优化" | grep -v asset_im > file
 sed -i 's/)//g' file
 cut -d '/' -f 8 file > images
@@ -16,7 +18,7 @@ do
 done < images
 
 rm ./file
-rm ./ images
+rm ./images
 
 if [ "$image_miss" = "true" ]; then
     echo -e "\nImage miss, please check it!\n"
@@ -25,14 +27,17 @@ fi
 echo -e "\nNo image miss\n"
 # end check image exist
 
+# hexo commit
+hexo g -d
+
+# add default commit comment
 if [[ -z $1 ]];then
     COMMENT="default comment info"
 else
     COMMENT=$1
 fi
 
-hexo g -d
-
+# source code commit
 git add .
 git commit -m "$COMMENT"
 git push
