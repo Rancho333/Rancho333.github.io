@@ -437,7 +437,7 @@
 </tbody></table>
 <p>举个之前在ENOS飞腾移植过程中的一个例子，先使用gdb做一个基本的错误定位<br><img src="https://rancho333.github.io/pictures/strace1.png"><br>看起来像是没有进入main函数就已经挂了。<br>使用strace查看命令执行过程中的系统调用和信号：<br><img src="https://rancho333.github.io/pictures/strace2.png"><br>找到源码中的对应位置：<br><img src="https://rancho333.github.io/pictures/strace3.png"><br>iv_signal_init在main函数之前会执行并挂掉，将之注释掉测试通过。</p>
 <h2 id="so库相关"><a href="#so库相关" class="headerlink" title="so库相关"></a>so库相关</h2><p>使用<code>ldd</code>命令可以查看app的依赖库，<code>readelf</code>命令可以获取到更多的内容<br><img src="https://rancho333.github.io/pictures/so.png"></p>
-<p>如果app的依赖库找不到，报错格式一般如下：<br><img src="https://rancho333.github.io/pictures/so.png"></p>
+<p>如果app的依赖库找不到，报错格式一般如下：<br><img src="https://rancho333.github.io/pictures/so_not_find.png"></p>
 <p>这里面缺少一些动态库，二进制可执行文件，分3种情况：</p>
 <ol>
 <li>文件不存在</li>
