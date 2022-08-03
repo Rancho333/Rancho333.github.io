@@ -8,7 +8,7 @@ tags: vpn
 <!--more-->
 
 # IPSec简介
-IPSec通过认证头AH(authentication header, 协议号51)和封装安全载荷ESP(encapsulating security payload)这两个安全协议来实现。此外可以通过IKE完成密钥交换。IPSec由这三个协议组成。
+IPSec通过认证头AH(authentication header, 协议号51)和封装安全载荷ESP(encapsulating security payload)这两个安全协议来实现。此外可以通过IKE(internet key exchange)完成密钥交换。一般场景使用IKE自动管理密钥交换，SA建立，使用ESP进行报文验证和加密。
 
 IPSec有两种封装模式：
 - 传输模式：在传输模式下，AH或ESP被插入到IP头之后但在所有传输层协议之前，或所有其它IPSec协议之前。
@@ -18,7 +18,7 @@ IPSec有两种封装模式：
 
 通常，在两个安全网关之间的数据流量，绝大部分都不是安全网关本身的流量，因此安全网关之间一般不使用传输模式，而是使用隧道模式。在一个安全网关被加密的报文，只有另一个安全网关才能被解密。
 
-IPSec的两大核心功能分别是*加密*和*认证*，ipsec使用对称加密算法，主要包括DES、3DES和AES。对于认证，在发送消息之前会先使用验证算法和验证密钥对消息进行处理，得到数字签名；另一方收到消息后同样计算签名，然后对比两端的签名，如果相同则消息没有被篡改。常用的验证算法有MD5和SHA系列。
+IPSec的两大核心功能分别是*加密*和*认证*，ipsec使用对称加密算法，主要包括DES、3DES和AES。对于认证，在发送消息之前会先使用验证算法和验证密钥对消息进行处理，得到报文摘要；另一方收到消息后同样计算摘要，然后对比两端的摘要，如果相同则消息没有被篡改。常用的验证算法有MD5和SHA系列。
 
 AH(IP协议号51)可提供数据源验证和数据完整性校验功能；
 ESP(IP协议号50)除提供数据源验证和数据完整性校验功能外，还提供对IP报文的加密功能。ESP的工作原理是在每一个数据包的标准IP包头后面添加一个ESP报文头，并在数据包后面追加一个ESP尾。与AH协议不同的是，ESP将需要保护的报文进行加密后再封装到IP包中，以保证数据的机密性。
@@ -48,6 +48,7 @@ SPI是用于唯一标识SA的一个32比特数值，他在AH和ESP头中传输�
 通过IKE协商建立的SA具有生存周期，手工方式建立的SA永不老化。IKE协商建立的SA的生存周期有两种定义方式：
 - 基于时间的生存周期，定义了一个SA从建立到失效的时间
 - 基于流量的生存周期，定义了一个SA允许处理的最大流量
+
 生存周期到达指定的时间或指定的流量，SA就会失效。SA失效前，IKE将为IPSec协商建立新的SA，这样，在旧的SA失效前新的SA就已经准备好了。
 
 建立安全联盟最直接的方式就是分别在两端认为设定好封装模式、加密算法、加密密钥、验证算法、验证密钥。
@@ -129,7 +130,7 @@ IPSec vpn配置时，有如下几个重要步骤：
 - 创建crypto map
 - 将crypto map应用于接口
 
-实验拓扑如图所示(lan-to-lan)：
+实验拓扑如图所示(lan-to-lan vpn)：
 ![](https://rancho333.github.io/pictures/ipsec_topology.png)
 
 拓扑说明如下：
@@ -230,7 +231,7 @@ interface Ethernet0/0
  crypto map rancho                  // 在eth0/0上应用名为rancho的crypto map
 ```
 <!-- endtab -->
-<!-- tab R3-->
+<!-- tab R3 -->
 ```
 crypto isakmp policy 1
  encr 3des
