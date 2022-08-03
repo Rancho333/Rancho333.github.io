@@ -148,3 +148,6 @@ tunnel是一个无状态的隧道，怎么感知对方的状态呢？否则会�
 可以看到传输协议与乘客协议的报文源目地址刚好是相反的，即R3的eth0发出的keepalive，R1的eth0收到之后解封装再路由，又会重新发送给R3的eth0。假设R1上的tunnel down(或者ip没配)，那么就无法完成解封装。
 
 最后一个问题是安全性的问题。我们在抓包过程中可以直接看到乘客协议的报文内容，比如我们知道乘客协议是icmp还是ospf等，这是不安全。GRE over IPSec可以解决这个问题。后面会接续研究。
+
+参考资料：
+[强叔侃墙 VPN篇 GRE](https://forum.huawei.com/enterprise/zh/thread-256801.html)
