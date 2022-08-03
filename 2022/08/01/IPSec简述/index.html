@@ -35,7 +35,7 @@
 <meta property="og:image" content="https://rancho333.github.io/pictures/ipsec_topology.png">
 <meta property="og:image" content="https://rancho333.github.io/pictures/ipsec_esp_packet.png">
 <meta property="article:published_time" content="2022-08-01T06:26:57.000Z">
-<meta property="article:modified_time" content="2022-08-03T07:21:00.701Z">
+<meta property="article:modified_time" content="2022-08-03T07:42:00.162Z">
 <meta property="article:author" content="Rancho">
 <meta property="article:tag" content="vpn">
 <meta name="twitter:card" content="summary">
@@ -248,7 +248,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-08-03 15:21:00" itemprop="dateModified" datetime="2022-08-03T15:21:00+08:00">2022-08-03</time>
+                <time title="修改时间：2022-08-03 15:42:00" itemprop="dateModified" datetime="2022-08-03T15:42:00+08:00">2022-08-03</time>
               </span>
 
           
@@ -274,7 +274,7 @@
         <h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>在<a href="https://rancho333.github.io/2022/07/29/GRE%E7%AE%80%E8%BF%B0/">GRE简述</a>中描述了一种vpn的实现，但是GRE没有认证，加密，数据完整性验证等特性，是一个不安全的封装协议，所以实际使用中都是结合IPSec一起。本文介绍VPN的第二种常见实现——IPSec.</p>
 <span id="more"></span>
 
-<h1 id="IPSec简介"><a href="#IPSec简介" class="headerlink" title="IPSec简介"></a>IPSec简介</h1><p>IPSec通过认证头AH(authentication header, 协议号51)和封装安全载荷ESP(encapsulating security payload)这两个安全协议来实现。此外可以通过IKE完成密钥交换。IPSec由这三个协议组成。</p>
+<h1 id="IPSec简介"><a href="#IPSec简介" class="headerlink" title="IPSec简介"></a>IPSec简介</h1><p>IPSec通过认证头AH(authentication header, 协议号51)和封装安全载荷ESP(encapsulating security payload)这两个安全协议来实现。此外可以通过IKE(internet key exchange)完成密钥交换。一般场景使用IKE自动管理密钥交换，SA建立，使用ESP进行报文验证和加密。</p>
 <p>IPSec有两种封装模式：</p>
 <ul>
 <li>传输模式：在传输模式下，AH或ESP被插入到IP头之后但在所有传输层协议之前，或所有其它IPSec协议之前。</li>
@@ -282,7 +282,7 @@
 </ul>
 <p>传输模式用于两台主机之间的通讯，或者一台主机和一个安全网关之间的通讯。在传输模式下，对报文加密和解密的两台设备本身必须是报文的原始发送者和最终接收者。</p>
 <p>通常，在两个安全网关之间的数据流量，绝大部分都不是安全网关本身的流量，因此安全网关之间一般不使用传输模式，而是使用隧道模式。在一个安全网关被加密的报文，只有另一个安全网关才能被解密。</p>
-<p>IPSec的两大核心功能分别是<em>加密</em>和<em>认证</em>，ipsec使用对称加密算法，主要包括DES、3DES和AES。对于认证，在发送消息之前会先使用验证算法和验证密钥对消息进行处理，得到数字签名；另一方收到消息后同样计算签名，然后对比两端的签名，如果相同则消息没有被篡改。常用的验证算法有MD5和SHA系列。</p>
+<p>IPSec的两大核心功能分别是<em>加密</em>和<em>认证</em>，ipsec使用对称加密算法，主要包括DES、3DES和AES。对于认证，在发送消息之前会先使用验证算法和验证密钥对消息进行处理，得到报文摘要；另一方收到消息后同样计算摘要，然后对比两端的摘要，如果相同则消息没有被篡改。常用的验证算法有MD5和SHA系列。</p>
 <p>AH(IP协议号51)可提供数据源验证和数据完整性校验功能；<br>ESP(IP协议号50)除提供数据源验证和数据完整性校验功能外，还提供对IP报文的加密功能。ESP的工作原理是在每一个数据包的标准IP包头后面添加一个ESP报文头，并在数据包后面追加一个ESP尾。与AH协议不同的是，ESP将需要保护的报文进行加密后再封装到IP包中，以保证数据的机密性。</p>
 <p>两者均可单独使用，也可一起配合使用。各自作用范围如下图所示：<br><img src="https://rancho333.github.io/pictures/ipsec_range.png"></p>
 <p>可见，AH提供的认证服务要强于ESP，同时使用AH和ESP时，设备支持的AH和ESP联合使用方式为：先对报文进行ESP封装，再对报文进行AH封装，封装之后的报文从内到外一次是原始IP报文，ESP报文头，AH报文头和外部IP头。</p>
@@ -296,8 +296,9 @@
 <p>通过IKE协商建立的SA具有生存周期，手工方式建立的SA永不老化。IKE协商建立的SA的生存周期有两种定义方式：</p>
 <ul>
 <li>基于时间的生存周期，定义了一个SA从建立到失效的时间</li>
-<li>基于流量的生存周期，定义了一个SA允许处理的最大流量<br>生存周期到达指定的时间或指定的流量，SA就会失效。SA失效前，IKE将为IPSec协商建立新的SA，这样，在旧的SA失效前新的SA就已经准备好了。</li>
+<li>基于流量的生存周期，定义了一个SA允许处理的最大流量</li>
 </ul>
+<p>生存周期到达指定的时间或指定的流量，SA就会失效。SA失效前，IKE将为IPSec协商建立新的SA，这样，在旧的SA失效前新的SA就已经准备好了。</p>
 <p>建立安全联盟最直接的方式就是分别在两端认为设定好封装模式、加密算法、加密密钥、验证算法、验证密钥。</p>
 <h3 id="IPSec虚拟隧道接口"><a href="#IPSec虚拟隧道接口" class="headerlink" title="IPSec虚拟隧道接口"></a>IPSec虚拟隧道接口</h3><p>IPSec虚拟隧道接口是一种支持路由的三层逻辑接口，它可以支持动态路由协议，所有路由到IPSec虚拟隧道接口的报文都将进行IPSec保护，同时还可以支持对组播流量的保护，和实现GRE的tunnel接口类似。使用虚拟隧道接口有以下优点：</p>
 <ul>
@@ -368,7 +369,7 @@
 <li>创建crypto map</li>
 <li>将crypto map应用于接口</li>
 </ul>
-<p>实验拓扑如图所示(lan-to-lan)：<br><img src="https://rancho333.github.io/pictures/ipsec_topology.png"></p>
+<p>实验拓扑如图所示(lan-to-lan vpn)：<br><img src="https://rancho333.github.io/pictures/ipsec_topology.png"></p>
 <p>拓扑说明如下：<br>vpc4和vpc5分别属于两个私网，网关分别指向R1和R3, R2仿真internet, R2上不配置任何路由，只负责和R1、R3之间直连链路的通信。R1和R3上配置默认路由指向R2。因为R2上没有VPC4、VPC5网段的路由，所以两者之间不通。</p>
 <p>基础网络环境配置如下(ip和默认路由)：</p>
 <div class="tabs" id="tab"><ul class="nav-tabs"><li class="tab active"><a href="#tab-1">VPC4</a></li><li class="tab"><a href="#tab-2">R1</a></li><li class="tab"><a href="#tab-3">R2</a></li><li class="tab"><a href="#tab-4">R3</a></li><li class="tab"><a href="#tab-5">VPC5</a></li></ul><div class="tab-content"><div class="tab-pane active" id="tab-1"><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">VPC4&gt; show</span><br><span class="line"></span><br><span class="line">NAME   IP&#x2F;MASK              GATEWAY                             GATEWAY</span><br><span class="line">VPC4   14.1.1.4&#x2F;24          14.1.1.1</span><br></pre></td></tr></table></figure></div><div class="tab-pane" id="tab-2"><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">interface Ethernet0&#x2F;0</span><br><span class="line"> ip address 12.1.1.1 255.255.255.0</span><br><span class="line">!</span><br><span class="line">interface Ethernet0&#x2F;1</span><br><span class="line"> ip address 14.1.1.1 255.255.255.0</span><br><span class="line">!</span><br><span class="line">ip route 0.0.0.0 0.0.0.0 12.1.1.2       &#x2F;&#x2F; 默认路由指向internet</span><br></pre></td></tr></table></figure></div><div class="tab-pane" id="tab-3"><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">interface Ethernet0&#x2F;0</span><br><span class="line"> ip address 12.1.1.2 255.255.255.0</span><br><span class="line">!</span><br><span class="line">interface Ethernet0&#x2F;1</span><br><span class="line"> ip address 23.1.1.2 255.255.255.0</span><br><span class="line">!</span><br></pre></td></tr></table></figure></div><div class="tab-pane" id="tab-4"><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">interface Ethernet0&#x2F;0</span><br><span class="line"> ip address 23.1.1.3 255.255.255.0</span><br><span class="line">!</span><br><span class="line">interface Ethernet0&#x2F;1</span><br><span class="line"> ip address 35.1.1.3 255.255.255.0</span><br><span class="line">!</span><br><span class="line">ip route 0.0.0.0 0.0.0.0 23.1.1.2       &#x2F;&#x2F; 默认路由指向internet</span><br></pre></td></tr></table></figure></div><div class="tab-pane" id="tab-5"><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">VPC5&gt; show</span><br><span class="line"></span><br><span class="line">NAME   IP&#x2F;MASK              GATEWAY                             GATEWAY</span><br><span class="line">VPC5   35.1.1.5&#x2F;24          35.1.1.3</span><br></pre></td></tr></table></figure></div></div></div>
