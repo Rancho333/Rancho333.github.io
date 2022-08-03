@@ -5,6 +5,7 @@ tags: vpn
 ---
 # 写在前面
 在[GRE简述](https://rancho333.github.io/2022/07/29/GRE%E7%AE%80%E8%BF%B0/)中描述了一种vpn的实现，但是GRE没有认证，加密，数据完整性验证等特性，是一个不安全的封装协议，所以实际使用中都是结合IPSec一起。本文介绍VPN的第二种常见实现——IPSec.
+<!--more-->
 
 # IPSec简介
 IPSec通过认证头AH(authentication header, 协议号51)和封装安全载荷ESP(encapsulating security payload)这两个安全协议来实现。此外可以通过IKE完成密钥交换。IPSec由这三个协议组成。
