@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Which things of this script can do?
+# 1. image check
+# 2. hexo generator and commit
+# 3. source code synchronize to github
+
 # for image check
 #first check if image does exist
 # second check if image duplicate use
