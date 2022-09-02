@@ -35,7 +35,7 @@
 <meta property="og:image" content="https://rancho333.github.io/pictures/ipsec_topology.png">
 <meta property="og:image" content="https://rancho333.github.io/pictures/ipsec_esp_packet.png">
 <meta property="article:published_time" content="2022-08-01T06:26:57.000Z">
-<meta property="article:modified_time" content="2022-08-03T07:42:00.162Z">
+<meta property="article:modified_time" content="2022-08-26T04:06:13.922Z">
 <meta property="article:author" content="Rancho">
 <meta property="article:tag" content="vpn">
 <meta name="twitter:card" content="summary">
@@ -248,7 +248,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-08-03 15:42:00" itemprop="dateModified" datetime="2022-08-03T15:42:00+08:00">2022-08-03</time>
+                <time title="修改时间：2022-08-26 12:06:13" itemprop="dateModified" datetime="2022-08-26T12:06:13+08:00">2022-08-26</time>
               </span>
 
           
@@ -260,7 +260,7 @@
               <span id="busuanzi_value_page_pv"></span>
             </span>
             <span class="post-meta-divider">|</span>
-<span title="post.wordcount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span>字数： 4.1k</span>
+<span title="post.wordcount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span>字数： 4.7k</span>
 
         </div>
       </header>
@@ -346,18 +346,17 @@
 <li>IPSec使用IKE建立的SA对IP报文加密或认证处理</li>
 </ul>
 <h1 id="IPSec实验"><a href="#IPSec实验" class="headerlink" title="IPSec实验"></a>IPSec实验</h1><h2 id="IOS中关于IPSec的一些配置概念"><a href="#IOS中关于IPSec的一些配置概念" class="headerlink" title="IOS中关于IPSec的一些配置概念"></a>IOS中关于IPSec的一些配置概念</h2><ul>
-<li><p>transform set<br>transform set是一组算法集合，通过它来定义使用怎样的算法来封装数据包，比如之前所说的ESP封装，AH封装都需要通过transform set来定义，还可以定义其它一些加密算法以及HMAC算法。通过transform set，就可以让用户来选择保护数据的强度，因此transform set就是定义数据包是受到怎样的保护。</p>
+<li><p>transform set<br>transform set是一组算法集合，通过它来定义使用怎样的算法来封装数据包，比如之前所说的ESP封装，AH封装都需要通过transform set来定义，还可以定义其它一些加密算法以及HMAC算法。通过transform set，就可以让用户来选择保护数据的强度，因此transform set就是定义数据包是受到怎样的保护。也就是ipsec的加密、完整性算法，以及ipsec的模式。</p>
 </li>
 <li><p>crypto isakmp<br>  定义IKE SA的协商参数</p>
 </li>
 <li><p>crypto map<br>Crypto map是思科的IOS中配置IPSec的组件，执行两个主要功能：</p>
+<ul>
+<li>选择需要加密处理的数据（通过ACL匹配）</li>
+<li>定义数据加密的策略以及数据发往的对端<br>crypto map将之前定义好的transform set和isakmp绑定起来，形成完整的ipsec配置，应用到接口就完成配置了。</li>
+</ul>
 </li>
 </ul>
-<ol>
-<li>选择需要加密处理的数据（通过ACL匹配）</li>
-<li>定义数据加密的策略以及数据发往的对端</li>
-<li>定义IPSec的mode</li>
-</ol>
 <p>crypto map中的策略是分组存放的，以序号区分，如果一个crypto map有多个策略组，则最低号码的组有限。当配置完crypto map后，需要应用到接口上才能生效，并且一个接口只能应用一个crypto map.</p>
 <p>crypto map还分为静态map和动态map，简单区分，就是数据发往的对端是否固定，如果是动态map，那么对端是不固定的，在存在隧道时，也就表示隧道的终点时不固定的，但源始终是自己。</p>
 <h2 id="eveng仿真实验"><a href="#eveng仿真实验" class="headerlink" title="eveng仿真实验"></a>eveng仿真实验</h2><p>IPSec vpn配置时，有如下几个重要步骤：</p>
@@ -388,6 +387,27 @@
 <p>可以看到先通过IKE建立SA，之后的ICMP报文封装在ESP报文中，在隧道两端传递。</p>
 <p>最后查看一下配置和状态：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; 查看isakmp policy策略</span><br><span class="line">R1#show crypto isakmp policy </span><br><span class="line"></span><br><span class="line">Global IKE policy</span><br><span class="line">Protection suite of priority 1</span><br><span class="line">	encryption algorithm:	Three key triple DES</span><br><span class="line">	hash algorithm:		Message Digest 5</span><br><span class="line">	authentication method:	Pre-Shared Key</span><br><span class="line">	Diffie-Hellman group:	#2 (1024 bit)</span><br><span class="line">	lifetime:		86400 seconds, no volume limit</span><br><span class="line"></span><br><span class="line">R1#show crypto isakmp key           &#x2F;&#x2F; 查看phase one认证密码</span><br><span class="line">R1#show crypto isakmp sa            &#x2F;&#x2F; 查看IKE SA</span><br><span class="line">R1#show crypto isakmp peers         &#x2F;&#x2F; 查看IKE peers</span><br><span class="line">R1#show crypto ipsec transform-set      &#x2F;&#x2F; 查看IPSec transform</span><br><span class="line">R1#show crypto ipsec sa                 &#x2F;&#x2F; 查看IPSec SA</span><br><span class="line">R1#show crypto map                  &#x2F;&#x2F; 查看crypto map</span><br></pre></td></tr></table></figure>
+
+<h1 id="关于IPSec使用的一些思考"><a href="#关于IPSec使用的一些思考" class="headerlink" title="关于IPSec使用的一些思考"></a>关于IPSec使用的一些思考</h1><p>IPsec具有以下优点：</p>
+<ul>
+<li>支持IKE，可实现密钥的自动协商功能，减少密钥协商的开销。可以通过IKE建立和维护SA的服务，简化了IPsec的使用和管理</li>
+<li>所有使用IP协议进行数据传输的应用系统和服务都可以使用IPsec，而不必对这些应用系统和服务本身做任何修改</li>
+</ul>
+<p>IPsec具有以下缺点：</p>
+<ul>
+<li>安全服务协议AH和ESP所提供的功能重叠率非常高，虽然IPsec最新版本规定AH为可选协议，但并没有解决IPsec组合复杂度的问题。从而导致IPsec的工程实现以及部署维护的成本依旧非常高。</li>
+<li>安全服务协议的工作模式众多：传输模式、隧道模式，在加上两种协议的组合，导致IPsec的复杂度高。</li>
+</ul>
+<p>协议包含有太多的选项和太多的灵活性，做同样或类似的事有几种方式，从而引入的复杂度会导致工程实现的系统非常复杂，存在的安全漏洞也就非常多，安全评估也就非常困难，从某种意义上讲，复杂是安全最大的敌人。</p>
+<p>  从工作模式的角度上看，IPsec的工作模式分为传输模式和隧道模式，而这两种工作模式结合AH与ESP以及AH和ESP的组合，又会衍生出更多的工作模式，导致IPsec在工程实现、维护上大大加重了其复杂度。</p>
+<p>  对于IPsec的使用场景与传输模式：</p>
+<ul>
+<li>传输模式适用于主机间应用场景(如果在网关上使用，那么网关视作主机，此时用于网络管理)</li>
+<li>隧道模式使用与带有网关的应用场景</li>
+</ul>
+<p>  传输模式是为高级协议(IP的payload)提供保护而设计的，隧道模式是为整个IP分组提供保护设计的。</p>
+<p>  可以淘汰传输模式。</p>
+
     </div>
 
     
@@ -425,7 +445,10 @@
     <a href="/2022/07/29/GRE%E7%AE%80%E8%BF%B0/" rel="prev" title="GRE简述">
       <i class="fa fa-chevron-left"></i> GRE简述
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2022/08/24/%E5%8D%8A%E8%87%AA%E5%8A%A8%E5%8C%96%E6%89%B9%E9%87%8F%E4%BF%9D%E5%AD%98%E7%BD%91%E9%A1%B5/" rel="next" title="半自动化批量保存网页">
+      半自动化批量保存网页 <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
@@ -484,7 +507,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="nav-number">1.</span> <span class="nav-text">写在前面</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#IPSec%E7%AE%80%E4%BB%8B"><span class="nav-number">2.</span> <span class="nav-text">IPSec简介</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E5%85%A8%E8%81%94%E7%9B%9F"><span class="nav-number">2.0.1.</span> <span class="nav-text">安全联盟</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IPSec%E8%99%9A%E6%8B%9F%E9%9A%A7%E9%81%93%E6%8E%A5%E5%8F%A3"><span class="nav-number">2.0.2.</span> <span class="nav-text">IPSec虚拟隧道接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IKE"><span class="nav-number">2.0.3.</span> <span class="nav-text">IKE</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#IPSec%E5%AE%9E%E9%AA%8C"><span class="nav-number">3.</span> <span class="nav-text">IPSec实验</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#IOS%E4%B8%AD%E5%85%B3%E4%BA%8EIPSec%E7%9A%84%E4%B8%80%E4%BA%9B%E9%85%8D%E7%BD%AE%E6%A6%82%E5%BF%B5"><span class="nav-number">3.1.</span> <span class="nav-text">IOS中关于IPSec的一些配置概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#eveng%E4%BB%BF%E7%9C%9F%E5%AE%9E%E9%AA%8C"><span class="nav-number">3.2.</span> <span class="nav-text">eveng仿真实验</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="nav-number">1.</span> <span class="nav-text">写在前面</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#IPSec%E7%AE%80%E4%BB%8B"><span class="nav-number">2.</span> <span class="nav-text">IPSec简介</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E5%85%A8%E8%81%94%E7%9B%9F"><span class="nav-number">2.0.1.</span> <span class="nav-text">安全联盟</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IPSec%E8%99%9A%E6%8B%9F%E9%9A%A7%E9%81%93%E6%8E%A5%E5%8F%A3"><span class="nav-number">2.0.2.</span> <span class="nav-text">IPSec虚拟隧道接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IKE"><span class="nav-number">2.0.3.</span> <span class="nav-text">IKE</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#IPSec%E5%AE%9E%E9%AA%8C"><span class="nav-number">3.</span> <span class="nav-text">IPSec实验</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#IOS%E4%B8%AD%E5%85%B3%E4%BA%8EIPSec%E7%9A%84%E4%B8%80%E4%BA%9B%E9%85%8D%E7%BD%AE%E6%A6%82%E5%BF%B5"><span class="nav-number">3.1.</span> <span class="nav-text">IOS中关于IPSec的一些配置概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#eveng%E4%BB%BF%E7%9C%9F%E5%AE%9E%E9%AA%8C"><span class="nav-number">3.2.</span> <span class="nav-text">eveng仿真实验</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%B3%E4%BA%8EIPSec%E4%BD%BF%E7%94%A8%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%9D%E8%80%83"><span class="nav-number">4.</span> <span class="nav-text">关于IPSec使用的一些思考</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -500,7 +523,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">69</span>
+          <span class="site-state-item-count">71</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -554,7 +577,7 @@
 
 <div class="theme-info">
   <div class="powered-by"></div>
-  <span class="post-count">全站共 104.1k 字</span>
+  <span class="post-count">全站共 106.1k 字</span>
 </div>
 
         

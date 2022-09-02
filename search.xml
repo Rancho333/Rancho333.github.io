@@ -2375,7 +2375,7 @@
 <li>vrf——&gt;默认vrf<br>默认vrf即为全局路由表。</li>
 </ul>
 <p>vrf-leak可以通过static和dynamic两种方式实现，在此进行static实验。修改配置进行vrf-leak实验，在R3上添加如下配置：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#96;&#96;&#96;</span><br><span class="line"></span><br><span class="line"># SONiC test case of VRF</span><br><span class="line"></span><br><span class="line">基本问题描述：test case场景下，单个VRF中存在12.8K(6.4K的IPv4和6.4K的IPv6)路由条目，删除VRF时，一定时间内需要删除大量路由。里面有两个问题：</span><br><span class="line">  1. zebra的fpm client不能将所有数据同步给fpm server</span><br><span class="line">  2. 删除VRF中默认路由时出错</span><br><span class="line"></span><br><span class="line">## 创建VRF时需要关注的几个对象</span><br><span class="line">![](https:&#x2F;&#x2F;rancho333.github.io&#x2F;pictures&#x2F;vrf_about_objects.png)</span><br><span class="line"></span><br><span class="line">注意：</span><br><span class="line">  1. 一个VRF中包含一个或多个L3 接口，创建接口会增加该VRF的reference count</span><br><span class="line">  2. 一个L3 接口上包含一个或多个IP，创建IP会增加该接口的reference count</span><br><span class="line">  3. 一个IP对应一个邻居，增加neighbour会增加该IP的reference count</span><br><span class="line">  4. 有了neighbour之后，路由协议会创建路由条目(route entry)，增加route entry会增加对VRF的reference count</span><br><span class="line">  5. route entry中的一个重要参数是next hop(可能会有多个next hop)，增加next hop会增加对route entry的reference count</span><br><span class="line"></span><br><span class="line">当一个对象的reference count不为0时，是不能将其删除的，必须彻底的解决其依赖关系。</span><br><span class="line"></span><br><span class="line">## SONiC数据同步机制的缺陷，以删除VRF为例</span><br><span class="line">![](https:&#x2F;&#x2F;rancho333.github.io&#x2F;pictures&#x2F;vrf_del_vrf.png)</span><br><span class="line">vrfmgrd会陷入loop等待vrforch删除数据库中stateobjectvrf条目，如果vrforch执行失败，vrfmgrd会陷入死循环。</span><br><span class="line"></span><br><span class="line">## zebra到fpmsyncd(bgp)同步路由的过程以及之前版本的缺陷(以删除ip为例)</span><br><span class="line">![](https:&#x2F;&#x2F;rancho333.github.io&#x2F;pictures&#x2F;vrf_del_ip.png)</span><br><span class="line"></span><br><span class="line">基本流程：</span><br><span class="line">1. SONiC通过Linux shell删除L3的IP</span><br><span class="line">2. zebra通过netlink同步信息并通知给个路由进程</span><br><span class="line">3. 路由进程决策路由信息通知给zebra</span><br><span class="line">4. zebra决策路由信息，通过netlink同步给kernel，通过fpm同步给sonic端的fpmsyncd</span><br><span class="line">5. zebra端fpm client写机制有缺陷(write buffer较小，有写次数的限制)，导致数据丢失</span><br><span class="line">6. 修改方式，在步骤1中删除IP后添加时延，减少zebra单位时间内处理的路由信息，给frr添加如下patch，解决fpm client写缺陷</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#96;&#96;&#96;</span><br><span class="line"></span><br><span class="line">## RD &amp; RT</span><br><span class="line">RD(route distinguish)路由区分标识，因为不同的vrf中可能有相同地址，造成地址overlapping, 在ipv4地址之前加上64位的RD，形成全局唯一的地址，这个地址形成一个新的地址族address family vpnv4，在MP-BGP中有体现。每个vrf有全局唯一的RD。RD的本质是避免ip地址冲突。</span><br><span class="line"></span><br><span class="line">RT(route target)路由目标，每个vrf会有import rt和export rt属性，从vrf中export的路由会打上export rt的标记，通过MP-BGP的扩展团体属性承载，对端接收到后，将本地vrf的import rt与MP-BGP中的rt做对比，如果相同则引入。每个vrf可以定义多个import rt和export rt. RT本质是标记路由，用以跨设备vrf中传递指定路由。</span><br><span class="line"></span><br><span class="line"># F-Vrf</span><br><span class="line">F-Vrf是front door VRF的简称。</span><br><span class="line"></span><br><span class="line">在使用GRE隧道的场景下，隧道的物理接口是underlay，被封装的流量（私网）是overlay，隧道tunnel虚接口在两者直接起桥梁作用，将私网流量路由到tunnel接口后即可进行gre封装。为了传递隧道两端私网的路由，需要将私网接口及tunnel接口加入动态路由计算(比如eigrp)，同时underlay之间也会运行IGP(比如ospf)保证IP连通性。如果tunnel地址与隧道物理接口地址网段冲突，如tunnel是10.9.8.0&#x2F;24，物理接口是10.204.12.0&#x2F;24，但是在路由协议中通告的是10.0.0.0&#x2F;8, 那么设备会同时从eigrp和ospf学到该网段路由，且是不同出口，tunnel接口会down掉。</span><br><span class="line"></span><br><span class="line">将隧道物理接口从global路由表中移除就不会有这个问题了，隧道物理接口就是front door，从front door进来就是我们的私网，所以将隧道物理接口加入的vrf叫做fvrf。简言之，*fvrf用于将连接到外部网络的路由表与全局路由表分开*。</span><br><span class="line">在实际配置上，将物理接口加入指定vrf，物理接口所属的IGP也要在该vrf中，在tunnel接口上通过&#96;tunnel vrf vrf-name&#96;指定隧道物理接口所属的vrf。</span><br><span class="line"></span><br><span class="line"># SONiC test case of VRF</span><br><span class="line"></span><br><span class="line">基本问题描述：test case场景下，单个VRF中存在12.8K(6.4K的IPv4和6.4K的IPv6)路由条目，删除VRF时，一定时间内需要删除大量路由。里面有两个问题：</span><br><span class="line">  1. zebra的fpm client不能将所有数据同步给fpm server</span><br><span class="line">  2. 删除VRF中默认路由时出错</span><br><span class="line"></span><br><span class="line">## 创建VRF时需要关注的几个对象</span><br><span class="line">![](https:&#x2F;&#x2F;rancho333.github.io&#x2F;pictures&#x2F;vrf_about_objects.png)</span><br><span class="line"></span><br><span class="line">注意：</span><br><span class="line">  1. 一个VRF中包含一个或多个L3 接口，创建接口会增加该VRF的reference count</span><br><span class="line">  2. 一个L3 接口上包含一个或多个IP，创建IP会增加该接口的reference count</span><br><span class="line">  3. 一个IP对应一个邻居，增加neighbour会增加该IP的reference count</span><br><span class="line">  4. 有了neighbour之后，路由协议会创建路由条目(route entry)，增加route entry会增加对VRF的reference count</span><br><span class="line">  5. route entry中的一个重要参数是next hop(可能会有多个next hop)，增加next hop会增加对route entry的reference count</span><br><span class="line"></span><br><span class="line">当一个对象的reference count不为0时，是不能将其删除的，必须彻底的解决其依赖关系。</span><br><span class="line"></span><br><span class="line">## SONiC数据同步机制的缺陷，以删除VRF为例</span><br><span class="line">![](https:&#x2F;&#x2F;rancho333.github.io&#x2F;pictures&#x2F;vrf_del_vrf.png)</span><br><span class="line">vrfmgrd会陷入loop等待vrforch删除数据库中stateobjectvrf条目，如果vrforch执行失败，vrfmgrd会陷入死循环。</span><br><span class="line"></span><br><span class="line">## zebra到fpmsyncd(bgp)同步路由的过程以及之前版本的缺陷(以删除ip为例)</span><br><span class="line">![](https:&#x2F;&#x2F;rancho333.github.io&#x2F;pictures&#x2F;vrf_del_ip.png)</span><br><span class="line"></span><br><span class="line">基本流程：</span><br><span class="line">1. SONiC通过Linux shell删除L3的IP</span><br><span class="line">2. zebra通过netlink同步信息并通知给个路由进程</span><br><span class="line">3. 路由进程决策路由信息通知给zebra</span><br><span class="line">4. zebra决策路由信息，通过netlink同步给kernel，通过fpm同步给sonic端的fpmsyncd</span><br><span class="line">5. zebra端fpm client写机制有缺陷(write buffer较小，有写次数的限制)，导致数据丢失</span><br><span class="line">6. 修改方式，在步骤1中删除IP后添加时延，减少zebra单位时间内处理的路由信息，给frr添加如下patch，解决fpm client写缺陷</span><br></pre></td></tr></table></figure>
 <p> zebra/zebra_fpm.c |    4 ++–<br> 1 file changed, 2 insertions(+), 2 deletions(-)</p>
 <p>diff –git a/zebra/zebra_fpm.c b/zebra/zebra_fpm.c<br>index 7b0611bf9..4efa8c896 100644<br>— a/zebra/zebra_fpm.c<br>+++ b/zebra/zebra_fpm.c<br>@@ -62,7 +62,7 @@ DEFINE_MTYPE_STATIC(ZEBRA, FPM_MAC_INFO, “FPM_MAC_INFO”);</p>
 <ul>
@@ -2399,6 +2399,7 @@
 <p><a href="https://www.cisco.com/c/en/us/td/docs/net_mgmt/prime/network/3-8/reference/guide/vrf.html">VPN and VRF of cisco</a></p>
 <p><a href="https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst4500/12-2/15-02SG/configuration/guide/config/vrf.html#85589">Config vrf of cisco</a></p>
 <p><a href="https://www.kernel.org/doc/html/latest/networking/vrf.html">Vrf of linux kernel</a></p>
+<p><a href="https://networkingwithfish.com/tunnels-and-the-use-of-front-door-vrfs/">Tunnels and the Use of Front Door VRFs</a></p>
 ]]></content>
       <tags>
         <tag>vrf</tag>
@@ -4616,10 +4617,14 @@
 <li>租用运营商VPN专线搭建企业VPN网络：主要是MPLS VPN, 相较于传统的专线(E1、SDH专线)更便宜</li>
 <li>用户企业自建VPN网络：基于internet建立企业vpn网络，具体技术包括GRE、L2TP、IPSec、SSLVPN等。</li>
 </ul>
-<p>根据组网方式的不同：<br>本质就是隧道端点位置的不同。</p>
+<p>根据组网方式的不同：<br>本质就是隧道端点位置的不同。记住两个点：加密点/隧道点 和 通信点</p>
 <ul>
-<li>远程访问VPn（access VPN）：适合居家办公场景，一般在PC上安装客户端即可，隧道端点位于PC上</li>
-<li>局域网到局域网的vpn(也称网关到网关的vpn)：适用于异地机构的互联，隧道端点位于网络设备上</li>
+<li>远程访问VPn（access VPN）：适合居家办公场景，一般在PC上安装客户端即可，隧道端点位于PC上，也叫做remote access VPN。加密点/隧道点和通信点都在PC或手机等设备上。</li>
+<li>局域网到局域网的vpn(也称网关到网关的vpn)：适用于异地机构的互联，隧道端点位于网络设备上，也叫做site-to-site VPN，这里有两种分类。加密点/隧道点和通信点在网关、防火墙等专门网络设备上。<ul>
+<li>一种叫intranet-based site-to-site, 即两端的局域网都属于一家公司，把几个私网连接在一起</li>
+<li>一种叫extranet-based site-to-site, 即两端的局域网不属于一家公司，只分享一些固定的资源，而其它资源保持私有</li>
+</ul>
+</li>
 </ul>
 <p>按照vpn技术实现的网络层次进行分类：</p>
 <ul>
@@ -4650,59 +4655,7 @@
 <li>SSL VPN：支持对数据进行完整性验证和数据源验证。SSL VPN采用公钥体质，利用Hash算法生成摘要，再用私钥加密摘要生成数字签名，利用公钥进行解密。利用公钥和私钥的一一关系可以对数据源进行认证。</li>
 </ul>
 <p>总结一下这几种vpn技术的应用场景：</p>
-<table>
-<thead>
-<tr>
-<th align="left"></th>
-<th align="left">GRE</th>
-<th align="left">L2TP</th>
-<th align="left">IPSec</th>
-<th align="left">SSL VPN</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="left">作用范围</td>
-<td align="left">IP层及以上数据</td>
-<td align="left">IP层及以上数据</td>
-<td align="left">IP层及以上数据</td>
-<td align="left">应用层特定数据</td>
-</tr>
-<tr>
-<td align="left">适用场景</td>
-<td align="left">internet VPN</td>
-<td align="left">access vpn</td>
-<td align="left">internet vpn; accese</td>
-<td align="left">access vpn</td>
-</tr>
-<tr>
-<td align="left">身份认证</td>
-<td align="left">不支持</td>
-<td align="left">支持，基于PPP的chap、pap、eap认证</td>
-<td align="left">支持，采用IP或ID+口令或证书进行数据源认证；IKEv2拨号方式采用EAP认证进行用户身份认证</td>
-<td align="left">支持，用户名+口令+证书对服务器进行认证，也可进行双向认证</td>
-</tr>
-<tr>
-<td align="left">加密技术</td>
-<td align="left">不支持</td>
-<td align="left">不支持</td>
-<td align="left">支持</td>
-<td align="left">支持</td>
-</tr>
-<tr>
-<td align="left">数据验证</td>
-<td align="left">支持，校验和验证、关键字验证</td>
-<td align="left">不支持</td>
-<td align="left">支持</td>
-<td align="left">支持</td>
-</tr>
-<tr>
-<td align="left">如何使用</td>
-<td align="left">GRE over IPSec</td>
-<td align="left">L2TP over IPSec</td>
-<td align="left">单独使用</td>
-<td align="left">SSL VPN</td>
-</tr>
-</tbody></table>
+<p>| GRE | L2TP | IPSec | SSL VPN |<br>| :— | :— | :— | :— | :— |<br>| 作用范围 | IP层及以上数据 | IP层及以上数据 | IP层及以上数据 | 应用层特定数据 |<br>| 适用场景 | internet VPN | access vpn | internet vpn; accese | access vpn |<br>| 身份认证 | 不支持 | 支持，基于PPP的chap、pap、eap认证| 支持，采用IP或ID+口令或证书进行数据源认证；IKEv2拨号方式采用EAP认证进行用户身份认证 | 支持，用户名+口令+证书对服务器进行认证，也可进行双向认证 |<br>| 加密技术 | 不支持 | 不支持 | 支持 | 支持 |<br>| 数据验证 | 支持，校验和验证、关键字验证 | 不支持 | 支持 | 支持 |<br>| 如何使用 | GRE over IPSec | L2TP over IPSec | 单独使用 | SSL VPN |</p>
 ]]></content>
       <tags>
         <tag>vpn</tag>
@@ -4837,18 +4790,17 @@
 <li>IPSec使用IKE建立的SA对IP报文加密或认证处理</li>
 </ul>
 <h1 id="IPSec实验"><a href="#IPSec实验" class="headerlink" title="IPSec实验"></a>IPSec实验</h1><h2 id="IOS中关于IPSec的一些配置概念"><a href="#IOS中关于IPSec的一些配置概念" class="headerlink" title="IOS中关于IPSec的一些配置概念"></a>IOS中关于IPSec的一些配置概念</h2><ul>
-<li><p>transform set<br>transform set是一组算法集合，通过它来定义使用怎样的算法来封装数据包，比如之前所说的ESP封装，AH封装都需要通过transform set来定义，还可以定义其它一些加密算法以及HMAC算法。通过transform set，就可以让用户来选择保护数据的强度，因此transform set就是定义数据包是受到怎样的保护。</p>
+<li><p>transform set<br>transform set是一组算法集合，通过它来定义使用怎样的算法来封装数据包，比如之前所说的ESP封装，AH封装都需要通过transform set来定义，还可以定义其它一些加密算法以及HMAC算法。通过transform set，就可以让用户来选择保护数据的强度，因此transform set就是定义数据包是受到怎样的保护。也就是ipsec的加密、完整性算法，以及ipsec的模式。</p>
 </li>
 <li><p>crypto isakmp<br>  定义IKE SA的协商参数</p>
 </li>
 <li><p>crypto map<br>Crypto map是思科的IOS中配置IPSec的组件，执行两个主要功能：</p>
+<ul>
+<li>选择需要加密处理的数据（通过ACL匹配）</li>
+<li>定义数据加密的策略以及数据发往的对端<br>crypto map将之前定义好的transform set和isakmp绑定起来，形成完整的ipsec配置，应用到接口就完成配置了。</li>
+</ul>
 </li>
 </ul>
-<ol>
-<li>选择需要加密处理的数据（通过ACL匹配）</li>
-<li>定义数据加密的策略以及数据发往的对端</li>
-<li>定义IPSec的mode</li>
-</ol>
 <p>crypto map中的策略是分组存放的，以序号区分，如果一个crypto map有多个策略组，则最低号码的组有限。当配置完crypto map后，需要应用到接口上才能生效，并且一个接口只能应用一个crypto map.</p>
 <p>crypto map还分为静态map和动态map，简单区分，就是数据发往的对端是否固定，如果是动态map，那么对端是不固定的，在存在隧道时，也就表示隧道的终点时不固定的，但源始终是自己。</p>
 <h2 id="eveng仿真实验"><a href="#eveng仿真实验" class="headerlink" title="eveng仿真实验"></a>eveng仿真实验</h2><p>IPSec vpn配置时，有如下几个重要步骤：</p>
@@ -4878,9 +4830,72 @@
 <p>在R2的eth0上抓包：<br><img src="https://rancho333.github.io/pictures/ipsec_esp_packet.png"></p>
 <p>可以看到先通过IKE建立SA，之后的ICMP报文封装在ESP报文中，在隧道两端传递。</p>
 <p>最后查看一下配置和状态：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F; 查看isakmp policy策略</span><br><span class="line">R1#show crypto isakmp policy </span><br><span class="line"></span><br><span class="line">Global IKE policy</span><br><span class="line">Protection suite of priority 1</span><br><span class="line">	encryption algorithm:	Three key triple DES</span><br><span class="line">	hash algorithm:		Message Digest 5</span><br><span class="line">	authentication method:	Pre-Shared Key</span><br><span class="line">	Diffie-Hellman group:	#2 (1024 bit)</span><br><span class="line">	lifetime:		86400 seconds, no volume limit</span><br><span class="line"></span><br><span class="line">R1#show crypto isakmp key           &#x2F;&#x2F; 查看phase one认证密码</span><br><span class="line">R1#show crypto isakmp sa            &#x2F;&#x2F; 查看IKE SA</span><br><span class="line">R1#show crypto isakmp peers         &#x2F;&#x2F; 查看IKE peers</span><br><span class="line">R1#show crypto ipsec transform-set      &#x2F;&#x2F; 查看IPSec transform</span><br><span class="line">R1#show crypto ipsec sa                 &#x2F;&#x2F; 查看IPSec SA</span><br><span class="line">R1#show crypto map                  &#x2F;&#x2F; 查看crypto map</span><br></pre></td></tr></table></figure>]]></content>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F; 查看isakmp policy策略</span><br><span class="line">R1#show crypto isakmp policy </span><br><span class="line"></span><br><span class="line">Global IKE policy</span><br><span class="line">Protection suite of priority 1</span><br><span class="line">	encryption algorithm:	Three key triple DES</span><br><span class="line">	hash algorithm:		Message Digest 5</span><br><span class="line">	authentication method:	Pre-Shared Key</span><br><span class="line">	Diffie-Hellman group:	#2 (1024 bit)</span><br><span class="line">	lifetime:		86400 seconds, no volume limit</span><br><span class="line"></span><br><span class="line">R1#show crypto isakmp key           &#x2F;&#x2F; 查看phase one认证密码</span><br><span class="line">R1#show crypto isakmp sa            &#x2F;&#x2F; 查看IKE SA</span><br><span class="line">R1#show crypto isakmp peers         &#x2F;&#x2F; 查看IKE peers</span><br><span class="line">R1#show crypto ipsec transform-set      &#x2F;&#x2F; 查看IPSec transform</span><br><span class="line">R1#show crypto ipsec sa                 &#x2F;&#x2F; 查看IPSec SA</span><br><span class="line">R1#show crypto map                  &#x2F;&#x2F; 查看crypto map</span><br></pre></td></tr></table></figure>
+
+<h1 id="关于IPSec使用的一些思考"><a href="#关于IPSec使用的一些思考" class="headerlink" title="关于IPSec使用的一些思考"></a>关于IPSec使用的一些思考</h1><p>IPsec具有以下优点：</p>
+<ul>
+<li>支持IKE，可实现密钥的自动协商功能，减少密钥协商的开销。可以通过IKE建立和维护SA的服务，简化了IPsec的使用和管理</li>
+<li>所有使用IP协议进行数据传输的应用系统和服务都可以使用IPsec，而不必对这些应用系统和服务本身做任何修改</li>
+</ul>
+<p>IPsec具有以下缺点：</p>
+<ul>
+<li>安全服务协议AH和ESP所提供的功能重叠率非常高，虽然IPsec最新版本规定AH为可选协议，但并没有解决IPsec组合复杂度的问题。从而导致IPsec的工程实现以及部署维护的成本依旧非常高。</li>
+<li>安全服务协议的工作模式众多：传输模式、隧道模式，在加上两种协议的组合，导致IPsec的复杂度高。</li>
+</ul>
+<p>协议包含有太多的选项和太多的灵活性，做同样或类似的事有几种方式，从而引入的复杂度会导致工程实现的系统非常复杂，存在的安全漏洞也就非常多，安全评估也就非常困难，从某种意义上讲，复杂是安全最大的敌人。</p>
+<p>  从工作模式的角度上看，IPsec的工作模式分为传输模式和隧道模式，而这两种工作模式结合AH与ESP以及AH和ESP的组合，又会衍生出更多的工作模式，导致IPsec在工程实现、维护上大大加重了其复杂度。</p>
+<p>  对于IPsec的使用场景与传输模式：</p>
+<ul>
+<li>传输模式适用于主机间应用场景(如果在网关上使用，那么网关视作主机，此时用于网络管理)</li>
+<li>隧道模式使用与带有网关的应用场景</li>
+</ul>
+<p>  传输模式是为高级协议(IP的payload)提供保护而设计的，隧道模式是为整个IP分组提供保护设计的。</p>
+<p>  可以淘汰传输模式。</p>
+]]></content>
       <tags>
         <tag>vpn</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>半自动化批量保存网页</title>
+    <url>/2022/08/24/%E5%8D%8A%E8%87%AA%E5%8A%A8%E5%8C%96%E6%89%B9%E9%87%8F%E4%BF%9D%E5%AD%98%E7%BD%91%E9%A1%B5/</url>
+    <content><![CDATA[<p>使用两个工具</p>
+<ol>
+<li><p>web scraper 批量获取文章的链接，导出为csv文件</p>
+</li>
+<li><p>SingleFile 批量下载链接网页  </p>
+</li>
+</ol>
+]]></content>
+  </entry>
+  <entry>
+    <title>使用ixia对sonic进行L2,3打流测试</title>
+    <url>/2022/09/02/%E4%BD%BF%E7%94%A8ixia%E5%AF%B9sonic%E8%BF%9B%E8%A1%8CL2-3%E6%89%93%E6%B5%81%E6%B5%8B%E8%AF%95/</url>
+    <content><![CDATA[<h1 id="环境说明"><a href="#环境说明" class="headerlink" title="环境说明"></a>环境说明</h1><p>实验拓扑如图：</p>
+<p><img src="https://rancho333.github.io/pictures/ixia_sonic_topology.png"></p>
+<p>线连接好后，ixia上做些配置使端口up。sonic上link training和auto negotiation默认关闭，FEC开启。在ixia上对应接口做设置与之匹配。</p>
+<p><img src="https://rancho333.github.io/pictures/ixia_port_up.png"></p>
+<p>确认端口up:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">root@localhost:&#x2F;home&#x2F;admin# show interfaces status Ethernet49</span><br><span class="line">  Interface        Lanes    Speed    MTU    FEC    Alias    Vlan    Oper    Admin             Type    Asym PFC</span><br><span class="line">-----------  -----------  -------  -----  -----  -------  ------  ------  -------  ---------------  ----------</span><br><span class="line"> Ethernet49  41,42,43,44     100G   9216     rs    etp49  routed      up       up  QSFP28 or later         N&#x2F;A</span><br><span class="line">root@localhost:&#x2F;home&#x2F;admin# show interfaces status Ethernet50</span><br><span class="line">  Interface        Lanes    Speed    MTU    FEC    Alias    Vlan    Oper    Admin             Type    Asym PFC</span><br><span class="line">-----------  -----------  -------  -----  -----  -------  ------  ------  -------  ---------------  ----------</span><br><span class="line"> Ethernet50  45,46,47,48     100G   9216     rs    etp50  routed      up       up  QSFP28 or later         N&#x2F;A&#x3D;</span><br></pre></td></tr></table></figure>
+
+<h1 id="二层打流"><a href="#二层打流" class="headerlink" title="二层打流"></a>二层打流</h1><p>ixia eth7端口发出二层报文，sonic两个端口在同一vlan，ixia eth8端口接收报文进行数据统计，检查是否丢包。同理eth8发包，eth7收包。这样就实现双向二层线速打流测试。详细步骤如下：</p>
+<p>sonic配置：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">config vlan add 78</span><br><span class="line">config vlan member add -u 78 Ethernet49</span><br><span class="line">config vlan member add -u 78 Ethernet50</span><br><span class="line"></span><br><span class="line">确认vlan配置：</span><br><span class="line">root@localhost:&#x2F;home&#x2F;admin# show vlan brief </span><br><span class="line">+-----------+--------------+------------+----------------+-------------+-----------------------+</span><br><span class="line">|   VLAN ID | IP Address   | Ports      | Port Tagging   | Proxy ARP   | DHCP Helper Address   |</span><br><span class="line">+&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;+&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;+&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;+&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;+&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;+&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;+</span><br><span class="line">|        78 |              | Ethernet49 | untagged       | disabled    |                       |</span><br><span class="line">|           |              | Ethernet50 | untagged       |             |                       |</span><br></pre></td></tr></table></figure>
+
+<p>ixia进行如下配置：<br>如图分别将eth7, eth8创建成L2接口：<br><img src="https://rancho333.github.io/pictures/ixia_l2_port.png"></p>
+<p>之后创建二层流：<br><img src="https://rancho333.github.io/pictures/ixia_l2_traffic.png"></p>
+<p>图示是eth7发送，eth8接收检查，同理创建反向流，实现双向打流测试。注意最好修改二层报文的源目mac地址。</p>
+<p>最后打流测试：<br><img src="https://rancho333.github.io/pictures/ixia_l2_traffic_loss.png"></p>
+<h1 id="三层打流"><a href="#三层打流" class="headerlink" title="三层打流"></a>三层打流</h1><p>ixia eth7,8设置为三层接口，网关指向sonic，创建两条流分别：src为eth7，dst为eth8； src为eth8,dst为eth7.这样就实现双向三层线速打流测试。详细步骤如下：</p>
+<p>sonic配置：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">config interface ip add Ethernet49 10.1.1.2&#x2F;24 </span><br><span class="line">config interface ip add Ethernet50 10.1.2.2&#x2F;24</span><br><span class="line"></span><br><span class="line">确认配置：</span><br><span class="line">root@localhost:&#x2F;home&#x2F;admin# show ip interfaces </span><br><span class="line">Interface    Master    IPv4 address&#x2F;mask    Admin&#x2F;Oper    BGP Neighbor    Neighbor IP</span><br><span class="line">-----------  --------  -------------------  ------------  --------------  -------------</span><br><span class="line">Ethernet49             10.1.1.2&#x2F;24          up&#x2F;up         N&#x2F;A             N&#x2F;A</span><br><span class="line">Ethernet50             10.1.2.2&#x2F;24          up&#x2F;up         N&#x2F;A             N&#x2F;A</span><br></pre></td></tr></table></figure>
+
+<p>ixia进行如下配置：<br>如图所示分别将eth7,eth8创建成L3接口：<br><img src="https://rancho333.github.io/pictures/ixia_l3_port.png"></p>
+<p>然后依次为两个接口配置ip地址和gateway:<br><img src="https://rancho333.github.io/pictures/ixia_l3_port_ip.png"></p>
+<p>将拓扑使能之后，测试网络的连通性：<br><img src="https://rancho333.github.io/pictures/ixia_l3_port_ping.png"></p>
+<p>之后创建L3流，图上所示是eth7到eth8的流，同理创建eth8到eth7的流：<br><img src="https://rancho333.github.io/pictures/ixia_l3_traffic.png"></p>
+<p>注意和L2的数据流不同，L3不需要手动修改报文的src mac，dst mac等字段，会自动配置。</p>
+<p>最后打流测试，查看丢包情况：<br><img src="https://rancho333.github.io/pictures/ixia_l3_traffic_loss.png"></p>
+]]></content>
   </entry>
 </search>

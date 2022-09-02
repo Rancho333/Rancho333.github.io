@@ -34,7 +34,7 @@
 <meta property="og:image" content="https://rancho333.github.io/pictures/vrf_separation_route.png">
 <meta property="og:image" content="https://rancho333.github.io/pictures/r2_ping_separation.png">
 <meta property="article:published_time" content="2021-10-20T05:14:53.000Z">
-<meta property="article:modified_time" content="2022-08-01T02:38:49.566Z">
+<meta property="article:modified_time" content="2022-08-31T07:19:02.779Z">
 <meta property="article:author" content="Rancho">
 <meta property="article:tag" content="vrf">
 <meta name="twitter:card" content="summary">
@@ -247,7 +247,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-08-01 10:38:49" itemprop="dateModified" datetime="2022-08-01T10:38:49+08:00">2022-08-01</time>
+                <time title="修改时间：2022-08-31 15:19:02" itemprop="dateModified" datetime="2022-08-31T15:19:02+08:00">2022-08-31</time>
               </span>
 
           
@@ -259,7 +259,7 @@
               <span id="busuanzi_value_page_pv"></span>
             </span>
             <span class="post-meta-divider">|</span>
-<span title="post.wordcount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span>字数： 2.1k</span>
+<span title="post.wordcount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span>字数： 2.6k</span>
 
         </div>
       </header>
@@ -312,7 +312,7 @@
 <li>vrf——&gt;默认vrf<br>默认vrf即为全局路由表。</li>
 </ul>
 <p>vrf-leak可以通过static和dynamic两种方式实现，在此进行static实验。修改配置进行vrf-leak实验，在R3上添加如下配置：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">&#96;&#96;&#96;</span><br><span class="line"></span><br><span class="line"># SONiC test case of VRF</span><br><span class="line"></span><br><span class="line">基本问题描述：test case场景下，单个VRF中存在12.8K(6.4K的IPv4和6.4K的IPv6)路由条目，删除VRF时，一定时间内需要删除大量路由。里面有两个问题：</span><br><span class="line">  1. zebra的fpm client不能将所有数据同步给fpm server</span><br><span class="line">  2. 删除VRF中默认路由时出错</span><br><span class="line"></span><br><span class="line">## 创建VRF时需要关注的几个对象</span><br><span class="line">![](https:&#x2F;&#x2F;rancho333.github.io&#x2F;pictures&#x2F;vrf_about_objects.png)</span><br><span class="line"></span><br><span class="line">注意：</span><br><span class="line">  1. 一个VRF中包含一个或多个L3 接口，创建接口会增加该VRF的reference count</span><br><span class="line">  2. 一个L3 接口上包含一个或多个IP，创建IP会增加该接口的reference count</span><br><span class="line">  3. 一个IP对应一个邻居，增加neighbour会增加该IP的reference count</span><br><span class="line">  4. 有了neighbour之后，路由协议会创建路由条目(route entry)，增加route entry会增加对VRF的reference count</span><br><span class="line">  5. route entry中的一个重要参数是next hop(可能会有多个next hop)，增加next hop会增加对route entry的reference count</span><br><span class="line"></span><br><span class="line">当一个对象的reference count不为0时，是不能将其删除的，必须彻底的解决其依赖关系。</span><br><span class="line"></span><br><span class="line">## SONiC数据同步机制的缺陷，以删除VRF为例</span><br><span class="line">![](https:&#x2F;&#x2F;rancho333.github.io&#x2F;pictures&#x2F;vrf_del_vrf.png)</span><br><span class="line">vrfmgrd会陷入loop等待vrforch删除数据库中stateobjectvrf条目，如果vrforch执行失败，vrfmgrd会陷入死循环。</span><br><span class="line"></span><br><span class="line">## zebra到fpmsyncd(bgp)同步路由的过程以及之前版本的缺陷(以删除ip为例)</span><br><span class="line">![](https:&#x2F;&#x2F;rancho333.github.io&#x2F;pictures&#x2F;vrf_del_ip.png)</span><br><span class="line"></span><br><span class="line">基本流程：</span><br><span class="line">1. SONiC通过Linux shell删除L3的IP</span><br><span class="line">2. zebra通过netlink同步信息并通知给个路由进程</span><br><span class="line">3. 路由进程决策路由信息通知给zebra</span><br><span class="line">4. zebra决策路由信息，通过netlink同步给kernel，通过fpm同步给sonic端的fpmsyncd</span><br><span class="line">5. zebra端fpm client写机制有缺陷(write buffer较小，有写次数的限制)，导致数据丢失</span><br><span class="line">6. 修改方式，在步骤1中删除IP后添加时延，减少zebra单位时间内处理的路由信息，给frr添加如下patch，解决fpm client写缺陷</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">&#96;&#96;&#96;</span><br><span class="line"></span><br><span class="line">## RD &amp; RT</span><br><span class="line">RD(route distinguish)路由区分标识，因为不同的vrf中可能有相同地址，造成地址overlapping, 在ipv4地址之前加上64位的RD，形成全局唯一的地址，这个地址形成一个新的地址族address family vpnv4，在MP-BGP中有体现。每个vrf有全局唯一的RD。RD的本质是避免ip地址冲突。</span><br><span class="line"></span><br><span class="line">RT(route target)路由目标，每个vrf会有import rt和export rt属性，从vrf中export的路由会打上export rt的标记，通过MP-BGP的扩展团体属性承载，对端接收到后，将本地vrf的import rt与MP-BGP中的rt做对比，如果相同则引入。每个vrf可以定义多个import rt和export rt. RT本质是标记路由，用以跨设备vrf中传递指定路由。</span><br><span class="line"></span><br><span class="line"># F-Vrf</span><br><span class="line">F-Vrf是front door VRF的简称。</span><br><span class="line"></span><br><span class="line">在使用GRE隧道的场景下，隧道的物理接口是underlay，被封装的流量（私网）是overlay，隧道tunnel虚接口在两者直接起桥梁作用，将私网流量路由到tunnel接口后即可进行gre封装。为了传递隧道两端私网的路由，需要将私网接口及tunnel接口加入动态路由计算(比如eigrp)，同时underlay之间也会运行IGP(比如ospf)保证IP连通性。如果tunnel地址与隧道物理接口地址网段冲突，如tunnel是10.9.8.0&#x2F;24，物理接口是10.204.12.0&#x2F;24，但是在路由协议中通告的是10.0.0.0&#x2F;8, 那么设备会同时从eigrp和ospf学到该网段路由，且是不同出口，tunnel接口会down掉。</span><br><span class="line"></span><br><span class="line">将隧道物理接口从global路由表中移除就不会有这个问题了，隧道物理接口就是front door，从front door进来就是我们的私网，所以将隧道物理接口加入的vrf叫做fvrf。简言之，*fvrf用于将连接到外部网络的路由表与全局路由表分开*。</span><br><span class="line">在实际配置上，将物理接口加入指定vrf，物理接口所属的IGP也要在该vrf中，在tunnel接口上通过&#96;tunnel vrf vrf-name&#96;指定隧道物理接口所属的vrf。</span><br><span class="line"></span><br><span class="line"># SONiC test case of VRF</span><br><span class="line"></span><br><span class="line">基本问题描述：test case场景下，单个VRF中存在12.8K(6.4K的IPv4和6.4K的IPv6)路由条目，删除VRF时，一定时间内需要删除大量路由。里面有两个问题：</span><br><span class="line">  1. zebra的fpm client不能将所有数据同步给fpm server</span><br><span class="line">  2. 删除VRF中默认路由时出错</span><br><span class="line"></span><br><span class="line">## 创建VRF时需要关注的几个对象</span><br><span class="line">![](https:&#x2F;&#x2F;rancho333.github.io&#x2F;pictures&#x2F;vrf_about_objects.png)</span><br><span class="line"></span><br><span class="line">注意：</span><br><span class="line">  1. 一个VRF中包含一个或多个L3 接口，创建接口会增加该VRF的reference count</span><br><span class="line">  2. 一个L3 接口上包含一个或多个IP，创建IP会增加该接口的reference count</span><br><span class="line">  3. 一个IP对应一个邻居，增加neighbour会增加该IP的reference count</span><br><span class="line">  4. 有了neighbour之后，路由协议会创建路由条目(route entry)，增加route entry会增加对VRF的reference count</span><br><span class="line">  5. route entry中的一个重要参数是next hop(可能会有多个next hop)，增加next hop会增加对route entry的reference count</span><br><span class="line"></span><br><span class="line">当一个对象的reference count不为0时，是不能将其删除的，必须彻底的解决其依赖关系。</span><br><span class="line"></span><br><span class="line">## SONiC数据同步机制的缺陷，以删除VRF为例</span><br><span class="line">![](https:&#x2F;&#x2F;rancho333.github.io&#x2F;pictures&#x2F;vrf_del_vrf.png)</span><br><span class="line">vrfmgrd会陷入loop等待vrforch删除数据库中stateobjectvrf条目，如果vrforch执行失败，vrfmgrd会陷入死循环。</span><br><span class="line"></span><br><span class="line">## zebra到fpmsyncd(bgp)同步路由的过程以及之前版本的缺陷(以删除ip为例)</span><br><span class="line">![](https:&#x2F;&#x2F;rancho333.github.io&#x2F;pictures&#x2F;vrf_del_ip.png)</span><br><span class="line"></span><br><span class="line">基本流程：</span><br><span class="line">1. SONiC通过Linux shell删除L3的IP</span><br><span class="line">2. zebra通过netlink同步信息并通知给个路由进程</span><br><span class="line">3. 路由进程决策路由信息通知给zebra</span><br><span class="line">4. zebra决策路由信息，通过netlink同步给kernel，通过fpm同步给sonic端的fpmsyncd</span><br><span class="line">5. zebra端fpm client写机制有缺陷(write buffer较小，有写次数的限制)，导致数据丢失</span><br><span class="line">6. 修改方式，在步骤1中删除IP后添加时延，减少zebra单位时间内处理的路由信息，给frr添加如下patch，解决fpm client写缺陷</span><br></pre></td></tr></table></figure>
 <p> zebra/zebra_fpm.c |    4 ++–<br> 1 file changed, 2 insertions(+), 2 deletions(-)</p>
 <p>diff –git a/zebra/zebra_fpm.c b/zebra/zebra_fpm.c<br>index 7b0611bf9..4efa8c896 100644<br>— a/zebra/zebra_fpm.c<br>+++ b/zebra/zebra_fpm.c<br>@@ -62,7 +62,7 @@ DEFINE_MTYPE_STATIC(ZEBRA, FPM_MAC_INFO, “FPM_MAC_INFO”);</p>
 <ul>
@@ -336,6 +336,7 @@
 <p><a target="_blank" rel="noopener" href="https://www.cisco.com/c/en/us/td/docs/net_mgmt/prime/network/3-8/reference/guide/vrf.html">VPN and VRF of cisco</a></p>
 <p><a target="_blank" rel="noopener" href="https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst4500/12-2/15-02SG/configuration/guide/config/vrf.html#85589">Config vrf of cisco</a></p>
 <p><a target="_blank" rel="noopener" href="https://www.kernel.org/doc/html/latest/networking/vrf.html">Vrf of linux kernel</a></p>
+<p><a target="_blank" rel="noopener" href="https://networkingwithfish.com/tunnels-and-the-use-of-front-door-vrfs/">Tunnels and the Use of Front Door VRFs</a></p>
 
     </div>
 
@@ -452,7 +453,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">69</span>
+          <span class="site-state-item-count">71</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -506,7 +507,7 @@
 
 <div class="theme-info">
   <div class="powered-by"></div>
-  <span class="post-count">全站共 104.1k 字</span>
+  <span class="post-count">全站共 106.1k 字</span>
 </div>
 
         
