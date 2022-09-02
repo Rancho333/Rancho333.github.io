@@ -14,9 +14,11 @@ tags: vpn
 - 用户企业自建VPN网络：基于internet建立企业vpn网络，具体技术包括GRE、L2TP、IPSec、SSLVPN等。
 
 根据组网方式的不同：
-本质就是隧道端点位置的不同。
-- 远程访问VPn（access VPN）：适合居家办公场景，一般在PC上安装客户端即可，隧道端点位于PC上
-- 局域网到局域网的vpn(也称网关到网关的vpn)：适用于异地机构的互联，隧道端点位于网络设备上
+本质就是隧道端点位置的不同。记住两个点：加密点/隧道点 和 通信点
+- 远程访问VPn（access VPN）：适合居家办公场景，一般在PC上安装客户端即可，隧道端点位于PC上，也叫做remote access VPN。加密点/隧道点和通信点都在PC或手机等设备上。
+- 局域网到局域网的vpn(也称网关到网关的vpn)：适用于异地机构的互联，隧道端点位于网络设备上，也叫做site-to-site VPN，这里有两种分类。加密点/隧道点和通信点在网关、防火墙等专门网络设备上。
+    - 一种叫intranet-based site-to-site, 即两端的局域网都属于一家公司，把几个私网连接在一起
+    - 一种叫extranet-based site-to-site, 即两端的局域网不属于一家公司，只分享一些固定的资源，而其它资源保持私有
 
 按照vpn技术实现的网络层次进行分类：
 - 基于数据链路层的VPN：L2TP、L2F、PPTP。其中L2F和PPTP已经基本上被L2TP替代了
@@ -51,7 +53,7 @@ internet上传输的报文如果不做加密处理，都是处于裸奔状态，
 
 总结一下这几种vpn技术的应用场景：
 
-|| GRE | L2TP | IPSec | SSL VPN |
+| GRE | L2TP | IPSec | SSL VPN |
 | :--- | :--- | :--- | :--- | :--- |
 | 作用范围 | IP层及以上数据 | IP层及以上数据 | IP层及以上数据 | 应用层特定数据 |
 | 适用场景 | internet VPN | access vpn | internet vpn; accese | access vpn |

@@ -112,6 +112,19 @@ vrf-leak可以通过static和dynamic两种方式实现，在此进行static实�
 ```
 ```
 
+## RD & RT
+RD(route distinguish)路由区分标识，因为不同的vrf中可能有相同地址，造成地址overlapping, 在ipv4地址之前加上64位的RD，形成全局唯一的地址，这个地址形成一个新的地址族address family vpnv4，在MP-BGP中有体现。每个vrf有全局唯一的RD。RD的本质是避免ip地址冲突。
+
+RT(route target)路由目标，每个vrf会有import rt和export rt属性，从vrf中export的路由会打上export rt的标记，通过MP-BGP的扩展团体属性承载，对端接收到后，将本地vrf的import rt与MP-BGP中的rt做对比，如果相同则引入。每个vrf可以定义多个import rt和export rt. RT本质是标记路由，用以跨设备vrf中传递指定路由。
+
+# F-Vrf
+F-Vrf是front door VRF的简称。
+
+在使用GRE隧道的场景下，隧道的物理接口是underlay，被封装的流量（私网）是overlay，隧道tunnel虚接口在两者直接起桥梁作用，将私网流量路由到tunnel接口后即可进行gre封装。为了传递隧道两端私网的路由，需要将私网接口及tunnel接口加入动态路由计算(比如eigrp)，同时underlay之间也会运行IGP(比如ospf)保证IP连通性。如果tunnel地址与隧道物理接口地址网段冲突，如tunnel是10.9.8.0/24，物理接口是10.204.12.0/24，但是在路由协议中通告的是10.0.0.0/8, 那么设备会同时从eigrp和ospf学到该网段路由，且是不同出口，tunnel接口会down掉。
+
+将隧道物理接口从global路由表中移除就不会有这个问题了，隧道物理接口就是front door，从front door进来就是我们的私网，所以将隧道物理接口加入的vrf叫做fvrf。简言之，*fvrf用于将连接到外部网络的路由表与全局路由表分开*。
+在实际配置上，将物理接口加入指定vrf，物理接口所属的IGP也要在该vrf中，在tunnel接口上通过`tunnel vrf vrf-name`指定隧道物理接口所属的vrf。
+
 # SONiC test case of VRF
 
 基本问题描述：test case场景下，单个VRF中存在12.8K(6.4K的IPv4和6.4K的IPv6)路由条目，删除VRF时，一定时间内需要删除大量路由。里面有两个问题：
@@ -193,3 +206,5 @@ alpm模式下，broadcom TH4芯片在创建VRF时会创建一条默认路由(只
 [Config vrf of cisco](https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst4500/12-2/15-02SG/configuration/guide/config/vrf.html#85589)
 
 [Vrf of linux kernel](https://www.kernel.org/doc/html/latest/networking/vrf.html)
+
+[Tunnels and the Use of Front Door VRFs](https://networkingwithfish.com/tunnels-and-the-use-of-front-door-vrfs/)

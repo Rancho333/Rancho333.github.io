@@ -106,16 +106,16 @@ IPSec与IKE的关系如下：
 # IPSec实验
 ## IOS中关于IPSec的一些配置概念
 - transform set
-transform set是一组算法集合，通过它来定义使用怎样的算法来封装数据包，比如之前所说的ESP封装，AH封装都需要通过transform set来定义，还可以定义其它一些加密算法以及HMAC算法。通过transform set，就可以让用户来选择保护数据的强度，因此transform set就是定义数据包是受到怎样的保护。
+transform set是一组算法集合，通过它来定义使用怎样的算法来封装数据包，比如之前所说的ESP封装，AH封装都需要通过transform set来定义，还可以定义其它一些加密算法以及HMAC算法。通过transform set，就可以让用户来选择保护数据的强度，因此transform set就是定义数据包是受到怎样的保护。也就是ipsec的加密、完整性算法，以及ipsec的模式。
 
 - crypto isakmp
     定义IKE SA的协商参数
 
 - crypto map
 Crypto map是思科的IOS中配置IPSec的组件，执行两个主要功能：
-1. 选择需要加密处理的数据（通过ACL匹配）
-2. 定义数据加密的策略以及数据发往的对端
-3. 定义IPSec的mode
+    - 选择需要加密处理的数据（通过ACL匹配）
+    - 定义数据加密的策略以及数据发往的对端
+crypto map将之前定义好的transform set和isakmp绑定起来，形成完整的ipsec配置，应用到接口就完成配置了。
 
 crypto map中的策略是分组存放的，以序号区分，如果一个crypto map有多个策略组，则最低号码的组有限。当配置完crypto map后，需要应用到接口上才能生效，并且一个接口只能应用一个crypto map.
 
@@ -298,3 +298,24 @@ R1#show crypto ipsec transform-set      // 查看IPSec transform
 R1#show crypto ipsec sa                 // 查看IPSec SA
 R1#show crypto map                  // 查看crypto map
 ```
+
+# 关于IPSec使用的一些思考
+IPsec具有以下优点：
+- 支持IKE，可实现密钥的自动协商功能，减少密钥协商的开销。可以通过IKE建立和维护SA的服务，简化了IPsec的使用和管理
+- 所有使用IP协议进行数据传输的应用系统和服务都可以使用IPsec，而不必对这些应用系统和服务本身做任何修改
+
+IPsec具有以下缺点：
+- 安全服务协议AH和ESP所提供的功能重叠率非常高，虽然IPsec最新版本规定AH为可选协议，但并没有解决IPsec组合复杂度的问题。从而导致IPsec的工程实现以及部署维护的成本依旧非常高。
+- 安全服务协议的工作模式众多：传输模式、隧道模式，在加上两种协议的组合，导致IPsec的复杂度高。
+
+协议包含有太多的选项和太多的灵活性，做同样或类似的事有几种方式，从而引入的复杂度会导致工程实现的系统非常复杂，存在的安全漏洞也就非常多，安全评估也就非常困难，从某种意义上讲，复杂是安全最大的敌人。
+
+  从工作模式的角度上看，IPsec的工作模式分为传输模式和隧道模式，而这两种工作模式结合AH与ESP以及AH和ESP的组合，又会衍生出更多的工作模式，导致IPsec在工程实现、维护上大大加重了其复杂度。
+
+  对于IPsec的使用场景与传输模式：
+  - 传输模式适用于主机间应用场景(如果在网关上使用，那么网关视作主机，此时用于网络管理)
+  - 隧道模式使用与带有网关的应用场景
+
+  传输模式是为高级协议(IP的payload)提供保护而设计的，隧道模式是为整个IP分组提供保护设计的。
+
+  可以淘汰传输模式。
