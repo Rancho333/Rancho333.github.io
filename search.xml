@@ -4873,6 +4873,8 @@
     <url>/2022/09/02/%E4%BD%BF%E7%94%A8ixia%E5%AF%B9sonic%E8%BF%9B%E8%A1%8CL2-3%E6%89%93%E6%B5%81%E6%B5%8B%E8%AF%95/</url>
     <content><![CDATA[<h1 id="环境说明"><a href="#环境说明" class="headerlink" title="环境说明"></a>环境说明</h1><p>实验拓扑如图：</p>
 <p><img src="https://rancho333.github.io/pictures/ixia_sonic_topology.png"></p>
+<span id="more"></span>
+
 <p>线连接好后，ixia上做些配置使端口up。sonic上link training和auto negotiation默认关闭，FEC开启。在ixia上对应接口做设置与之匹配。</p>
 <p><img src="https://rancho333.github.io/pictures/ixia_port_up.png"></p>
 <p>确认端口up:</p>
