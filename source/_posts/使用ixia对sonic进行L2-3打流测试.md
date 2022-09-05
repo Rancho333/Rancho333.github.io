@@ -8,6 +8,7 @@ tags:
 实验拓扑如图：
 
 ![](https://rancho333.github.io/pictures/ixia_sonic_topology.png)
+<!--more-->
 
 线连接好后，ixia上做些配置使端口up。sonic上link training和auto negotiation默认关闭，FEC开启。在ixia上对应接口做设置与之匹配。
 
