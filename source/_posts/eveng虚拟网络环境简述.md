@@ -6,6 +6,7 @@ tags: eveng
 
 # 写在前面
 本文主要分析下vmware三种网络模式的实现，然后说明eveng如何借助vmware虚拟网卡实现内部设备与外网的联通，最后分析下eveng lab中虚拟网络设备之间的连通性。
+<!--more-->
 
 # VMware的三种网络模式
 vmware有桥接、NAT、host-only三种网络模式。其中NAT和host-only会默认在host上各创建一张虚拟网卡。其中VMnet1是host-only，VMnet8是NAT。我们在虚拟的配置hardware时，可以添加网络设备。
