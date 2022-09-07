@@ -4904,6 +4904,8 @@
     <title>eveng虚拟网络环境简述</title>
     <url>/2022/09/06/eveng%E8%99%9A%E6%8B%9F%E7%BD%91%E7%BB%9C%E7%8E%AF%E5%A2%83%E7%AE%80%E8%BF%B0/</url>
     <content><![CDATA[<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>本文主要分析下vmware三种网络模式的实现，然后说明eveng如何借助vmware虚拟网卡实现内部设备与外网的联通，最后分析下eveng lab中虚拟网络设备之间的连通性。</p>
+<span id="more"></span>
+
 <h1 id="VMware的三种网络模式"><a href="#VMware的三种网络模式" class="headerlink" title="VMware的三种网络模式"></a>VMware的三种网络模式</h1><p>vmware有桥接、NAT、host-only三种网络模式。其中NAT和host-only会默认在host上各创建一张虚拟网卡。其中VMnet1是host-only，VMnet8是NAT。我们在虚拟的配置hardware时，可以添加网络设备。<br><img src="https://rancho333.github.io/pictures/eveng_vmware_network.png"><br>如果选择NAT、host-only、桥接则使用默认网卡。选择custome时，可以指定我们自己创建的其它网卡。注意，只能存在一个bridge和NAT的网络，即我们可以额外添加的虚拟网络类型只能是host-only。下面对三种网络模式做一个简单说明。</p>
 <h2 id="桥接模式"><a href="#桥接模式" class="headerlink" title="桥接模式"></a>桥接模式</h2><p>三种模式下只有桥接模式没有创建虚拟网卡，这种模式下虚拟机和主机相当于连接在同一个网桥上，网桥的出口是主机的物理出口网卡，虚拟机的ip和主机的ip由上游DHCP同一分配，两者在同一网段，虚拟机可以自由的访问同子网的主机(当然包括主机)，这种情况下虚拟没有和外部网络隔离，会消耗主机网络环境的ip。可以同时满足主机与虚拟机之间的网络连通，以及虚拟机与外部网络之间的网络连通。<br><img src="https://rancho333.github.io/pictures/eveng_vmware_bridge.png"></p>
 <p>简言之，桥接模式就是虚拟机和主机连接在同一个网桥上，网桥上连是出口，下连是虚拟机和主机。桥接模式和主机物理网卡是强相关的，在创建bridge虚拟网络时，选择auto选项，vmware会自动从主机多网卡中选择合适的进行桥接。</p>
