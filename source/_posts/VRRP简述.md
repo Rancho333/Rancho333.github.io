@@ -29,7 +29,7 @@ VRRP(virtual router redundancy protocol)和`HSRP`非常相似，原理相同，�
 
 关于辞职，当master路由器接口shutdown时，会立即发送优先级为0的通告，vrrp中优先级为0表示不参与虚拟组计算，收到的backups之间会立即重新选举出新的master，否则就要等待3秒的报文超时再选举，这样可以加快收敛时间。优先级为0的报文如下：
 
-![](![](https://rancho333.github.io/pictures/vrrp_packet_priority_0.png)
+![](https://rancho333.github.io/pictures/vrrp_packet_priority_0.png)
 
 在HSRP中，tracking中触发支持shutdown，如果active路由器接口shutdown，那么standby只能等待10秒超时后变成active. VRRP tracking中不支持shutdown，嗯，也就是说只有路由接口手动shutdown或物理线路挂掉才会触发优先级为0的报文，而上行链路挂掉tracking无法触发？
 
