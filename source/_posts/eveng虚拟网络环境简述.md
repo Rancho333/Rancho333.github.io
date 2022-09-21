@@ -30,7 +30,7 @@ host-only模式默认创建VMnet1虚拟网卡。虚拟机网卡与vmnet1相连�
 
 ## 一些小结思考
 真实的拓扑模型可能和上述的不一样，上述只是自己实验加理解的结果。在上面理解中，VMnet我其实是理解成三层交换机而不是网卡，因为它可以被多个虚拟机连接，但是网卡的一个端口在系统上会映射成一个网络设备，多个接口会映射成多个网络设备，所以在windows的视角中，vmnet就是一个单接口的网卡。
-有些博客中提到：vmware会创建虚拟交换机和虚拟网卡，虚拟交换机互联虚拟机网卡，主机虚拟网卡，主机物理网卡。这是虚拟化实现的内部细节，可以暂不做细节研究，了解不同模式的特点，功能，及使用就好。
+有些博客中提到：vmware会创建虚拟交换机和虚拟网卡，虚拟交换机互联虚拟机网卡，主机虚拟网卡。
 ![](https://rancho333.github.io/pictures/eveng_vmware_blog.png)
 这种拓扑是比较合理的，windows的视角下有一块网卡VMnet8，而虚拟机连接的是同名为VMnet8的网桥，所以多个虚拟机可以连接到VMnet8，这三者组成vmware虚拟网络环境，虚拟机和主机通过vmnet8同网段进行通信，vmnet8与物理NIC之间通过NAT与外网通信。给虚拟机设置网卡的配置界面如下：
 ![](https://rancho333.github.io/pictures/eveng_vmware_adapter.png)
@@ -143,3 +143,11 @@ lab中的网元连接到不同的cloud，就可以根据cloud所属网桥的网�
 vmware是可以创建多张虚拟网卡的，默认有三种网络类型，bridge没有虚拟网卡，VMnet1对应host-only,VMnet8对应NAT。虽然允许创建额外的VMnet，`但是类型只能是host-only`，所以看起好像没什么创建的必要，默认的就已经够用了。我们需要做的也就是配置一下dhcp地址池(使用默认的也行)。
 对于eveng的虚拟网络，由外网、windows、vmware、eveng、lab这些对象组成，完整的网络拓扑如下：
 ![](https://rancho333.github.io/pictures/eveng_network_topology.png)
+
+下图是在vmware下创建虚拟网卡的界面，可以看到vmnet0虽然没有在windows上创建网卡，但是在vmware中还是有设备的，此时vmnet0就是一个网桥。
+![](https://rancho333.github.io/pictures/eveng_vmware_vnic.png)
+
+所以在vmware中创建一张网卡后：
+1. 在windows网络中添加了一张网卡
+2. 在vmware环境中添加了一个同名网桥
+3. 当将这张网卡配置给虚拟机时，虚拟机中创建一张网卡，然后连接到vmware的网桥，获得对应网络能力
