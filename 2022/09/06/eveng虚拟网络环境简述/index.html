@@ -40,8 +40,9 @@
 <meta property="og:image" content="https://rancho333.github.io/pictures/eveng_network_cloud0.png">
 <meta property="og:image" content="https://rancho333.github.io/pictures/eveng_network_lab_connection.png">
 <meta property="og:image" content="https://rancho333.github.io/pictures/eveng_network_topology.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/eveng_vmware_vnic.png">
 <meta property="article:published_time" content="2022-09-06T08:13:55.000Z">
-<meta property="article:modified_time" content="2022-09-07T06:20:26.334Z">
+<meta property="article:modified_time" content="2022-09-14T02:26:04.614Z">
 <meta property="article:author" content="Rancho">
 <meta property="article:tag" content="eveng">
 <meta name="twitter:card" content="summary">
@@ -254,7 +255,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-09-07 14:20:26" itemprop="dateModified" datetime="2022-09-07T14:20:26+08:00">2022-09-07</time>
+                <time title="修改时间：2022-09-14 10:26:04" itemprop="dateModified" datetime="2022-09-14T10:26:04+08:00">2022-09-14</time>
               </span>
 
           
@@ -266,7 +267,7 @@
               <span id="busuanzi_value_page_pv"></span>
             </span>
             <span class="post-meta-divider">|</span>
-<span title="post.wordcount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span>字数： 2.4k</span>
+<span title="post.wordcount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span>字数： 2.5k</span>
 
         </div>
       </header>
@@ -286,7 +287,7 @@
 <h2 id="NAT模式"><a href="#NAT模式" class="headerlink" title="NAT模式"></a>NAT模式</h2><p>NAT模式默认创建VMnet8虚拟网卡。虚拟机网卡与vmnet8相连，vmnet8在主机上是一块物理网卡，是直连网段，所以主机与虚拟机之间可以直接通过Vmnet8通信。vmnet8上开启dhcp服务，负责给虚拟机分配ip，在vmware设置中可以设置所需的网段。当虚拟机需要和主机外部通信时，vmnet8通过NAT服务将虚拟机ip映射主机某个物理网卡ip，从而实现和外网的连通性。模型如下图所示：<br><img src="https://rancho333.github.io/pictures/eveng_vmware_nat.png"></p>
 <p>这种场景下，虚拟机与主机通过vmnet8同网段通信，复用主机ip通过NAT与外网通信。在NAT模式的配置下并没有看到NAT转换的具体配置，关键是没看到转换后的ip, 这其实与主机的实际出口网卡相关，这难道和桥接模式一样，也是自动选择的？</p>
 <h2 id="host-only模式"><a href="#host-only模式" class="headerlink" title="host-only模式"></a>host-only模式</h2><p>host-only模式默认创建VMnet1虚拟网卡。虚拟机网卡与vmnet1相连。该模式本质就是NAT模式阉割掉NAT功能，使得虚拟机只能与主机网络可达，而不能访问外部网络。这样可以有效的实现虚拟机与外部网络环境的隔离。</p>
-<h2 id="一些小结思考"><a href="#一些小结思考" class="headerlink" title="一些小结思考"></a>一些小结思考</h2><p>真实的拓扑模型可能和上述的不一样，上述只是自己实验加理解的结果。在上面理解中，VMnet我其实是理解成三层交换机而不是网卡，因为它可以被多个虚拟机连接，但是网卡的一个端口在系统上会映射成一个网络设备，多个接口会映射成多个网络设备，所以在windows的视角中，vmnet就是一个单接口的网卡。<br>有些博客中提到：vmware会创建虚拟交换机和虚拟网卡，虚拟交换机互联虚拟机网卡，主机虚拟网卡，主机物理网卡。这是虚拟化实现的内部细节，可以暂不做细节研究，了解不同模式的特点，功能，及使用就好。<br><img src="https://rancho333.github.io/pictures/eveng_vmware_blog.png"><br>这种拓扑是比较合理的，windows的视角下有一块网卡VMnet8，而虚拟机连接的是同名为VMnet8的网桥，所以多个虚拟机可以连接到VMnet8，这三者组成vmware虚拟网络环境，虚拟机和主机通过vmnet8同网段进行通信，vmnet8与物理NIC之间通过NAT与外网通信。给虚拟机设置网卡的配置界面如下：<br><img src="https://rancho333.github.io/pictures/eveng_vmware_adapter.png"></p>
+<h2 id="一些小结思考"><a href="#一些小结思考" class="headerlink" title="一些小结思考"></a>一些小结思考</h2><p>真实的拓扑模型可能和上述的不一样，上述只是自己实验加理解的结果。在上面理解中，VMnet我其实是理解成三层交换机而不是网卡，因为它可以被多个虚拟机连接，但是网卡的一个端口在系统上会映射成一个网络设备，多个接口会映射成多个网络设备，所以在windows的视角中，vmnet就是一个单接口的网卡。<br>有些博客中提到：vmware会创建虚拟交换机和虚拟网卡，虚拟交换机互联虚拟机网卡，主机虚拟网卡。<br><img src="https://rancho333.github.io/pictures/eveng_vmware_blog.png"><br>这种拓扑是比较合理的，windows的视角下有一块网卡VMnet8，而虚拟机连接的是同名为VMnet8的网桥，所以多个虚拟机可以连接到VMnet8，这三者组成vmware虚拟网络环境，虚拟机和主机通过vmnet8同网段进行通信，vmnet8与物理NIC之间通过NAT与外网通信。给虚拟机设置网卡的配置界面如下：<br><img src="https://rancho333.github.io/pictures/eveng_vmware_adapter.png"></p>
 <p>在虚拟机的视角下，每添加一个network adapter就是在虚拟机上创建一个物理网卡，network connection选项则是虚拟机网卡连接vmware虚拟网络环境的模式，通过连接到指定的虚拟网桥来实现的，而不同的虚拟网桥连接着不同的windows虚拟网卡(bridge没有虚拟网卡)。</p>
 <h1 id="eveng中镜像的连接实现"><a href="#eveng中镜像的连接实现" class="headerlink" title="eveng中镜像的连接实现"></a>eveng中镜像的连接实现</h1><p>一个简单的eveng镜像连接如下所示：<br><img src="https://rancho333.github.io/pictures/eveng_image_connection.png"></p>
 <p>这里有三个对象，switch、vpc以及他们的连接线，switch和vpc由各自的镜像提供运算仿真逻辑，当我们需要仿真某种设备时，只需要将其镜像导入eveng，而镜像的运行则依赖于eveng的三大虚拟仿真组件：iol、qemu、dynamips。那么镜像之间的连接线是如何实现的呢？通过bridge来实现。在上图拓扑基础上我们进入eveng的CLI界面：<br>将lab中的image启动后查看bridge状态：</p>
@@ -312,6 +313,13 @@
 <p>lab中的网元连接到不同的cloud，就可以根据cloud所属网桥的网卡的连接方式(bridge, nat, host-only)获得对应的网络能力，实现lab与主机和外部网络的连通性。</p>
 <p>总结一下，配置eveng时的network adapter对应eveng中的eth网卡，eth网卡attch到pnet网桥上，pnet网桥对应lab中的cloud，lab中的网元连接到对应cloud即可获得相应网络能力。</p>
 <h2 id="完整的eveng与vmware虚拟网络连接示意图"><a href="#完整的eveng与vmware虚拟网络连接示意图" class="headerlink" title="完整的eveng与vmware虚拟网络连接示意图"></a>完整的eveng与vmware虚拟网络连接示意图</h2><p>vmware是可以创建多张虚拟网卡的，默认有三种网络类型，bridge没有虚拟网卡，VMnet1对应host-only,VMnet8对应NAT。虽然允许创建额外的VMnet，<code>但是类型只能是host-only</code>，所以看起好像没什么创建的必要，默认的就已经够用了。我们需要做的也就是配置一下dhcp地址池(使用默认的也行)。<br>对于eveng的虚拟网络，由外网、windows、vmware、eveng、lab这些对象组成，完整的网络拓扑如下：<br><img src="https://rancho333.github.io/pictures/eveng_network_topology.png"></p>
+<p>下图是在vmware下创建虚拟网卡的界面，可以看到vmnet0虽然没有在windows上创建网卡，但是在vmware中还是有设备的，此时vmnet0就是一个网桥。<br><img src="https://rancho333.github.io/pictures/eveng_vmware_vnic.png"></p>
+<p>所以在vmware中创建一张网卡后：</p>
+<ol>
+<li>在windows网络中添加了一张网卡</li>
+<li>在vmware环境中添加了一个同名网桥</li>
+<li>当将这张网卡配置给虚拟机时，虚拟机中创建一张网卡，然后连接到vmware的网桥，获得对应网络能力</li>
+</ol>
 
     </div>
 
@@ -482,7 +490,7 @@
 
 <div class="theme-info">
   <div class="powered-by"></div>
-  <span class="post-count">全站共 110.1k 字</span>
+  <span class="post-count">全站共 110.2k 字</span>
 </div>
 
         
