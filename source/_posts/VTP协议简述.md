@@ -15,7 +15,7 @@ VTP设备有三种角色：
 2. VTP  client：不可以通过CLI修改vlan配置，只能通过同步VTP通告修改vlan配置
 3. VTP transparent：透传VTP通告但是不同步，可以修改本地vlan，修改也只在本地生效
 
-VTP三种吗模式的能力概要如下：
+VTP三种模式的能力概要如下：
 
 | | VTP server| VTP Client | VTP transparent |
 | :--- | :--- | :--- | :--- |
@@ -245,7 +245,7 @@ vlan 60
 - authentication improvements
 这里不做深入研究了，了解点VTPv2的皮毛先, 凑合用下吧。
 
-为了严谨点，附上一个VTP报文截图吧, 创建vlan50时抓的，看来vtp会携带所有的vlan信息。
+为了严谨点，附上一个VTP报文截图吧, 创建vlan80时抓的，看来vtp会携带所有的vlan信息。
 ![](https://rancho333.github.io/pictures/vtp_packet.png)
 
 # 参考资料
