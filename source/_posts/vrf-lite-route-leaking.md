@@ -27,11 +27,11 @@ R1(config)#ip vrf 2             // 创建vrf2
 R1(config)#ip vrf 3             // 创建vrf3
 
 R1(config-if)#interface ethernet 0/0
-R1(config-if)#ip vrf forwarding 2                   // 将eth0将入vrf 2
+R1(config-if)#ip vrf forwarding 2                   // 将eth0加入vrf 2
 R1(config-if)#ip address 12.1.1.1 255.255.255.0
 
 R1(config-if)#interface ethernet 0/1
-R1(config-if)#ip vrf forwarding 3                   // 将eth1将入vrf 3
+R1(config-if)#ip vrf forwarding 3                   // 将eth1加入vrf 3
 R1(config-if)#ip address 13.1.1.1 255.255.255.0
 ```
 
@@ -90,7 +90,7 @@ vpc4> ping 13.1.1.3 -c 1                // vrf 3与global之间三层可达
 2. 同时global中一定要有返回该vrf的路由
 3. 网络是双向的，来回都需要有路由。
 
-分下一下路由表，这是最本质的东西了：
+分析下一下路由表，这是最本质的东西了：
 ```
 对于vrf 2的路由表:
 R1#show ip route vrf 2 static         
