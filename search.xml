@@ -5103,6 +5103,11 @@
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">对于vrf 2的路由表:</span><br><span class="line">R1#show ip route vrf 2 static         </span><br><span class="line">      13.0.0.0&#x2F;24 is subnetted, 1 subnets</span><br><span class="line">S        13.1.1.0 [1&#x2F;0] via 13.1.1.3                    &#x2F;&#x2F; 去往vrf 3的路由，到global中找下一跳13.1.1.3  (路由表中好像并没有什么地方体现出到global去找)</span><br><span class="line">      14.0.0.0&#x2F;24 is subnetted, 1 subnets</span><br><span class="line">S        14.1.1.0 [1&#x2F;0] via 14.1.1.4                    &#x2F;&#x2F; 去往global的路由</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 对于global路由表</span><br><span class="line">R1#show ip route static </span><br><span class="line">      12.0.0.0&#x2F;24 is subnetted, 1 subnets</span><br><span class="line">S        12.1.1.0 is directly connected, Ethernet0&#x2F;0</span><br><span class="line">      13.0.0.0&#x2F;24 is subnetted, 1 subnets</span><br><span class="line">S        13.1.1.0 is directly connected, Ethernet0&#x2F;1    &#x2F;&#x2F; 指明13.1.1.0网段的出口</span><br><span class="line"></span><br><span class="line">R1#show ip route vrf 3 static </span><br><span class="line">      12.0.0.0&#x2F;24 is subnetted, 1 subnets</span><br><span class="line">S        12.1.1.0 [1&#x2F;0] via 12.1.1.2                    &#x2F;&#x2F; 12.1.1.0的回程路由</span><br><span class="line">      14.0.0.0&#x2F;24 is subnetted, 1 subnets</span><br><span class="line">S        14.1.1.0 [1&#x2F;0] via 14.1.1.4                    </span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
 <p>一张图来收尾吧：<br><img src="https://rancho333.github.io/pictures/vrf_leaking_route.png"></p>
+<p>最后再补充一点，vrf lite leaking有两种方式，一种就是上面使用的通过配置静态路由实现，另外一种方式就是使用MP-BG。对于MP-BGP的方式：</p>
+<ol>
+<li>在vrf中表明需要import的RT</li>
+<li>在MP-BGP对应的vrf中redistribute相关的路由<br>本质就是将不同vrf中的路由导入到MP-BGP中去，然后再import自己感兴趣的其它vrf中的路由，这样就可以实现不同vrf之间的路由leaking.</li>
+</ol>
 ]]></content>
       <tags>
         <tag>vrf</tag>
