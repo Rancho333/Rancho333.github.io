@@ -116,3 +116,8 @@ S        14.1.1.0 [1/0] via 14.1.1.4
 
 一张图来收尾吧：
 ![](https://rancho333.github.io/pictures/vrf_leaking_route.png)
+
+最后再补充一点，vrf lite leaking有两种方式，一种就是上面使用的通过配置静态路由实现，另外一种方式就是使用MP-BG。对于MP-BGP的方式：
+1. 在vrf中表明需要import的RT
+2. 在MP-BGP对应的vrf中redistribute相关的路由
+本质就是将不同vrf中的路由导入到MP-BGP中去，然后再import自己感兴趣的其它vrf中的路由，这样就可以实现不同vrf之间的路由leaking.
