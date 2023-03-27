@@ -23,7 +23,7 @@ do
 done < images
 
 rm ./file
-rm ./images
+#rm ./images
 
 if [ "$image_miss" = "true" ]; then
     echo -e "\nImage miss, please check it!\n"
