@@ -9,8 +9,28 @@
     <atom:link href="https://rancho333.github.io/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description>No pain, no gain!</description>
-    <pubDate>Thu, 10 Nov 2022 07:07:54 GMT</pubDate>
+    <pubDate>Mon, 27 Mar 2023 06:12:11 GMT</pubDate>
     <generator>http://hexo.io/</generator>
+    
+    <item>
+      <title></title>
+      <link>https://rancho333.github.io/2023/03/27/Questone2A_25G_line_rate_test/</link>
+      <guid>https://rancho333.github.io/2023/03/27/Questone2A_25G_line_rate_test/</guid>
+      <pubDate>Mon, 27 Mar 2023 06:12:11 GMT</pubDate>
+      
+      <description>&lt;h1 id=&quot;environment-description&quot;&gt;&lt;a href=&quot;#environment-description&quot; class=&quot;headerlink&quot; title=&quot;environment description&quot;&gt;&lt;/a&gt;environment description&lt;/h1&gt;&lt;p&gt;The experimental topology is shown in the figure:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://rancho333.github.io/pictures/questone2a_25G_topology.png&quot;&gt;&lt;/p&gt;</description>
+      
+      
+      
+      <content:encoded><![CDATA[<h1 id="environment-description"><a href="#environment-description" class="headerlink" title="environment description"></a>environment description</h1><p>The experimental topology is shown in the figure:</p><p><img src="https://rancho333.github.io/pictures/questone2a_25G_topology.png"></p><span id="more"></span><p>We only need add one ixia 100G port to topology, and set the line rate of 25 percent to test Questone2A 25G ports.<br><img src="https://rancho333.github.io/pictures/questone2a_25G_ixia_topology.png"></p><p>For Questone2A, follow the below cmds to set up test enviorments.</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">vlan clear              </span><br><span class="line">vlan remove 1 pbm&#x3D;ce       </span><br><span class="line">vlan remove 1 pbm&#x3D;xe </span><br><span class="line"></span><br><span class="line">vlan create 103 pbm&#x3D;xe0,ce0 ubm&#x3D;xe0,ce0; pvlan set xe0,ce0 103</span><br><span class="line">vlan create 100 pbm&#x3D;xe1,xe2 ubm&#x3D;xe1,xe2; pvlan set xe1,xe2 100</span><br><span class="line">vlan create 101 pbm&#x3D;xe3,xe4 ubm&#x3D;xe3,xe4; pvlan set xe3,xe4 101</span><br><span class="line">vlan create 102 pbm&#x3D;xe5,xe6 ubm&#x3D;xe5,xe6; pvlan set xe5,xe6 102</span><br><span class="line">vlan create 104 pbm&#x3D;xe7,ce0 ubm&#x3D;xe7,ce0; pvlan set xe7,ce0 104</span><br></pre></td></tr></table></figure><p>We test three different(20,25,30) line rate speed, and expect no packets loss when line rate under 25 percent.</p><p>We use default preemphasis and differnet FEC setting to test line rate of 25G port.</p><h2 id="FEC-fc"><a href="#FEC-fc" class="headerlink" title="FEC fc"></a>FEC fc</h2><p>For fec mode of fc，ports status show as below picture.<br><img src="https://rancho333.github.io/pictures/questone2a_25g_fec_fc.png"></p><h3 id="Line-rate-20-percent"><a href="#Line-rate-20-percent" class="headerlink" title="Line rate 20 percent"></a>Line rate 20 percent</h3><p>Just set line rate 20 percent on ixia like below picture.<br><img src="https://rancho333.github.io/pictures/questone2a_line_rate_20.png"></p><p>Test results show as below picture and meet expectations.<br><img src="https://rancho333.github.io/pictures/questone2a_line_rate_20_result.png"></p><h3 id="Line-rate-25-percent"><a href="#Line-rate-25-percent" class="headerlink" title="Line rate 25 percent"></a>Line rate 25 percent</h3><p>Test results show as below picture and meet expectations.<br><img src="https://rancho333.github.io/pictures/questone2a_line_rate_25.png"></p><h3 id="Line-rate-30-percent"><a href="#Line-rate-30-percent" class="headerlink" title="Line rate 30 percent"></a>Line rate 30 percent</h3><p>Test results show as below picture and packets loss.<br><img src="https://rancho333.github.io/pictures/questone2a_line_rate_30.png"></p><h2 id="Fec-none"><a href="#Fec-none" class="headerlink" title="Fec none"></a>Fec none</h2><p>For fec mode of none, ports status show as below picture.<br><img src="https://rancho333.github.io/pictures/questone2a_25_fec_none.png"></p><h3 id="Line-rate-20-percent-1"><a href="#Line-rate-20-percent-1" class="headerlink" title="Line rate 20 percent"></a>Line rate 20 percent</h3><p>For fec mode of none, ports status show as below picture.<br><img src="https://rancho333.github.io/pictures/questone2a_line_rate_20_none.png"></p><h3 id="Line-rate-25-percent-1"><a href="#Line-rate-25-percent-1" class="headerlink" title="Line rate 25 percent"></a>Line rate 25 percent</h3><p>For fec mode of none, ports status show as below picture.<br><img src="https://rancho333.github.io/pictures/questone2a_line_rate_25_none.png"></p><h3 id="Line-rate-30-percent-1"><a href="#Line-rate-30-percent-1" class="headerlink" title="Line rate 30 percent"></a>Line rate 30 percent</h3><p>Test results show as below picture and packets loss.<br><img src="https://rancho333.github.io/pictures/questone2a_line_rate_30_none.png"></p>]]></content:encoded>
+      
+      
+      
+      
+      <comments>https://rancho333.github.io/2023/03/27/Questone2A_25G_line_rate_test/#disqus_thread</comments>
+      
+    </item>
     
     <item>
       <title>vrf lite route leaking</title>
@@ -200,27 +220,6 @@
       
       
       <comments>https://rancho333.github.io/2022/07/29/GRE%E7%AE%80%E8%BF%B0/#disqus_thread</comments>
-      
-    </item>
-    
-    <item>
-      <title>vpn技术简述</title>
-      <link>https://rancho333.github.io/2022/07/28/vpn%E6%8A%80%E6%9C%AF%E7%AE%80%E8%BF%B0/</link>
-      <guid>https://rancho333.github.io/2022/07/28/vpn%E6%8A%80%E6%9C%AF%E7%AE%80%E8%BF%B0/</guid>
-      <pubDate>Thu, 28 Jul 2022 08:11:52 GMT</pubDate>
-      
-      <description>&lt;h1 id=&quot;写在前面&quot;&gt;&lt;a href=&quot;#写在前面&quot; class=&quot;headerlink&quot; title=&quot;写在前面&quot;&gt;&lt;/a&gt;写在前面&lt;/h1&gt;&lt;p&gt;无论是访问外网资源(google，youtube等)，还是居家办公访问公司内网，我们都需要使用到vpn这个东东。VPN(virtual private network)是指在公用网络上建立一个私有的、专用的虚拟通信网络。本质就是建立隧道传递原有的业务流量，在隧道两端进行业务流量的封装与解封装，隧道两端则是需要互通的两个子网。&lt;/p&gt;</description>
-      
-      
-      
-      <content:encoded><![CDATA[<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>无论是访问外网资源(google，youtube等)，还是居家办公访问公司内网，我们都需要使用到vpn这个东东。VPN(virtual private network)是指在公用网络上建立一个私有的、专用的虚拟通信网络。本质就是建立隧道传递原有的业务流量，在隧道两端进行业务流量的封装与解封装，隧道两端则是需要互通的两个子网。</p><span id="more"></span><h1 id="vpn技术的一些分类"><a href="#vpn技术的一些分类" class="headerlink" title="vpn技术的一些分类"></a>vpn技术的一些分类</h1><p>有几种角度的分类方式，其一是根据建设单位(运营商还是企业自身)来分类：</p><ul><li>租用运营商VPN专线搭建企业VPN网络：主要是MPLS VPN, 相较于传统的专线(E1、SDH专线)更便宜</li><li>用户企业自建VPN网络：基于internet建立企业vpn网络，具体技术包括GRE、L2TP、IPSec、SSLVPN等。</li></ul><p>根据组网方式的不同：<br>本质就是隧道端点位置的不同。记住两个点：加密点/隧道点 和 通信点</p><ul><li>远程访问VPn（access VPN）：适合居家办公场景，一般在PC上安装客户端即可，隧道端点位于PC上，也叫做remote access VPN。加密点/隧道点和通信点都在PC或手机等设备上。</li><li>局域网到局域网的vpn(也称网关到网关的vpn)：适用于异地机构的互联，隧道端点位于网络设备上，也叫做site-to-site VPN，这里有两种分类。加密点/隧道点和通信点在网关、防火墙等专门网络设备上。<ul><li>一种叫intranet-based site-to-site, 即两端的局域网都属于一家公司，把几个私网连接在一起</li><li>一种叫extranet-based site-to-site, 即两端的局域网不属于一家公司，只分享一些固定的资源，而其它资源保持私有</li></ul></li></ul><p>按照vpn技术实现的网络层次进行分类：</p><ul><li>基于数据链路层的VPN：L2TP、L2F、PPTP。其中L2F和PPTP已经基本上被L2TP替代了</li><li>基于网络层的VPN：IPSec、GRE</li><li>基于应用层的VPN：SSL VPN</li></ul><p>基于internet的VPN技术有一个共同的特点就是必须解决网络安全的问题。</p><h1 id="VPN关键技术点"><a href="#VPN关键技术点" class="headerlink" title="VPN关键技术点"></a>VPN关键技术点</h1><h2 id="隧道技术"><a href="#隧道技术" class="headerlink" title="隧道技术"></a>隧道技术</h2><p>隧道技术是VPN的基本技术，类似于点到点的连接技术。它的基本过程就是在数据进入源VPN网关后，将数据封装后通过internet传输到目的vpn网关后再对数据进行解封装。可初略认为vpn网关之间是直连的，是一条隧道，封装的报文不关心具体传输路径。封装后的报文src ip是源vpn网关，dest ip是目的vpn网关。</p><h2 id="认证"><a href="#认证" class="headerlink" title="认证"></a>认证</h2><p>移动办公等场景下，需要对用户的身份进行验证。</p><ul><li>GRE不支持认证</li><li>L2TP依赖于PPP提供的认证技术。</li><li>IPSec：通过IKEv2拨号时，支持进行EAP认证。接入用户的用户名和密码可以本地认证，也可以通过RADIUS服务器认证。认证通过后再给用户分配内部的IP地址，通过此IP地址对用户进行授权和管理。另外IPSec还支持数据源认证</li><li>SSL VPN: 支持本地认证，证书认证和服务器认证。主要是对服务器进行身份认证，确认web网页的合法性。</li></ul><h2 id="加密技术"><a href="#加密技术" class="headerlink" title="加密技术"></a>加密技术</h2><p>internet上传输的报文如果不做加密处理，都是处于裸奔状态，比如我们通过wireshark抓包就可以直接读取到报文内容。加密对象有数据报文和协议报文之分，能够实现协议报文和数据报文都加密的协议安全系数更高。</p><ul><li>GRE和L2TP本身不提供加密技术，所以通常结合IPSec协议一起使用，而IPSec只支持单播封装，很好互补</li><li>IPSec：支持数据报文和协议报文加密。IPSec一般采用对称密钥算法加密数据。</li><li>SSL VPN: 支持数据报文和协议报文加密。SSL VPN采用非对称密钥算法加密数据(公钥加密，私钥解密)。</li></ul><h2 id="数据验证技术"><a href="#数据验证技术" class="headerlink" title="数据验证技术"></a>数据验证技术</h2><p>数据验证就是对收到的报文进行验货。比如常用MD5验证文件的完整性。在收发两端都对报文进行验证，只有摘要一致的报文才被认可。</p><ul><li>GRE：本身只提供简单的校验和验证及关键字验证。</li><li>L2TP：不提供数据验证技术</li><li>IPSec: 支持对数据进行完整性验证和数据源验证。在IPSec中验证和加密通常一起使用，对加密后的报文HMAC(keyed-hash message authentication code)生成摘要</li><li>SSL VPN：支持对数据进行完整性验证和数据源验证。SSL VPN采用公钥体质，利用Hash算法生成摘要，再用私钥加密摘要生成数字签名，利用公钥进行解密。利用公钥和私钥的一一关系可以对数据源进行认证。</li></ul><p>总结一下这几种vpn技术的应用场景：</p><p>| GRE | L2TP | IPSec | SSL VPN |<br>| :— | :— | :— | :— | :— |<br>| 作用范围 | IP层及以上数据 | IP层及以上数据 | IP层及以上数据 | 应用层特定数据 |<br>| 适用场景 | internet VPN | access vpn | internet vpn; accese | access vpn |<br>| 身份认证 | 不支持 | 支持，基于PPP的chap、pap、eap认证| 支持，采用IP或ID+口令或证书进行数据源认证；IKEv2拨号方式采用EAP认证进行用户身份认证 | 支持，用户名+口令+证书对服务器进行认证，也可进行双向认证 |<br>| 加密技术 | 不支持 | 不支持 | 支持 | 支持 |<br>| 数据验证 | 支持，校验和验证、关键字验证 | 不支持 | 支持 | 支持 |<br>| 如何使用 | GRE over IPSec | L2TP over IPSec | 单独使用 | SSL VPN |</p>]]></content:encoded>
-      
-      
-      
-      <category domain="https://rancho333.github.io/tags/vpn/">vpn</category>
-      
-      
-      <comments>https://rancho333.github.io/2022/07/28/vpn%E6%8A%80%E6%9C%AF%E7%AE%80%E8%BF%B0/#disqus_thread</comments>
       
     </item>
     
