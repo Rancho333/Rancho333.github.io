@@ -134,6 +134,12 @@ questone2a_25_fec_none.png
 questone2a_line_rate_20_none.png
 questone2a_line_rate_25_none.png
 questone2a_line_rate_30_none.png
+questone2a_100G_snake_traffic_topology.png
+questone2a_100G_snake_traffic_traffic.png
+questone2a_snake_traffic_100G_result.png
+questone2a_snake_traffic_25G_topology.png
+questone2a_snake_traffic_25G_ixia.png
+questone2a_snake_traffic_25G_result.png
 rstp_election.png
 rstp_bpdu.png
 rstp_pa_mechanism.png
