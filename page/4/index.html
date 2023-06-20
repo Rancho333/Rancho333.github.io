@@ -208,6 +208,78 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/07/21/SONiC%E4%B8%AD%E4%BA%A4%E6%8D%A2%E8%8A%AF%E7%89%87%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E7%AE%80%E8%BF%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/pictures/R-W.png">
+      <meta itemprop="name" content="Rancho">
+      <meta itemprop="description" content="No pain, no gain!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rancho Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/07/21/SONiC%E4%B8%AD%E4%BA%A4%E6%8D%A2%E8%8A%AF%E7%89%87%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E7%AE%80%E8%BF%B0/" class="post-title-link" itemprop="url">SONiC中交换芯片启动流程简述</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-07-21 17:15:56" itemprop="dateCreated datePublished" datetime="2021-07-21T17:15:56+08:00">2021-07-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-07-07 12:13:48" itemprop="dateModified" datetime="2022-07-07T12:13:48+08:00">2022-07-07</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>本文基于SONiC 202012分支进行交换芯片启动流程的分析。源码部分主要涉及<code>sonic-swss</code>和<code>sonic-sairedis</code>以及<code>ocp-sai</code>. 一句话说明所有流程：swss模块通知syncd模块进行ASIC初始化。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/07/21/SONiC%E4%B8%AD%E4%BA%A4%E6%8D%A2%E8%8A%AF%E7%89%87%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E7%AE%80%E8%BF%B0/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/04/28/SONiC%E4%B8%ADVxlan-decap%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B%E7%AE%80%E6%9E%90/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -858,78 +930,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/02/22/shell%E6%A0%B8%E5%BF%83%E6%9C%BA%E5%88%B6%E4%B9%8B%E5%AD%90shell%E4%B8%8Eshell%E7%8E%AF%E5%A2%83/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/pictures/R-W.png">
-      <meta itemprop="name" content="Rancho">
-      <meta itemprop="description" content="No pain, no gain!">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Rancho Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/02/22/shell%E6%A0%B8%E5%BF%83%E6%9C%BA%E5%88%B6%E4%B9%8B%E5%AD%90shell%E4%B8%8Eshell%E7%8E%AF%E5%A2%83/" class="post-title-link" itemprop="url">shell核心机制之子shell与shell环境</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-02-22 10:49:31" itemprop="dateCreated datePublished" datetime="2021-02-22T10:49:31+08:00">2021-02-22</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-07-07 12:13:48" itemprop="dateModified" datetime="2022-07-07T12:13:48+08:00">2022-07-07</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="深入了解shell必备的两个知识点"><a href="#深入了解shell必备的两个知识点" class="headerlink" title="深入了解shell必备的两个知识点"></a>深入了解shell必备的两个知识点</h1><p>子shell与shell环境是深入了解shell所必备的两个知识点。shell的实现方式有多种，如bash，sh，zsh等，这些软件本质就是一个shell解释器，最常用的是bash，因为其在几乎所有的Linux发行版中都预安装了。<br>子shell是shell命令的运行机制，而shell环境是shell命令的运行环境，就是我们常说的环境变量了。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/02/22/shell%E6%A0%B8%E5%BF%83%E6%9C%BA%E5%88%B6%E4%B9%8B%E5%AD%90shell%E4%B8%8Eshell%E7%8E%AF%E5%A2%83/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1001,7 +1001,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">77</span>
+          <span class="site-state-item-count">78</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1014,7 +1014,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">41</span>
+        <span class="site-state-item-count">42</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -1055,7 +1055,7 @@
 
 <div class="theme-info">
   <div class="powered-by"></div>
-  <span class="post-count">全站共 116k 字</span>
+  <span class="post-count">全站共 117.2k 字</span>
 </div>
 
         
