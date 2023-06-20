@@ -57,6 +57,15 @@ config.png
 vmlinux.png
 initramfs_kernel.png
 kernel_initramfs.png
+lab1.1_topology.drawio.png
+lab_1.2.png
+lab_1.2_pc_101.png
+lab_1.2_pc_102.png
+lab_1.2_vtp_101.png
+lab_1.2_vtp_password_101.png
+lab_1.2_vtp_102.png
+lab_1.2_spt_101.png
+lab_1.2_spt_102.png
 nm.png
 compare.png
 strip.png
