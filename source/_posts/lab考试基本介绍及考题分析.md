@@ -7,10 +7,10 @@ tags: CCIE
 
 # lab基本介绍
 
-在22年9月份考过CCNP(350-408)的笔试后就一直在约lab的考试，终于在今年(23)4月份约了一个北京考场的位置，5月初开始正式备考。EI CCIE lab考试总共分为两个部分，第一部分是design，全部是笔试，共计39题(第一题介绍，最后一题say goodby)，3小时内完成；第二部分是DOO(deploy，operate，optimize)，共计5小时。design做完可以提前交卷，3小时中剩下的时间则直接作废，不会加给DOO使用。DOO就是lab实操了，诶，主要分为三块，一是传统网络，而是SDN网络，三是自动化。传统网络共计16个小题，SDN网络共计6个小题，自动化共计三个小题。每个部分中都有一个选择题。
+在22年9月份考过CCNP(350-408)的笔试后就一直在约lab的考试，终于在今年(23)4月份约了一个北京考场的位置，5月初开始正式备考。EI CCIE lab考试总共分为两个部分，第一部分是design，全部是笔试，共计39题(第一题介绍，最后一题say goodby)，3小时内完成；第二部分是DOO(deploy，operate，optimize)，共计5小时。design做完可以提前交卷，3小时中剩下的时间则直接作废，不会加给DOO使用。DOO就是lab实操了，主要分为三块，一是传统网络，二是SDN网络，三是自动化。传统网络共计16个小题，SDN网络共计6个小题，自动化共计三个小题，每个部分中都有一个选择题。
 <!--more-->
 
-这个系列的blog主要用来对这个版本lab的网络做一个基本分析，注意在2023年9月之后lab会改版。
+这个系列的blog主要用来对当前版本lab的网络做一个基本分析，注意在2023年9月之后lab会改版。
 
 # lab 拓扑全景
 
@@ -24,16 +24,16 @@ tags: CCIE
 * IaaS(Infrastructure as a service) 主要用来做自动化，以及ping通R30的ipv6 loopback
 * ISP(Internet service provider) 提供8.8.8.8，并且会通过BGP下发默认路由
 * SP1(service provider 1) 主要跑mpls,bgp，起到连接各个sites的作用
-* SP2 通SP1，上面只跑BGP
-* Branch1 分支1，跑SDN，viptela的overlay是DNAc的underlay，viptela在vedge之间构建好vpn通过，DNAc基于此对物理交换机进行纳管，注意SW400是border/edge两种角色一体
+* SP2 同SP1，上面只跑BGP
+* Branch1 分支1，跑SDN，viptela的overlay是DNAc的underlay，viptela在vedge之间构建好vpn通道，DNAc基于此对物理交换机进行纳管，注意SW400是border/edge两种角色一体
 * Branch2 分支2，跑SDN，大部分同branch1, sw501和sw502是border角色，sw510是edge
 * Branch3 分支3，跑DMVPN，作为spoken
 * Branch4 分支4，跑DMVPN，作为spoken
 
-最终的目的其实很简单，就是使用L2，L3，SDN等网络技术使所有主机都获取到ip地址，并能访问ISP中的8.8.8.8(google DNS服务器)
+最终的目的其实很简单，就是使用L2，L3，SDN等网络技术使所有主机都获取到ip地址，并能访问ISP中的8.8.8.8(google DNS服务器)，当然，HQ,DC,IaaS，branch1,branch2,branch3,branch4之前也是互联互通的，即这些sites中的主机都可以ping通的，guest vpn除外。
 
 ## 传统1.2
-1.1是introduction，不用管。下面是1.2的题目。
+1.1是introduction，直接pass了。下面是1.2的题目。
 ```
 Complete and correct the etherchannel configuration between switches sw101,sw102,sw110 according to these requirements：
 1. At the end of the task，all ethernetchannels between switches sw101, sw102 must be up and operational including all their physical member links
@@ -56,6 +56,7 @@ These switches must run MST and maintain 3 instances including the default insta
 ```
 
 1.2的拓扑示意如下：
+
 ![](https://rancho333.github.io/pictures/lab_1.2.png)
 
 结构很简单，涉及到三台设备：sw101,sw102,sw110，三台交换机之间通过portchannel连接，其中sw101和sw110之间走staic，其它两条走LACP。配置思路如下
@@ -79,12 +80,17 @@ int port-channel 1
     shutdown
     no shutdown             // po1是静态lag，对端修改配置后，本地down/up使其获取最新状态
 ```
-配置完成之后，检查po端口状态, pc全部都是`SU`状态，物理成员端口全部都是`P`状态，字母含义在show中有说明。
+配置完成之后，检查pc端口状态, pc全部都是`SU`状态，物理成员端口全部都是`P`状态，字母含义在show中有说明。
+
 sw101 pc端口状态
+
 ![](https://rancho333.github.io/pictures/lab_1.2_pc_101.png)
+
 sw102 pc端口状态
+
 ![](https://rancho333.github.io/pictures/lab_1.2_pc_102.png)
-三角拓扑检查两台设备即可确认所有po端口状态
+
+三角拓扑检查两台设备即可确认所有pc端口状态
 
 2. 配置VTP
 ```
@@ -102,12 +108,17 @@ vtp password cc1E@fab hidden
 vtp mode client MST                 // 注意sw102和sw110的vtp工作在client模式 
 ```
 配置完成之后检查vtp状态：
+
 sw101的vtp状态如下：
+
 ![](https://rancho333.github.io/pictures/lab_1.2_vtp_101.png)
-密码是hidden的所有看不到明文：
+
+密码是hidden所以看不到明文：
+
 ![](https://rancho333.github.io/pictures/lab_1.2_vtp_password_101.png)
 
 sw102的vtp状态如下：
+
 ![](https://rancho333.github.io/pictures/lab_1.2_vtp_102.png)
 
 3. 配置mst
@@ -130,6 +141,13 @@ spaaning-tree mode mst
 ```
 配置完成之后检查mst状态，sw101作为instance 0-1根桥，sw102作为instance 2的根桥
 sw101 spt状态
+
 ![](https://rancho333.github.io/pictures/lab_1.2_spt_101.png)
+
 sw102 spt状态
+
 ![](https://rancho333.github.io/pictures/lab_1.2_spt_102.png)
+
+tips: sw102和sw110的VTP配置相同，spt配置基本相同，只是sw102多一个instance 2的根桥配置。复制粘贴配置即可。
+
+后面的blog会按顺序逐题进行分析。
