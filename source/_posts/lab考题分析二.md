@@ -1,6 +1,6 @@
 ---
 layout: ccie
-title: lab考题分析二
+title: lab考题分析1.3与1.4
 date: 2023-06-20 15:44:57
 tags: CCIE
 ---
