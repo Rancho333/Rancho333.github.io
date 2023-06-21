@@ -35,6 +35,8 @@ tags: CCIE
 ## 传统1.2
 1.1是introduction，直接pass了。下面是1.2的题目。
 ```
+layer 2 technologies in HQ
+
 Complete and correct the etherchannel configuration between switches sw101,sw102,sw110 according to these requirements：
 1. At the end of the task，all ethernetchannels between switches sw101, sw102 must be up and operational including all their physical member links
 2. Do not create new port-channel interfaces; reuse that already exist on the switches
