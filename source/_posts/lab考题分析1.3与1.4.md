@@ -12,10 +12,15 @@ tags: CCIE
 下面是考题
 ```
 For ipv4, implement an FHRP mechanism on sw101 and sw102 for vlans 2000 and vlan 2001 according to these requiremnet:
+
 1. Use group number 100 for vlan 2000 and group number 101 for vlan 2001
+
 2. Use the first available ipv4 address in the subnet for the address of the virtual router
+
 3. For vlan2000, sw101 must be the preferred gateway，for vlan2001，sw102 must be the preferred gateway. Do not rely on the ipv4 addresses of the switches as role tiebreakers. The role must be determined and explicit configuration on the intended preferred gateway.
+
 4. Each preferred gateway must monitor the reachability of both routers r11 and r12 using the loopback ipv4 addresses of the routers by icmp echo. The reachability is to be verified every 5 seconds with a timeout of 400 msec. A router must be declared unreachable as soon as it does not respond to three probes in a row. If both r11 and r12 are declared unreachable from a preferred gateway，the other switch must be allow to assume the gateway role, only a single tracking command may be added to the appropriate SVI configuration to accomplish this requirement
+
 5. Use the FHRP protocol that allows the virtual ipv4 address to match the ipv4 addresses of a member router
 ```
 
@@ -89,7 +94,9 @@ interface vlan2001
 
 
 # 1.4 Ospfv2 between HQ and DC
+
 下面是考题。
+
 ```
 Complete and correct the ospf configuration on the switches sw101,sw102,sw201 and sw202 according to these requirements.
 
@@ -105,6 +112,7 @@ Complete and correct the ospf configuration on the switches sw101,sw102,sw201 an
 
 6. Improve the detection of unreachable ospfv2 neighbors on the redundant interconnections between DC and HQ that ospf can detect the losses of a neighbor with 300 msec, eith the probes being sent every 100 msec. It is not allowed to modify ospf timers to accomplish this requirements.
 ```  
+
 1.4的拓扑图如下所示：
 
 ![](https://rancho333.github.io/pictures/lab_1.4.png)
@@ -170,6 +178,7 @@ router ospf 1
     interface gi 0/2
         ip ospf cost 200       // 增大接口ospf的cost，使sw102访问DC的流量走sw101
 ```
+
 配置完成之后，检查ospf邻居状态：
 
 ![](https://rancho333.github.io/pictures/lab_1.4_ospf.png)
