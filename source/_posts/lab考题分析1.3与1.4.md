@@ -111,7 +111,7 @@ Complete and correct the ospf configuration on the switches sw101,sw102,sw201 an
 5. Protect the authenticity and integrity of the ospfv2 sessions on the redundant interconnections between DC and HQ with the SHA-384 mechanism. Use key ID 1 and a shared secret of "cci3"（without quotes）
 
 6. Improve the detection of unreachable ospfv2 neighbors on the redundant interconnections between DC and HQ that ospf can detect the losses of a neighbor with 300 msec, eith the probes being sent every 100 msec. It is not allowed to modify ospf timers to accomplish this requirements.
-```  
+```
 
 1.4的拓扑图如下所示：
 
