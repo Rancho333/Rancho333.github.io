@@ -32,7 +32,7 @@ Enable hosts in HQ vlan2000 and vlan2001 to obtain their IP configuration via DH
 涉及到6台设备，分别是host11,host12,sw110,sw101,sw102,sw211.
 1.2,1.3,1.4都是为了1.5做铺垫，1.2是打通二层链路，1.3是配置冗余网关，1.4是解决主机，网关到DHCP server的路由。1.6就是做DHCP配置，使host11，host12拿到ip。基本思路如下：
 - sw211作为dhcp server，分别给HQ的vlan2000,vlan2001配置dhcp pool，并添加relay信任
-- sw101和sw102上面做dhcp relay配置并天剑relay信任
+- sw101和sw102上面做dhcp relay配置并添加relay信任
 - sw110上做dhcp snooping相关配置
 - host11和host12通过dhcp获取ip
 - 通过client-id给指定设备分配固定ip
@@ -108,6 +108,8 @@ sw211:
 ```
 使host重新获取ip地址，结果如下；
 ![](https://rancho333.github.io/pictures/lab_1.5_dhcp_client-id.png)
+
+注意state的状态是`Active`，如果server上看不到分配的ip，说明主机报文无法到达server，如果state状态是`Selecting`，表明主机没有收到server的offer报文，server到主机方向的路由有问题。
 
 host获取到指定ip，最后测试host到DC中几个关键服务器的可达性：
 ```
