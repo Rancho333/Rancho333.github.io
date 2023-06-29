@@ -81,6 +81,13 @@ lab_1.5_dhcp_relay.png
 lab_1.5_dhcp_snooping.png
 lab_1.5_dhcp.png
 lab_1.5_dhcp_client-id.png
+lab_1.6.png
+lab_1.6_ipv6.png
+lab_1.7.png
+lab_1.7_eigrp_neighbor_1.png
+lab_1.7_eigrp_neighbor_2.png
+lab_1.7_eigrp_ecmp.png
+lab_1.7_eigrp_ping.png
 nm.png
 compare.png
 strip.png
