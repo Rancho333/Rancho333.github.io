@@ -5171,74 +5171,6 @@
 ]]></content>
   </entry>
   <entry>
-    <title>lab考试基本介绍及考题分析</title>
-    <url>/2023/06/19/lab%E8%80%83%E8%AF%95%E5%9F%BA%E6%9C%AC%E4%BB%8B%E7%BB%8D%E5%8F%8A%E8%80%83%E9%A2%98%E5%88%86%E6%9E%90/</url>
-    <content><![CDATA[<h1 id="lab基本介绍"><a href="#lab基本介绍" class="headerlink" title="lab基本介绍"></a>lab基本介绍</h1><p>在22年9月份考过CCNP(350-408)的笔试后就一直在约lab的考试，终于在今年(23)4月份约了一个北京考场的位置，5月初开始正式备考。EI CCIE lab考试总共分为两个部分，第一部分是design，全部是笔试，共计39题(第一题介绍，最后一题say goodby)，3小时内完成；第二部分是DOO(deploy，operate，optimize)，共计5小时。design做完可以提前交卷，3小时中剩下的时间则直接作废，不会加给DOO使用。DOO就是lab实操了，主要分为三块，一是传统网络，二是SDN网络，三是自动化。传统网络共计16个小题，SDN网络共计6个小题，自动化共计三个小题，每个部分中都有一个选择题。</p>
-<span id="more"></span>
-
-<p>这个系列的blog主要用来对当前版本lab的网络做一个基本分析，注意在2023年9月之后lab会改版。</p>
-<h1 id="lab-拓扑全景"><a href="#lab-拓扑全景" class="headerlink" title="lab 拓扑全景"></a>lab 拓扑全景</h1><p>整个lab的所有设备及连接如下图所示：</p>
-<p><img src="https://rancho333.github.io/pictures/lab1.1_topology.drawio.png"></p>
-<p>这个图实际上还是很复杂的，总共由10个sites组成，分别是：</p>
-<ul>
-<li>HQ(head quarter)：主要跑ospf, eigrp v6，bgp等，虽然r12和ISP互联，但是默认从DC访问互联网</li>
-<li>DC(data center)：整个网络的中心，跑ospf, dmvpn，eigrp等，DHCP server, DMVPN hub, viptela，DNAc都部署在里面</li>
-<li>IaaS(Infrastructure as a service) 主要用来做自动化，以及ping通R30的ipv6 loopback</li>
-<li>ISP(Internet service provider) 提供8.8.8.8，并且会通过BGP下发默认路由</li>
-<li>SP1(service provider 1) 主要跑mpls,bgp，起到连接各个sites的作用</li>
-<li>SP2 同SP1，上面只跑BGP</li>
-<li>Branch1 分支1，跑SDN，viptela的overlay是DNAc的underlay，viptela在vedge之间构建好vpn通道，DNAc基于此对物理交换机进行纳管，注意SW400是border/edge两种角色一体</li>
-<li>Branch2 分支2，跑SDN，大部分同branch1, sw501和sw502是border角色，sw510是edge</li>
-<li>Branch3 分支3，跑DMVPN，作为spoken</li>
-<li>Branch4 分支4，跑DMVPN，作为spoken</li>
-</ul>
-<p>最终的目的其实很简单，就是使用L2，L3，SDN等网络技术使所有主机都获取到ip地址，并能访问ISP中的8.8.8.8(google DNS服务器)，当然，HQ,DC,IaaS，branch1,branch2,branch3,branch4之前也是互联互通的，即这些sites中的主机都可以ping通的，guest vpn除外。</p>
-<h2 id="传统1-2"><a href="#传统1-2" class="headerlink" title="传统1.2"></a>传统1.2</h2><p>1.1是introduction，直接pass了。下面是1.2的题目。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">layer 2 technologies in HQ</span><br><span class="line"></span><br><span class="line">Complete and correct the etherchannel configuration between switches sw101,sw102,sw110 according to these requirements：</span><br><span class="line">1. At the end of the task，all ethernetchannels between switches sw101, sw102 must be up and operational including all their physical member links</span><br><span class="line">2. Do not create new port-channel interfaces; reuse that already exist on the switches</span><br><span class="line">3. When resolving existing issues，do not change the preconfigured negotiation protocol（if any）</span><br><span class="line">4. On ethernetchannel that use a negotiation protocol，tune its mode of operation for the shortest link bunding time possible</span><br><span class="line"></span><br><span class="line">Configure VTP version 3 on these switches as follows:</span><br><span class="line">1. VTP domain must be set to CCIE</span><br><span class="line">2. VTP password must be cc1E@fab</span><br><span class="line">3. When displayed, the VTP password must be shown as 32-character hexadecimal string</span><br><span class="line">4. sw101 must be configured as VTP server for the MST feature</span><br><span class="line">5. sw102 &amp; sw110 must be configured as VTP client for the MST feature</span><br><span class="line"></span><br><span class="line">These switches must run MST and maintain 3 instances including the default instance 0 as follows：</span><br><span class="line">1. Associate vlans 1001-2000 in instance 1</span><br><span class="line">2. Associate vlans 2001-4094 in instance 2</span><br><span class="line">3. sw101 must be root for the default instance 0 and instance 1</span><br><span class="line">4. sw102 must be root for instance 2</span><br></pre></td></tr></table></figure>
-
-<p>1.2的拓扑示意如下：</p>
-<p><img src="https://rancho333.github.io/pictures/lab_1.2.png"></p>
-<p>结构很简单，涉及到三台设备：sw101,sw102,sw110，三台交换机之间通过portchannel连接，其中sw101和sw110之间走staic，其它两条走LACP。配置思路如下</p>
-<ul>
-<li>修复portchannel配置，打通二层连接</li>
-<li>配置VTP，其中sw101作为VTP server, 另外两台作为vtp client</li>
-<li>配置mst，其中sw101作为instance 0-1的根，sw102作为instance 2的根</li>
-</ul>
-<p>下面是实际配置：</p>
-<ol>
-<li>修复portchannel配置<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">sw101：</span><br><span class="line">int range gi 1&#x2F;2-3</span><br><span class="line">    channel-group 1 mode on</span><br><span class="line">sw102:</span><br><span class="line">int range gi 1&#x2F;2-3</span><br><span class="line">    channel-group 2 mode active</span><br><span class="line">sw110:</span><br><span class="line">int range gi 1&#x2F;2-3</span><br><span class="line">    channel-group 2 mode active</span><br><span class="line">int port-channel 1</span><br><span class="line">    shutdown</span><br><span class="line">    no shutdown             &#x2F;&#x2F; po1是静态lag，对端修改配置后，本地down&#x2F;up使其获取最新状态</span><br></pre></td></tr></table></figure>
-配置完成之后，检查pc端口状态, pc全部都是<code>SU</code>状态，物理成员端口全部都是<code>P</code>状态，字母含义在show中有说明。</li>
-</ol>
-<p>sw101 pc端口状态</p>
-<p><img src="https://rancho333.github.io/pictures/lab_1.2_pc_101.png"></p>
-<p>sw102 pc端口状态</p>
-<p><img src="https://rancho333.github.io/pictures/lab_1.2_pc_102.png"></p>
-<p>三角拓扑检查两台设备即可确认所有pc端口状态</p>
-<ol start="2">
-<li>配置VTP<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">sw101:</span><br><span class="line">vtp domain CCIE</span><br><span class="line">vtp version 3</span><br><span class="line">vtp password cc1E@fab hidden</span><br><span class="line">vtp mode server MST</span><br><span class="line">vtp primary mst force           &#x2F;&#x2F; 特权模式下强制指定mst primary server, 需要输密码</span><br><span class="line"></span><br><span class="line">sw102&#x2F;sw110:</span><br><span class="line">vtp domain CCIE</span><br><span class="line">vtp version 3</span><br><span class="line">vtp password cc1E@fab hidden</span><br><span class="line">vtp mode client MST                 &#x2F;&#x2F; 注意sw102和sw110的vtp工作在client模式 </span><br></pre></td></tr></table></figure>
-配置完成之后检查vtp状态：</li>
-</ol>
-<p>sw101的vtp状态如下：</p>
-<p><img src="https://rancho333.github.io/pictures/lab_1.2_vtp_101.png"></p>
-<p>密码是hidden所以看不到明文：</p>
-<p><img src="https://rancho333.github.io/pictures/lab_1.2_vtp_password_101.png"></p>
-<p>sw102的vtp状态如下：</p>
-<p><img src="https://rancho333.github.io/pictures/lab_1.2_vtp_102.png"></p>
-<ol start="3">
-<li>配置mst<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">sw101： </span><br><span class="line">spanning-tree mode mst              指定spanning tree模式为mst</span><br><span class="line">spanning-tree mst configuration</span><br><span class="line">    name CCIE</span><br><span class="line">    revision 1</span><br><span class="line">    instance 1 vlan 1001-2000</span><br><span class="line">    instance 2 vlan 2001-4094       &#x2F;&#x2F; mst的具体配置只需要在sw101上配置，之后会通过vtp同步给sw102和sw110</span><br><span class="line">spanning-tree mst 0-1 root primary      &#x2F;&#x2F; 指定sw101是instance 0-1的根</span><br><span class="line"></span><br><span class="line">sw102：</span><br><span class="line">spanning-tree mode mst              </span><br><span class="line">spanning-tree mst 2 root primary        &#x2F;&#x2F; 指定sw102是instance 2的根</span><br><span class="line"></span><br><span class="line">sw103:</span><br><span class="line">spaaning-tree mode mst</span><br></pre></td></tr></table></figure>
-配置完成之后检查mst状态，sw101作为instance 0-1根桥，sw102作为instance 2的根桥<br>sw101 spt状态</li>
-</ol>
-<p><img src="https://rancho333.github.io/pictures/lab_1.2_spt_101.png"></p>
-<p>sw102 spt状态</p>
-<p><img src="https://rancho333.github.io/pictures/lab_1.2_spt_102.png"></p>
-<p>tips: sw102和sw110的VTP配置相同，spt配置基本相同，只是sw102多一个instance 2的根桥配置。复制粘贴配置即可。</p>
-<p>后面的blog会按顺序逐题进行分析。</p>
-]]></content>
-      <tags>
-        <tag>CCIE</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>lab考题分析1.3与1.4</title>
     <url>/2023/06/20/lab%E8%80%83%E9%A2%98%E5%88%86%E6%9E%901.3%E4%B8%8E1.4/</url>
     <content><![CDATA[<p>继续考题分析，1.3和1.4。</p>
@@ -5351,6 +5283,113 @@ dhcp snooping配置结果现象如下：</li>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">host11&#x2F;12:</span><br><span class="line">    ping 10.2.250.11</span><br><span class="line">    ping 10.2.251.11</span><br><span class="line">    ping 10.2.252.11    </span><br><span class="line">    ping 10.2.253.11</span><br><span class="line">    ping 10.2.254.11</span><br></pre></td></tr></table></figure>
 
 <p>lab考试中有两个DHCP服务器，一个是sw211，另外一个是r23。r23只是给br1和br2的guest vpn提供DHCP服务，而sw211则给HQ中的host11,host12; br3中的host61，host62, br4中的host71,host72; br1/2中的IoT vpn、Employee vpn提供dhcp服务。我们可以在1.5中将sw211上的DHCP pool都配置掉。</p>
+]]></content>
+      <tags>
+        <tag>CCIE</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>lab考试基本介绍及考题分析</title>
+    <url>/2023/06/19/lab%E8%80%83%E8%AF%95%E5%9F%BA%E6%9C%AC%E4%BB%8B%E7%BB%8D%E5%8F%8A%E8%80%83%E9%A2%98%E5%88%86%E6%9E%901.2/</url>
+    <content><![CDATA[<h1 id="lab基本介绍"><a href="#lab基本介绍" class="headerlink" title="lab基本介绍"></a>lab基本介绍</h1><p>在22年9月份考过CCNP(350-408)的笔试后就一直在约lab的考试，终于在今年(23)4月份约了一个北京考场的位置，5月初开始正式备考。EI CCIE lab考试总共分为两个部分，第一部分是design，全部是笔试，共计39题(第一题介绍，最后一题say goodby)，3小时内完成；第二部分是DOO(deploy，operate，optimize)，共计5小时。design做完可以提前交卷，3小时中剩下的时间则直接作废，不会加给DOO使用。DOO就是lab实操了，主要分为三块，一是传统网络，二是SDN网络，三是自动化。传统网络共计16个小题，SDN网络共计6个小题，自动化共计三个小题，每个部分中都有一个选择题。</p>
+<span id="more"></span>
+
+<p>这个系列的blog主要用来对当前版本lab的网络做一个基本分析，注意在2023年9月之后lab会改版。</p>
+<h1 id="lab-拓扑全景"><a href="#lab-拓扑全景" class="headerlink" title="lab 拓扑全景"></a>lab 拓扑全景</h1><p>整个lab的所有设备及连接如下图所示：</p>
+<p><img src="https://rancho333.github.io/pictures/lab1.1_topology.drawio.png"></p>
+<p>这个图实际上还是很复杂的，总共由10个sites组成，分别是：</p>
+<ul>
+<li>HQ(head quarter)：主要跑ospf, eigrp v6，bgp等，虽然r12和ISP互联，但是默认从DC访问互联网</li>
+<li>DC(data center)：整个网络的中心，跑ospf, dmvpn，eigrp等，DHCP server, DMVPN hub, viptela，DNAc都部署在里面</li>
+<li>IaaS(Infrastructure as a service) 主要用来做自动化，以及ping通R30的ipv6 loopback</li>
+<li>ISP(Internet service provider) 提供8.8.8.8，并且会通过BGP下发默认路由</li>
+<li>SP1(service provider 1) 主要跑mpls,bgp，起到连接各个sites的作用</li>
+<li>SP2 同SP1，上面只跑BGP</li>
+<li>Branch1 分支1，跑SDN，viptela的overlay是DNAc的underlay，viptela在vedge之间构建好vpn通道，DNAc基于此对物理交换机进行纳管，注意SW400是border/edge两种角色一体</li>
+<li>Branch2 分支2，跑SDN，大部分同branch1, sw501和sw502是border角色，sw510是edge</li>
+<li>Branch3 分支3，跑DMVPN，作为spoken</li>
+<li>Branch4 分支4，跑DMVPN，作为spoken</li>
+</ul>
+<p>最终的目的其实很简单，就是使用L2，L3，SDN等网络技术使所有主机都获取到ip地址，并能访问ISP中的8.8.8.8(google DNS服务器)，当然，HQ,DC,IaaS，branch1,branch2,branch3,branch4之前也是互联互通的，即这些sites中的主机都可以ping通的，guest vpn除外。</p>
+<h2 id="传统1-2"><a href="#传统1-2" class="headerlink" title="传统1.2"></a>传统1.2</h2><p>1.1是introduction，直接pass了。下面是1.2的题目。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">layer 2 technologies in HQ</span><br><span class="line"></span><br><span class="line">Complete and correct the etherchannel configuration between switches sw101,sw102,sw110 according to these requirements：</span><br><span class="line">1. At the end of the task，all ethernetchannels between switches sw101, sw102 must be up and operational including all their physical member links</span><br><span class="line">2. Do not create new port-channel interfaces; reuse that already exist on the switches</span><br><span class="line">3. When resolving existing issues，do not change the preconfigured negotiation protocol（if any）</span><br><span class="line">4. On ethernetchannel that use a negotiation protocol，tune its mode of operation for the shortest link bunding time possible</span><br><span class="line"></span><br><span class="line">Configure VTP version 3 on these switches as follows:</span><br><span class="line">1. VTP domain must be set to CCIE</span><br><span class="line">2. VTP password must be cc1E@fab</span><br><span class="line">3. When displayed, the VTP password must be shown as 32-character hexadecimal string</span><br><span class="line">4. sw101 must be configured as VTP server for the MST feature</span><br><span class="line">5. sw102 &amp; sw110 must be configured as VTP client for the MST feature</span><br><span class="line"></span><br><span class="line">These switches must run MST and maintain 3 instances including the default instance 0 as follows：</span><br><span class="line">1. Associate vlans 1001-2000 in instance 1</span><br><span class="line">2. Associate vlans 2001-4094 in instance 2</span><br><span class="line">3. sw101 must be root for the default instance 0 and instance 1</span><br><span class="line">4. sw102 must be root for instance 2</span><br></pre></td></tr></table></figure>
+
+<p>1.2的拓扑示意如下：</p>
+<p><img src="https://rancho333.github.io/pictures/lab_1.2.png"></p>
+<p>结构很简单，涉及到三台设备：sw101,sw102,sw110，三台交换机之间通过portchannel连接，其中sw101和sw110之间走staic，其它两条走LACP。配置思路如下</p>
+<ul>
+<li>修复portchannel配置，打通二层连接</li>
+<li>配置VTP，其中sw101作为VTP server, 另外两台作为vtp client</li>
+<li>配置mst，其中sw101作为instance 0-1的根，sw102作为instance 2的根</li>
+</ul>
+<p>下面是实际配置：</p>
+<ol>
+<li>修复portchannel配置<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">sw101：</span><br><span class="line">int range gi 1&#x2F;2-3</span><br><span class="line">    channel-group 1 mode on</span><br><span class="line">sw102:</span><br><span class="line">int range gi 1&#x2F;2-3</span><br><span class="line">    channel-group 2 mode active</span><br><span class="line">sw110:</span><br><span class="line">int range gi 1&#x2F;2-3</span><br><span class="line">    channel-group 2 mode active</span><br><span class="line">int port-channel 1</span><br><span class="line">    shutdown</span><br><span class="line">    no shutdown             &#x2F;&#x2F; po1是静态lag，对端修改配置后，本地down&#x2F;up使其获取最新状态</span><br></pre></td></tr></table></figure>
+配置完成之后，检查pc端口状态, pc全部都是<code>SU</code>状态，物理成员端口全部都是<code>P</code>状态，字母含义在show中有说明。</li>
+</ol>
+<p>sw101 pc端口状态</p>
+<p><img src="https://rancho333.github.io/pictures/lab_1.2_pc_101.png"></p>
+<p>sw102 pc端口状态</p>
+<p><img src="https://rancho333.github.io/pictures/lab_1.2_pc_102.png"></p>
+<p>三角拓扑检查两台设备即可确认所有pc端口状态</p>
+<ol start="2">
+<li>配置VTP<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">sw101:</span><br><span class="line">vtp domain CCIE</span><br><span class="line">vtp version 3</span><br><span class="line">vtp password cc1E@fab hidden</span><br><span class="line">vtp mode server MST</span><br><span class="line">vtp primary mst force           &#x2F;&#x2F; 特权模式下强制指定mst primary server, 需要输密码</span><br><span class="line"></span><br><span class="line">sw102&#x2F;sw110:</span><br><span class="line">vtp domain CCIE</span><br><span class="line">vtp version 3</span><br><span class="line">vtp password cc1E@fab hidden</span><br><span class="line">vtp mode client MST                 &#x2F;&#x2F; 注意sw102和sw110的vtp工作在client模式 </span><br></pre></td></tr></table></figure>
+配置完成之后检查vtp状态：</li>
+</ol>
+<p>sw101的vtp状态如下：</p>
+<p><img src="https://rancho333.github.io/pictures/lab_1.2_vtp_101.png"></p>
+<p>密码是hidden所以看不到明文：</p>
+<p><img src="https://rancho333.github.io/pictures/lab_1.2_vtp_password_101.png"></p>
+<p>sw102的vtp状态如下：</p>
+<p><img src="https://rancho333.github.io/pictures/lab_1.2_vtp_102.png"></p>
+<ol start="3">
+<li>配置mst<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">sw101： </span><br><span class="line">spanning-tree mode mst              指定spanning tree模式为mst</span><br><span class="line">spanning-tree mst configuration</span><br><span class="line">    name CCIE</span><br><span class="line">    revision 1</span><br><span class="line">    instance 1 vlan 1001-2000</span><br><span class="line">    instance 2 vlan 2001-4094       &#x2F;&#x2F; mst的具体配置只需要在sw101上配置，之后会通过vtp同步给sw102和sw110</span><br><span class="line">spanning-tree mst 0-1 root primary      &#x2F;&#x2F; 指定sw101是instance 0-1的根</span><br><span class="line"></span><br><span class="line">sw102：</span><br><span class="line">spanning-tree mode mst              </span><br><span class="line">spanning-tree mst 2 root primary        &#x2F;&#x2F; 指定sw102是instance 2的根</span><br><span class="line"></span><br><span class="line">sw103:</span><br><span class="line">spaaning-tree mode mst</span><br></pre></td></tr></table></figure>
+配置完成之后检查mst状态，sw101作为instance 0-1根桥，sw102作为instance 2的根桥<br>sw101 spt状态</li>
+</ol>
+<p><img src="https://rancho333.github.io/pictures/lab_1.2_spt_101.png"></p>
+<p>sw102 spt状态</p>
+<p><img src="https://rancho333.github.io/pictures/lab_1.2_spt_102.png"></p>
+<p>tips: sw102和sw110的VTP配置相同，spt配置基本相同，只是sw102多一个instance 2的根桥配置。复制粘贴配置即可。</p>
+<p>后面的blog会按顺序逐题进行分析。</p>
+]]></content>
+      <tags>
+        <tag>CCIE</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>lab考题分析1.6与1.7</title>
+    <url>/2023/06/28/lab%E8%80%83%E9%A2%98%E5%88%86%E6%9E%901.6%E4%B8%8E1.7/</url>
+    <content><![CDATA[<p>继续考题分析，1.6与1.7。 这两题是ipv6相关，很简单。</p>
+<span id="more"></span>
+
+<h1 id="1-6-IPv6-in-HQ"><a href="#1-6-IPv6-in-HQ" class="headerlink" title="1.6 IPv6 in HQ"></a>1.6 IPv6 in HQ</h1><p>下面是考题。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Implement IPv6 on sw101 and sw102 for switch virtual interface(SVIs) vlan2000 and vlan2001 according to these requirements：</span><br><span class="line"></span><br><span class="line">sw101:</span><br><span class="line">    interface vlan2000: 2001:db8:1:100::1&#x2F;64</span><br><span class="line">    interface vlan2001: 2001:db8:1:101::1&#x2F;64</span><br><span class="line"></span><br><span class="line">sw102:</span><br><span class="line">    interface vlan2000: 2001:db8:1:100::2&#x2F;64</span><br><span class="line">    interface vlan2001: 2001:db8:1:101::2&#x2F;64</span><br><span class="line"></span><br><span class="line">The configuration must enable hosts in these Vlans to obtain their IPv6 configuration via SLAAC and keep a stable connectivity with their IPv6 networks.</span><br><span class="line"></span><br><span class="line">Use native IPv6 means to provide gateway redundancy, with sw101 being the preferred gateway in vlan2000 and sw102 being the preferred gateway in vlan2001. The role must be determined by explicit configuration on their intended preferred gateway.</span><br><span class="line"></span><br><span class="line">Hosts must be able to detect the preferred gateway in as little as 3 seconds.</span><br></pre></td></tr></table></figure>
+
+<p>1.6的拓扑示意图如下：</p>
+<p><img src="https://rancho333.github.io/pictures/lab_1.6.png"></p>
+<p>和1.3一样，只涉及到sw101和sw102这两台交换机，配置很简单，就是在SVI上配置ipv6地址，再做RA一些属性配置即可. 配置如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">ipv6 unicast-routing        &#x2F;&#x2F; 确保开启ipv6单播功能，这样RA通告才可以发送，客户端才可以通过SLAAC无状态获取ipv6地址</span><br><span class="line"></span><br><span class="line">sw101:</span><br><span class="line">    inter vlan2000 </span><br><span class="line">        ipv6 addr 2001:db8:1:100::1&#x2F;64</span><br><span class="line">        ipv6 nd ra internal msec 2000</span><br><span class="line">        ipv6 nd ra lifetime 3</span><br><span class="line">        ipv6 nd router-preference High</span><br><span class="line">    inter vlan2001 </span><br><span class="line">        ipv6 addr 2001:db8:1:101::1&#x2F;64</span><br><span class="line">        ipv6 nd ra internal msec 2000</span><br><span class="line">        ipv6 nd ra lifetime 3</span><br><span class="line">sw102:</span><br><span class="line">    inter vlan2000 </span><br><span class="line">        ipv6 addr 2001:db8:1:100::2&#x2F;64</span><br><span class="line">        ipv6 nd ra internal msec 2000</span><br><span class="line">        ipv6 nd ra lifetime 3</span><br><span class="line">    inter vlan2001 </span><br><span class="line">        ipv6 addr 2001:db8:1:101::2&#x2F;64</span><br><span class="line">        ipv6 nd ra internal msec 2000</span><br><span class="line">        ipv6 nd ra lifetime 3</span><br><span class="line">        ipv6 nd router-preference High</span><br><span class="line">&#x2F;&#x2F; 先配置RA通告间隔，在配置RA产生默认路由的生命周期，否则会报错</span><br><span class="line">&#x2F;&#x2F; RA的lifetime时间不应该小于RA通告时间</span><br></pre></td></tr></table></figure>
+
+<p>保证对应vlan配置<code>High</code>即可，试验台上主机上貌似看不到现象；或者在sw110上创建svi来模拟。<br>在主机上通过<code>ifconfig</code>查看ipv6地址，<code>ip -6 route</code>查看路由，检查网关优先级。</p>
+<p><img src="https://rancho333.github.io/pictures/lab_1.6_ipv6.png"></p>
+<h1 id="1-7-Ipv6-Eigrp-in-HQ"><a href="#1-7-Ipv6-Eigrp-in-HQ" class="headerlink" title="1.7 Ipv6 Eigrp in HQ"></a>1.7 Ipv6 Eigrp in HQ</h1><p>下面是题目。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">In HQ enable EIGRP for ipv6 on r11,r12,sw101 and sw102 according to these requirements:</span><br><span class="line"></span><br><span class="line">1. Use process name &quot;ccie&quot; (without the quotes) and AS number 65001</span><br><span class="line"></span><br><span class="line">2. Do not configure any additional IPv6 addresses</span><br><span class="line"></span><br><span class="line">3. IPv6 EIGRP may form adjacencies only over the physical Layer3 interface between r11,r12,sw101 and sw102</span><br><span class="line"></span><br><span class="line">4. Prevent IPv6 EIGRP from automatically running on, or advertising attached prefixes from new ipv6-enabled interfaces in the future unless allowed explicitly</span><br><span class="line"></span><br><span class="line">5. Ensure that the attached ipv6 prefixes on SVI‘s vlan2000 and vlan2001 on sw101 and sw102 are advertised in ip6 EIGRP and learned on r11 and r12</span><br><span class="line"></span><br><span class="line">6. No route filtering is allowed to accomplish this entire task</span><br></pre></td></tr></table></figure>
+
+<p>1.7的拓扑示意示意如下：</p>
+<p><img src="https://rancho333.github.io/pictures/lab_1.7.png"></p>
+<p>总共涉及到四台设备，分别是sw101,sw102,r11和r12。 基本思路如下：</p>
+<ul>
+<li>将eigrp接口默认行为改为passive和shutdown</li>
+<li>只在物理三层接口上开启eigrp邻居</li>
+<li>sw101和sw102的svi，r11和r12的loopback只通告路由，不建立eigrp邻居</li>
+</ul>
+<p>配置如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">ipv6 unicast-routing            &#x2F;&#x2F; 先全局开启ipv6单播功能，否则无法启动eigrp的ipv6</span><br><span class="line"></span><br><span class="line">sw101&#x2F;sw102:</span><br><span class="line">    router eigrp ccie</span><br><span class="line">    address-family ipv6 unicat autonomous-system 65001        &#x2F;&#x2F; 创建eigrp实例ccie，as为65001</span><br><span class="line">    af-interface default</span><br><span class="line">        shutdown</span><br><span class="line">        passive-interface        &#x2F;&#x2F; 所有ipv6接口不宣告进eigrp，并且默认全为被动接口</span><br><span class="line">    af-interface gi0&#x2F;0</span><br><span class="line">        no shutdown</span><br><span class="line">        no passive-interface</span><br><span class="line">    af-interface e0&#x2F;1</span><br><span class="line">        no shutdown</span><br><span class="line">        no passive-interface        &#x2F;&#x2F; 与r11和r12互联的三层接口打开ipv6 eigrp</span><br><span class="line">    af-interface vlan2000</span><br><span class="line">        no shutdown</span><br><span class="line">    af-interface vlan2001</span><br><span class="line">        no shutdown            &#x2F;&#x2F; 末节svi没有必要建立eigrp邻居，但所在网段需要通过eigrp传递路由</span><br><span class="line"></span><br><span class="line">r11&#x2F;r12:</span><br><span class="line">router eigrp ccie</span><br><span class="line">        address-family ipv6 unicast autonomous-system 65001</span><br><span class="line">        af-interface default</span><br><span class="line">            shutdown</span><br><span class="line">            passive-interface            &#x2F;&#x2F; 默认所有接口不宣告进eigrp，并且默认全为被动接口</span><br><span class="line">        af-interface e0&#x2F;1</span><br><span class="line">            no shutdown</span><br><span class="line">            no passive-interface</span><br><span class="line">        af-interface e0&#x2F;2</span><br><span class="line">            no shutdown</span><br><span class="line">            no passive-interface</span><br><span class="line">        af-interface e0&#x2F;3</span><br><span class="line">            no shutdown</span><br><span class="line">            no passive-interface            &#x2F;&#x2F; R11&amp;R12正常宣告三层物理接口进eigrp</span><br><span class="line">        af-interface loopback0</span><br><span class="line">            no shutdown                &#x2F;&#x2F; 环回口只需要no shutdown, 不用no passive</span><br><span class="line">            exit-af-interface</span><br></pre></td></tr></table></figure>
+
+<p>配置完成之后，sw101和sw102应该各有两个ipv6 eigrp邻居,分别是r11和r12<br><img src="https://rancho333.github.io/pictures/lab_1.7_eigrp_neighbor_1.png"></p>
+<p>r11和r12各有三个eigrp邻居，分别是sw101,sw102与r11/12<br><img src="https://rancho333.github.io/pictures/lab_1.7_eigrp_neighbor_2.png"></p>
+<p>r11，r12上对于sw101和sw102的SVI ipv6网段路由应用是ECMP：<br><img src="https://rancho333.github.io/pictures/lab_1.7_eigrp_ecmp.png"></p>
+<p>在主机上对r11或r12的lo0 ipv6地址进行traceroute测试，host11应该优先走sw101, 挂了后则走sw102。host12同理。这里就只做一个ping测试了。<br><img src="https://rancho333.github.io/pictures/lab_1.7_eigrp_ping.png"></p>
 ]]></content>
       <tags>
         <tag>CCIE</tag>
