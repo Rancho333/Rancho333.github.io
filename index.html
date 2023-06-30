@@ -231,10 +231,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2023-06-29 16:57:46 / 修改时间：18:04:51" itemprop="dateCreated datePublished" datetime="2023-06-29T16:57:46+08:00">2023-06-29</time>
+              <time title="创建时间：2023-06-29 16:57:46" itemprop="dateCreated datePublished" datetime="2023-06-29T16:57:46+08:00">2023-06-29</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-06-30 09:57:34" itemprop="dateModified" datetime="2023-06-30T09:57:34+08:00">2023-06-30</time>
+              </span>
 
           
 
@@ -248,32 +254,14 @@
 
       
           <p>继续考题分析，1.8与1.9</p>
-<h1 id="1-8-OSPFv2-in-DC"><a href="#1-8-OSPFv2-in-DC" class="headerlink" title="1.8 OSPFv2 in DC"></a>1.8 OSPFv2 in DC</h1><p>考题如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Configure device in the DC according to these requirements：</span><br><span class="line">1. Switches sw201 and sw202 must establish a stable OSPF adjacency in the Full state with vedge21 and vedge22 on interface vlan3999. Any configuration changes and corrections necessary to meet this requirement may be performed only on the switches and any mismatced parameters causing the issue must be changed to exactly match the configuration of the vedges</span><br><span class="line"></span><br><span class="line">2. All OSPF speakers in the DC running Cisco IOS and IOS-XE software must be configured to keep the number of advertised internal routes to an absolute minimum while not impacting the reachability of the services. This include the reachability of ISE, DNA center，vManage，vBond，vSmart on their internal addresses as well as any existing and future in vlan4000 on sw201 and sw202. The configuration of this requirement must be completed exclusively within the &#39;router ospf&#39; and &#39;interface vlan&#39; context without causing any impact to existing OSPF adjacencies。</span><br><span class="line"></span><br><span class="line">3. Router r24 must advertise two prefixes，10.6.0.0&#x2F;15 and 10.200.0.0&#x2F;24 as Type-5 LSAs in ODPFv2 to provide HQ and DC with the reachability to the DMVPN tunnel and Branch3,4. The configuration of this requirement must be completed exclusively within the &#39;router ospf&#39; context.</span><br><span class="line"></span><br><span class="line">4. Any route from 10.2.0.0&#x2F;16 range that keeps being advertised in OSPF must continue being advertised an intra-area route.</span><br><span class="line"></span><br><span class="line">5. It is not allowed to modify existing areas to accomplish this entire task.</span><br></pre></td></tr></table></figure>
-<p>1.8的拓扑示意如下：</p>
-<p><img src="https://rancho333.github.io/pictures/lab_1.8.png"></p>
-<p>总共涉及到8台设备，分别是sw201,sw202,sw211,sw212,r21,r22,r23,r24. 其中sw201，sw202与vedge21，vedge22建立ospf邻居关系，示意如下：</p>
-<p><img src="https://rancho333.github.io/pictures/lab_1.8_vedge.png"></p>
-<p>拓扑简要说明下：</p>
-<ul>
-<li>sw201,sw202与vedge相连的接口均为trunk，native vlan为4000, 对于vedge而言这是vpn0 underlay</li>
-<li>vedge上创建子接口与sw的vlan 3999对接，作为vpn999的接口</li>
-<li>vedge21上两个物理口分别与两台sw相连，sw201在201网段(再子网划分给vlan3999和4000),sw202在202网段，这是为了冗余吧</li>
-<li>sw101的vlan3999,vlan4000与vedge21的0/1, 0/1.3999分别建立ospf邻居，与vedge22同理，所以sw201上vlan3999有两个ospf零件，vlan4000中也是两个； sw202同理</li>
-</ul>
-<p>解法如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">sw201&#x2F;sw202：</span><br><span class="line">interface vlan3999 </span><br><span class="line">    ip mtu 1496        &#x2F;&#x2F; 修复与vedge子接口的ospf邻居，vedge子接口MTU需要减去4字节的vlan tag</span><br><span class="line"></span><br><span class="line">router ospf 1</span><br><span class="line">    prefix-suppression      &#x2F;&#x2F; 开启ospf前缀抑制，减少路由器之间相连网段的路由</span><br><span class="line"></span><br><span class="line">interface range vlan 3999-4000</span><br><span class="line">    ip ospf prefix-supression disable       &#x2F;&#x2F; 与vedge相连的接口不抑制</span><br><span class="line">    shutdown </span><br><span class="line">    no shutdown             &#x2F;&#x2F; 重新建立连接，否则DC区域可能无法正常学习到br1和br2的路由，直接导致br1，br2无法连接到DNAc，显示unreachreable</span><br><span class="line"></span><br><span class="line">sw211：</span><br><span class="line">    router ospf 1</span><br><span class="line">        prefix-supression</span><br><span class="line">        passive-interface gi1&#x2F;1</span><br><span class="line">        passive-interface gi1&#x2F;2</span><br><span class="line">        passive-interface gi1&#x2F;3</span><br><span class="line"></span><br><span class="line">sw212：</span><br><span class="line">    router ospf 1</span><br><span class="line">        prefix-supression</span><br><span class="line">        passive-interface gi1&#x2F;1</span><br><span class="line">        passive-interface gi1&#x2F;2     &#x2F;&#x2F; 与DNAc等相连的不抑制</span><br><span class="line"></span><br><span class="line">r21,r22,r23,r24：</span><br><span class="line">    router ospf 1</span><br><span class="line">        prefix-supression</span><br><span class="line">    </span><br></pre></td></tr></table></figure>
-
-<p>配置完成之后，sw201与sw202上与vedge建立ospf邻居：<br><img src="https://rancho333.github.io/pictures/1.8_ospf_neig.png"></p>
-<p>sw201上查看路由抑制效果：<br><img src="https://rancho333.github.io/pictures/lab_1.8_route.png"></p>
-<p>ospf路由表说明如下：</p>
-<ul>
-<li>总共另外7台设备<code>/32</code>的loopback路由，loopback接口不抑制</li>
-<li>总共有5个<code>/24</code>网段路由，对应vManage，vsmart，vbond，DNAc和ISE</li>
-<li>2个<code>/29</code>网段路由，分别从sw202和vedge22学到，所以ECMP</li>
-</ul>
-<p>注意需求第三点中要求的路由汇聚在1.12中体现，只有在修复DMVPN之后，DC中才会有<code>10.6.0.0/15</code>网段的路由。</p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/06/29/lab%E8%80%83%E9%A2%98%E5%88%86%E6%9E%901.8%E4%B8%8E1.9/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
