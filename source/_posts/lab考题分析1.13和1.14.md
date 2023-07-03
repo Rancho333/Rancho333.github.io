@@ -6,6 +6,7 @@ tags: CCIE
 ---
 
 继续考题分析，1.13和1.14。 1.13是让主机拿ip，1.14是选择题。
+<!--more-->
 
 # 1.13 IPv4 networks on legacy Branchs
 下面是题目。
