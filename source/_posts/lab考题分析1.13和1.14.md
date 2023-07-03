@@ -172,3 +172,11 @@ In the table below，for each configuration command，select all router types wh
 | ip pim sparse-mode | Y | Y | Y |
 | ip pim rp-address | Y | Y | Y |
 | ip pim passive | Y | Y | |
+
+基本说明如下：
+- spt(short path tree), 最短路径树，一般在最后一条开启，用于和source之间建立最短路径树。貌似也可以在RP上开启
+- igmp当然是最后一跳了
+- refister-source   指定发送register报文的源ip，类似ping指定源，用于第一跳向RP发送register报文使用
+- sparse mode用于指定PIM的模式，所有路由器都可配置
+- 指定静态指定RP的地址，所有路由器都可配置；另外一种方式就是自动选举RP了
+- pim的被动端口，和ospf，eigrp的被动端口效果类似，不发送和处理pim报文，末节路由器，也就是用在主机侧了，source和receiver都是主机，first和last都选上
