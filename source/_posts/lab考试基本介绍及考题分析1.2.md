@@ -30,7 +30,7 @@ tags: CCIE
 * Branch3 分支3，跑DMVPN，作为spoken
 * Branch4 分支4，跑DMVPN，作为spoken
 
-最终的目的其实很简单，就是使用L2，L3，SDN等网络技术使所有主机都获取到ip地址，并能访问ISP中的8.8.8.8(google DNS服务器)，当然，HQ,DC,IaaS，branch1,branch2,branch3,branch4之前也是互联互通的，即这些sites中的主机都可以ping通的，guest vpn除外。
+最终的目的其实很简单，就是使用L2，L3，SDN等网络技术使所有主机都获取到ip地址，并能访问ISP中的8.8.8.8(google DNS服务器)，当然，HQ,DC,IaaS，branch1,branch2,branch3,branch4之间也是互联互通的，即这些sites中的主机都可以ping通的，guest vpn除外。
 
 ## 传统1.2
 1.1是introduction，直接pass了。下面是1.2的题目。

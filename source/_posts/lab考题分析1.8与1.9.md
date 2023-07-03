@@ -82,7 +82,7 @@ ospf路由表说明如下：
 
 注意需求第三点中要求的路由汇聚在1.12中体现，只有在修复DMVPN之后，DC中才会有`10.6.0.0/15`网段的路由。
 
-# 1.9 BGP between HQ-DQ and service provides
+# 1.9 BGP between HQ-DC and service provides
 
 考题如下：
 ```
@@ -115,13 +115,13 @@ Configure the BGP peering between HQ/DC and global SP#1 and Global SP#2 accordin
 先完成BGP邻居的建立
 - 配置r11，使其与r3建立eBGP
 - 配置r21，使其与r3建立eBGP，使其与r22建立iBGP，并且下一跳为自身
-- 配置r22，使其与r21建立iBGP，并且下一跳为自身
+- 配置r22，使其与sp2建立eBGP邻居； 使其与r21建立iBGP，并且下一跳为自身
 
 然后做双点双向重分布以及as-path
 - r11上将bgp路由重分布进ospf，打上tag，创建route-map拒绝该tag
 - 在r11上创建as-path拒绝65002的路由，并在bgp邻居中应用
 - 在r11上将ospf的路由重分布进bgp，并应用route-map
-- 在r21和r22上重复上诉操作
+- 在r21和r22上重复上述操作
 
 简要说明下拓扑，R11和R21处于两个路由域的边界，上方是ospf，下方是BGP，这就是一个典型的双点双向重分布环境。
 - r3的bgp路由发布给R11, 然后被引入ospf域，r21通过ospf学到，重分布进bgp，又发布给r3，这样会形成路由环路
