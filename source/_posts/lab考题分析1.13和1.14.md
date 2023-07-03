@@ -152,6 +152,7 @@ Intermediary Hop Routers - routers on the path between first hop and last hop ro
 
 In the table below，for each configuration command，select all router types where the use of the command is appropriate.(select all that apply)
 ```
+
 | | last hop router | first hop router | intermediary hop router |
 | :-- | :-- | :-- | :-- |
 | ip pim spt-threshold | | | |
@@ -162,6 +163,7 @@ In the table below，for each configuration command，select all router types wh
 | ip pim passive | | | |
 
 解法如下：
+
 | | last hop router | first hop router | intermediary hop router |
 | :-- | :-- | :-- | :-- |
 | ip pim spt-threshold | Y | | |
