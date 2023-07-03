@@ -33,7 +33,7 @@
 <meta property="og:image" content="https://rancho333.github.io/pictures/lab_1.10_ping_r70.png">
 <meta property="og:image" content="https://rancho333.github.io/pictures/lab_1.10_tracroute_r70.png">
 <meta property="article:published_time" content="2023-07-03T02:17:29.000Z">
-<meta property="article:modified_time" content="2023-07-03T03:11:36.589Z">
+<meta property="article:modified_time" content="2023-07-03T03:15:48.383Z">
 <meta property="article:author" content="Rancho">
 <meta property="article:tag" content="CCIE">
 <meta name="twitter:card" content="summary">
@@ -240,7 +240,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2023-07-03 10:17:29 / 修改时间：11:11:36" itemprop="dateCreated datePublished" datetime="2023-07-03T10:17:29+08:00">2023-07-03</time>
+              <time title="创建时间：2023-07-03 10:17:29 / 修改时间：11:15:48" itemprop="dateCreated datePublished" datetime="2023-07-03T10:17:29+08:00">2023-07-03</time>
             </span>
 
           
@@ -252,7 +252,7 @@
               <span id="busuanzi_value_page_pv"></span>
             </span>
             <span class="post-meta-divider">|</span>
-<span title="post.wordcount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span>字数： 657</span>
+<span title="post.wordcount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span>字数： 659</span>
 
         </div>
       </header>
@@ -270,7 +270,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">Configure routers r3,r4,r5,r6 in SP1 according to these requirements.</span><br><span class="line"></span><br><span class="line">Configure r3 through r6mutual vpnv4 and vpnv6 route exchange</span><br><span class="line"></span><br><span class="line">configgure r3 as a router-reflector</span><br><span class="line"></span><br><span class="line">configure r4,r5 and r6 as clients of router-reflector</span><br><span class="line"></span><br><span class="line">use minimal configuration for achieving this task</span><br><span class="line"></span><br><span class="line">use peer-group GlobalSP</span><br><span class="line"></span><br><span class="line">use lo0 ipv4 addresses for peering</span><br><span class="line"></span><br><span class="line">configuration r3 through r6 to assign(allocate&#x2F;bind) as few unique MPLS labels to all existing and future vpnv4 and vpnv6 routes as possible.</span><br><span class="line"></span><br><span class="line">on routers r3 through r6，prevent any existing and future customer from discovering detail about the inter topology of SP1, it is not allowed to use ACLs to accomplish this requirement.</span><br></pre></td></tr></table></figure>
 
 <p>lab1.10的拓扑如下<br><img src="https://rancho333.github.io/pictures/lab_1.10.png"></p>
-<p>共设计到4台设备，分别是r3,r4,r5,r6，其中r1,r2的所有接口开启mpls，SP1中就是典型<code>f-VRF+MPLS</code>的拓扑。r3作为bgp的路由反射器，通过peer group与另外三台建立邻居，r4,5,6作为客户端。此外，配置mpls隐藏sp1内部拓扑，相同vpn使用同一个lable。</p>
+<p>共涉及到4台设备，分别是r3,r4,r5,r6，其中r1,r2的所有接口开启mpls，SP1中就是典型<code>f-VRF+MPLS</code>的拓扑。r3作为bgp的路由反射器，通过peer group与另外三台建立邻居，r4,5,6作为客户端。此外，配置mpls隐藏sp1内部拓扑，相同vpn使用同一个lable。</p>
 <p>配置思路如下：</p>
 <ul>
 <li>配置r3作为路由反射器，与r4,5,6建立iBGP邻居</li>
@@ -284,7 +284,7 @@
 <li><p>配置mpls</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">r3,4,5,6：</span><br><span class="line">mpls label all-vrfs protocol bgp-vpnv4 per-vrf</span><br><span class="line">mpls label all-vrfs protocol bgp-vpnv6 per-vrf      &#x2F;&#x2F; vpnv4和vpnv6所有的地址族，基于每一个vrf一个标签</span><br><span class="line">no mpls ip propagate-ttl forwarded          &#x2F;&#x2F; 在mpls域内的边界PE上关闭TTL繁衍，防止mpls内部拓扑被发现</span><br></pre></td></tr></table></figure></li>
 <li><p>配置r4,5,6</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">router bgp 10000</span><br><span class="line">    no bgp default ipv4-unicast</span><br><span class="line">    bgp router-id 100.255.254.4&#x2F;5&#x2F;6</span><br><span class="line"></span><br><span class="line">    neighbor 100.255.254.3 remote-as 10000</span><br><span class="line">    neighbor 100.255.254.3 update-source lo0</span><br><span class="line">address vpnv4</span><br><span class="line">    neighbor 100.255.254.3 active</span><br><span class="line">address vpnv6</span><br><span class="line">    neighbor 100.255.254.3 active        &#x2F;&#x2F; 在vpnv4和vpnv6下分别激活邻居</span><br></pre></td></tr></table></figure></li>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">router bgp 10000</span><br><span class="line">    no bgp default ipv4-unicast</span><br><span class="line">    bgp router-id 100.255.254.4&#x2F;5&#x2F;6</span><br><span class="line"></span><br><span class="line">    neighbor 100.255.254.3 remote-as 10000</span><br><span class="line">    neighbor 100.255.254.3 update-source lo0</span><br><span class="line">    address vpnv4</span><br><span class="line">        neighbor 100.255.254.3 active</span><br><span class="line">    address vpnv6</span><br><span class="line">        neighbor 100.255.254.3 active        &#x2F;&#x2F; 在vpnv4和vpnv6下分别激活邻居</span><br></pre></td></tr></table></figure></li>
 </ol>
 <p>配置完成之后在r3上查看bgp邻居，在vpnv4和vpnv6下分别与r4,5,6建立bgp邻居，vpnv4下另外两个邻居r11和r21是在1.9中建立的。<br><img src="https://rancho333.github.io/pictures/lab_1.10_neighbor.png"></p>
 <p>label这玩意也不是太懂，加个配置就行了，现象后面再研究吧。R70的lo0已经预配通过BGP通告路由，R11现在可以ping通<code>10.7.255.70</code>.<br><img src="https://rancho333.github.io/pictures/lab_1.10_ping_r70.png"></p>
@@ -327,7 +327,10 @@
     <a href="/2023/06/29/lab%E8%80%83%E9%A2%98%E5%88%86%E6%9E%901.8%E4%B8%8E1.9/" rel="prev" title="lab考题分析1.8与1.9">
       <i class="fa fa-chevron-left"></i> lab考题分析1.8与1.9
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2023/07/03/lab%E8%80%83%E9%A2%98%E5%88%86%E6%9E%901.11%E5%92%8C1.12/" rel="next" title="lab考题分析1.11和1.12">
+      lab考题分析1.11和1.12 <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
@@ -402,7 +405,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">83</span>
+          <span class="site-state-item-count">84</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -456,7 +459,7 @@
 
 <div class="theme-info">
   <div class="powered-by"></div>
-  <span class="post-count">全站共 123.3k 字</span>
+  <span class="post-count">全站共 125.5k 字</span>
 </div>
 
         
