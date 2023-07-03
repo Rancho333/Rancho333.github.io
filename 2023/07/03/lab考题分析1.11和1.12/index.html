@@ -21,12 +21,12 @@
     var CONFIG = {"hostname":"rancho333.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="继续考题分析，1.11和1.12. 主要是DMVPN相关。">
+  <meta name="description" content="继续考题分析，1.11和1.12. 主要是DMVPN相关。简单概括下，1.11是修复DMVPN；1.12是通过隧道建立eigrp下发默认路由.">
 <meta property="og:type" content="article">
 <meta property="og:title" content="lab考题分析1.11和1.12">
 <meta property="og:url" content="https://rancho333.github.io/2023/07/03/lab%E8%80%83%E9%A2%98%E5%88%86%E6%9E%901.11%E5%92%8C1.12/index.html">
 <meta property="og:site_name" content="Rancho Blog">
-<meta property="og:description" content="继续考题分析，1.11和1.12. 主要是DMVPN相关。">
+<meta property="og:description" content="继续考题分析，1.11和1.12. 主要是DMVPN相关。简单概括下，1.11是修复DMVPN；1.12是通过隧道建立eigrp下发默认路由.">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://rancho333.github.io/pictures/lab_1.11.png">
 <meta property="og:image" content="https://rancho333.github.io/pictures/lab_1.11_bgp_neighbor.png">
@@ -42,7 +42,7 @@
 <meta property="og:image" content="https://rancho333.github.io/pictures/lab_1.12_ospf_summary.png">
 <meta property="og:image" content="https://rancho333.github.io/pictures/lab_1.12_vlan2000_dhcp.png">
 <meta property="article:published_time" content="2023-07-03T03:54:32.000Z">
-<meta property="article:modified_time" content="2023-07-03T07:44:00.134Z">
+<meta property="article:modified_time" content="2023-07-03T07:57:47.140Z">
 <meta property="article:author" content="Rancho">
 <meta property="article:tag" content="CCIE">
 <meta name="twitter:card" content="summary">
@@ -249,7 +249,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2023-07-03 11:54:32 / 修改时间：15:44:00" itemprop="dateCreated datePublished" datetime="2023-07-03T11:54:32+08:00">2023-07-03</time>
+              <time title="创建时间：2023-07-03 11:54:32 / 修改时间：15:57:47" itemprop="dateCreated datePublished" datetime="2023-07-03T11:54:32+08:00">2023-07-03</time>
             </span>
 
           
@@ -272,7 +272,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>继续考题分析，1.11和1.12. 主要是DMVPN相关。</p>
+        <p>继续考题分析，1.11和1.12. 主要是DMVPN相关。简单概括下，1.11是修复DMVPN；1.12是通过隧道建立eigrp下发默认路由.</p>
 <span id="more"></span>
 
 <h1 id="1-11-Fixing-broken-DMVPN-between-DC-and-Branch3-amp-4"><a href="#1-11-Fixing-broken-DMVPN-between-DC-and-Branch3-amp-4" class="headerlink" title="1.11 Fixing broken DMVPN between DC and Branch3&amp;4"></a>1.11 Fixing broken DMVPN between DC and Branch3&amp;4</h1><p>下面是考题：</p>
@@ -370,10 +370,13 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2023/07/03/lab%E8%80%83%E9%A2%98%E5%88%86%E6%9E%901-10/" rel="prev" title="lab考题分析1.10">
+    <a href="/2023/07/03/lab%E8%80%83%E9%A2%98%E5%88%86%E6%9E%901.10/" rel="prev" title="lab考题分析1.10">
       <i class="fa fa-chevron-left"></i> lab考题分析1.10
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2023/07/03/lab%E8%80%83%E9%A2%98%E5%88%86%E6%9E%901.13%E5%92%8C1.14/" rel="next" title="lab考题分析1.13和1.14">
+      lab考题分析1.13和1.14 <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
@@ -448,7 +451,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">84</span>
+          <span class="site-state-item-count">85</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -502,7 +505,7 @@
 
 <div class="theme-info">
   <div class="powered-by"></div>
-  <span class="post-count">全站共 125.5k 字</span>
+  <span class="post-count">全站共 126.8k 字</span>
 </div>
 
         
