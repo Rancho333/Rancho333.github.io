@@ -81,3 +81,117 @@ ospf路由表说明如下：
 - 2个`/29`网段路由，分别从sw202和vedge22学到，所以ECMP
 
 注意需求第三点中要求的路由汇聚在1.12中体现，只有在修复DMVPN之后，DC中才会有`10.6.0.0/15`网段的路由。
+
+# 1.9 BGP between HQ-DQ and service provides
+
+考题如下：
+```
+Configure the BGP peering between HQ/DC and global SP#1 and Global SP#2 according to these requirements：
+
+1. Bring up the BGP peering between HQ r11 and SP1 r23
+
+2. Bring up the BGP peering between DC r21 and SP1 r23
+
+3. Bring up the BGP pering DC r22 and SP2
+
+4. Ensure that the routes learned over eBGP sessions and further advertised in iBGP will be considered reachable even if the networks on inter-AS links are not advertised in OSPF. The configuration of this requirement must be completed exclusively with the "router bgp" context
+
+5. On r11，r21，r22 perform mutual redistribution between OSPFv2 and BGP. Howevr, prevent routes that were injected into OSPF from BGP to be reinjected back into BGP. This requirement must be solved on r11,r21,r22 using only a single route0map on each of the routes andwithout any reference to ACLs,prefix lists or route-types
+
+6. Prevent HQ and DC from ever communicating through SP1 r3. All communication between HQ and DC must occur only over the direct sw101/sw201 and sw102/sw202 interconnections. Any other communication must remain unaffected. This requirement must be solved on r11,r21 and r22 by route filtering based on a well-known mandatory attribute without the use of routemaps.
+
+7. No command may be removed from configuration on r11 to accomplish this entire task
+
+8. It is allowed to modify existing configuration commands inside router bgp 65002 on r21 and r22 to accomplish this entire task.
+
+```
+
+1.9的拓扑示意图如下：
+
+![](https://rancho333.github.io/pictures/lab_1.9.png)
+
+总共涉及到5台设备，其中sp1的r3和sp2都是预配好的，不需要动，只需要在r11,r21和r22三台设备进行配置。配置思路如下：
+
+先完成BGP邻居的建立
+- 配置r11，使其与r3建立eBGP
+- 配置r21，使其与r3建立eBGP，使其与r22建立iBGP，并且下一跳为自身
+- 配置r22，使其与r21建立iBGP，并且下一跳为自身
+
+然后做双点双向重分布以及as-path
+- r11上将bgp路由重分布进ospf，打上tag，创建route-map拒绝该tag
+- 在r11上创建as-path拒绝65002的路由，并在bgp邻居中应用
+- 在r11上将ospf的路由重分布进bgp，并应用route-map
+- 在r21和r22上重复上诉操作
+
+简要说明下拓扑，R11和R21处于两个路由域的边界，上方是ospf，下方是BGP，这就是一个典型的双点双向重分布环境。
+- r3的bgp路由发布给R11, 然后被引入ospf域，r21通过ospf学到，重分布进bgp，又发布给r3，这样会形成路由环路
+- r21将ospf域内的路由重发布进bgp，r11上通过bgp学到该路由，bgp AD比ospf小，所以r11会通过bgp到达r21，而不是之前的ospf，这样形成次优路径
+
+关于双点双向充分布的分析可以参考这篇 [blog](https://rancho333.github.io/2022/07/12/%E5%8F%8C%E7%82%B9%E5%8F%8C%E5%90%91%E9%87%8D%E5%88%86%E5%B8%83/)。
+
+下面是解法：
+```
+建立eBGP，iBGP邻居
+r11:
+    router bgp 65001
+        bgp router-id 10.1.255.11           // 手动配置bgp router-id
+        no bgp default ipv4-unicast         // 默认配置不激活ipv4单播邻居
+        neighbor 100.3.11.1 remote-as 10000 
+    address-family ipv4
+        neighbor 100.3.11.1 active          // 在ipv4地址族下手动激活邻居
+
+r21:
+    router bgp 65002
+        bgp router-id 10.2.255.21
+        no bgp default ipv4-unicast
+        neighbor 100.3.21.1 remote-as 10000
+    address-family ipv4
+        neighbor 100.3.21.1 active
+        neighbor 10.2.255.22 active         // 预配已经指定as，激活即可
+        neighbor 10.2.255.22 next-hop-self   // iBGP指定下一跳是自我
+
+r22：
+    router bgp 65002
+        bgp router-id 10.2.255.22
+        no bgp default ipv4-unicast
+        neighbor 101.22.0.1 remote-as 10001
+    address-family ipv4 
+        neighbor 101.22.0.1 active
+        neighbor 10.2.255.21 active         // 同r21
+        neighbor 10.2.255.21 next-hop-self  
+```
+配置完成之后，正常建立bgp邻居关系：
+![](https://rancho333.github.io/pictures/lab_1.9_bgp_neighbor.png)
+
+```
+按要求配置路由策略：
+
+r11：
+router ospf 1
+    redistribute bgp 65001 subnets tag 123          // 在ospf中引入bgp的路由，打上tag
+
+route-map O2B deny 10
+    match tag 123
+route-map O2B permit 20                // 基于tag做路由策略，拒绝有tag 123的路由
+
+ip as-path access-list 100 deny _65002$     // 配置基于as-patch的ACL，拒绝通过bgp接收65002的路由
+ip as-path access-list  100 permit .*       // 允许除65002之外的路由
+
+router bgp 65001
+    address family ipv4
+        redistribute ospf 1 match internal external 1 external 2 route-map O2B // 在bgp中引入ospf路由，包含ospf外部路由，调用路由策略拒绝tag路由
+        neighbor 100.3.11.1 filter-list 100 in          // 针对eBGP调用ACL
+
+r22和r23上使用相同配置，注意下as number和 eBGP邻居地址即可
+
+clear ip bgp * soft include     // 重置BGP路由表，使配置的策略生效
+```
+
+查看r11上的路由表, `10.2`即DC区域的路由都是通过ospf学到的，并且是`O IA`类型，DC是area 0，HQ是area 1。`10.6`，`10.7`网段的路由则是通过BGP学到的，注意这需要配置完后面的DMVPN才能看到。
+![](https://rancho333.github.io/pictures/lab_1.9_r11_route.png)
+
+对于r21和r22, `10.1`网段的路由也是通过ospf学到的。
+![](https://rancho333.github.io/pictures/lab_1.9_r21_r22_route.png)
+
+HQ和DC中的路由通过bgp通告给r3. SP1在这里起到一个连接的作用，后续HQ和br3,4之间的互通都要通过这里，一定要保证双方的路由都传递过去了。
+![](https://rancho333.github.io/pictures/lab_1.9_r3_route.png)
