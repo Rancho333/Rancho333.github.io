@@ -5310,7 +5310,7 @@ dhcp snooping配置结果现象如下：</li>
 <li>Branch3 分支3，跑DMVPN，作为spoken</li>
 <li>Branch4 分支4，跑DMVPN，作为spoken</li>
 </ul>
-<p>最终的目的其实很简单，就是使用L2，L3，SDN等网络技术使所有主机都获取到ip地址，并能访问ISP中的8.8.8.8(google DNS服务器)，当然，HQ,DC,IaaS，branch1,branch2,branch3,branch4之前也是互联互通的，即这些sites中的主机都可以ping通的，guest vpn除外。</p>
+<p>最终的目的其实很简单，就是使用L2，L3，SDN等网络技术使所有主机都获取到ip地址，并能访问ISP中的8.8.8.8(google DNS服务器)，当然，HQ,DC,IaaS，branch1,branch2,branch3,branch4之间也是互联互通的，即这些sites中的主机都可以ping通的，guest vpn除外。</p>
 <h2 id="传统1-2"><a href="#传统1-2" class="headerlink" title="传统1.2"></a>传统1.2</h2><p>1.1是introduction，直接pass了。下面是1.2的题目。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">layer 2 technologies in HQ</span><br><span class="line"></span><br><span class="line">Complete and correct the etherchannel configuration between switches sw101,sw102,sw110 according to these requirements：</span><br><span class="line">1. At the end of the task，all ethernetchannels between switches sw101, sw102 must be up and operational including all their physical member links</span><br><span class="line">2. Do not create new port-channel interfaces; reuse that already exist on the switches</span><br><span class="line">3. When resolving existing issues，do not change the preconfigured negotiation protocol（if any）</span><br><span class="line">4. On ethernetchannel that use a negotiation protocol，tune its mode of operation for the shortest link bunding time possible</span><br><span class="line"></span><br><span class="line">Configure VTP version 3 on these switches as follows:</span><br><span class="line">1. VTP domain must be set to CCIE</span><br><span class="line">2. VTP password must be cc1E@fab</span><br><span class="line">3. When displayed, the VTP password must be shown as 32-character hexadecimal string</span><br><span class="line">4. sw101 must be configured as VTP server for the MST feature</span><br><span class="line">5. sw102 &amp; sw110 must be configured as VTP client for the MST feature</span><br><span class="line"></span><br><span class="line">These switches must run MST and maintain 3 instances including the default instance 0 as follows：</span><br><span class="line">1. Associate vlans 1001-2000 in instance 1</span><br><span class="line">2. Associate vlans 2001-4094 in instance 2</span><br><span class="line">3. sw101 must be root for the default instance 0 and instance 1</span><br><span class="line">4. sw102 must be root for instance 2</span><br></pre></td></tr></table></figure>
 
@@ -5426,7 +5426,7 @@ dhcp snooping配置结果现象如下：</li>
 <li>2个<code>/29</code>网段路由，分别从sw202和vedge22学到，所以ECMP</li>
 </ul>
 <p>注意需求第三点中要求的路由汇聚在1.12中体现，只有在修复DMVPN之后，DC中才会有<code>10.6.0.0/15</code>网段的路由。</p>
-<h1 id="1-9-BGP-between-HQ-DQ-and-service-provides"><a href="#1-9-BGP-between-HQ-DQ-and-service-provides" class="headerlink" title="1.9 BGP between HQ-DQ and service provides"></a>1.9 BGP between HQ-DQ and service provides</h1><p>考题如下：</p>
+<h1 id="1-9-BGP-between-HQ-DC-and-service-provides"><a href="#1-9-BGP-between-HQ-DC-and-service-provides" class="headerlink" title="1.9 BGP between HQ-DC and service provides"></a>1.9 BGP between HQ-DC and service provides</h1><p>考题如下：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Configure the BGP peering between HQ&#x2F;DC and global SP#1 and Global SP#2 according to these requirements：</span><br><span class="line"></span><br><span class="line">1. Bring up the BGP peering between HQ r11 and SP1 r23</span><br><span class="line"></span><br><span class="line">2. Bring up the BGP peering between DC r21 and SP1 r23</span><br><span class="line"></span><br><span class="line">3. Bring up the BGP pering DC r22 and SP2</span><br><span class="line"></span><br><span class="line">4. Ensure that the routes learned over eBGP sessions and further advertised in iBGP will be considered reachable even if the networks on inter-AS links are not advertised in OSPF. The configuration of this requirement must be completed exclusively with the &quot;router bgp&quot; context</span><br><span class="line"></span><br><span class="line">5. On r11，r21，r22 perform mutual redistribution between OSPFv2 and BGP. Howevr, prevent routes that were injected into OSPF from BGP to be reinjected back into BGP. This requirement must be solved on r11,r21,r22 using only a single route0map on each of the routes andwithout any reference to ACLs,prefix lists or route-types</span><br><span class="line"></span><br><span class="line">6. Prevent HQ and DC from ever communicating through SP1 r3. All communication between HQ and DC must occur only over the direct sw101&#x2F;sw201 and sw102&#x2F;sw202 interconnections. Any other communication must remain unaffected. This requirement must be solved on r11,r21 and r22 by route filtering based on a well-known mandatory attribute without the use of routemaps.</span><br><span class="line"></span><br><span class="line">7. No command may be removed from configuration on r11 to accomplish this entire task</span><br><span class="line"></span><br><span class="line">8. It is allowed to modify existing configuration commands inside router bgp 65002 on r21 and r22 to accomplish this entire task.</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
 <p>1.9的拓扑示意图如下：</p>
@@ -5436,14 +5436,14 @@ dhcp snooping配置结果现象如下：</li>
 <ul>
 <li>配置r11，使其与r3建立eBGP</li>
 <li>配置r21，使其与r3建立eBGP，使其与r22建立iBGP，并且下一跳为自身</li>
-<li>配置r22，使其与r21建立iBGP，并且下一跳为自身</li>
+<li>配置r22，使其与sp2建立eBGP邻居； 使其与r21建立iBGP，并且下一跳为自身</li>
 </ul>
 <p>然后做双点双向重分布以及as-path</p>
 <ul>
 <li>r11上将bgp路由重分布进ospf，打上tag，创建route-map拒绝该tag</li>
 <li>在r11上创建as-path拒绝65002的路由，并在bgp邻居中应用</li>
 <li>在r11上将ospf的路由重分布进bgp，并应用route-map</li>
-<li>在r21和r22上重复上诉操作</li>
+<li>在r21和r22上重复上述操作</li>
 </ul>
 <p>简要说明下拓扑，R11和R21处于两个路由域的边界，上方是ospf，下方是BGP，这就是一个典型的双点双向重分布环境。</p>
 <ul>
@@ -5459,6 +5459,40 @@ dhcp snooping配置结果现象如下：</li>
 <p>查看r11上的路由表, <code>10.2</code>即DC区域的路由都是通过ospf学到的，并且是<code>O IA</code>类型，DC是area 0，HQ是area 1。<code>10.6</code>，<code>10.7</code>网段的路由则是通过BGP学到的，注意这需要配置完后面的DMVPN才能看到。<br><img src="https://rancho333.github.io/pictures/lab_1.9_r11_route.png"></p>
 <p>对于r21和r22, <code>10.1</code>网段的路由也是通过ospf学到的。<br><img src="https://rancho333.github.io/pictures/lab_1.9_r21_r22_route.png"></p>
 <p>HQ和DC中的路由通过bgp通告给r3. SP1在这里起到一个连接的作用，后续HQ和br3,4之间的互通都要通过这里，一定要保证双方的路由都传递过去了。<br><img src="https://rancho333.github.io/pictures/lab_1.9_r3_route.png"></p>
+]]></content>
+      <tags>
+        <tag>CCIE</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>lab考题分析1.10</title>
+    <url>/2023/07/03/lab%E8%80%83%E9%A2%98%E5%88%86%E6%9E%901-10/</url>
+    <content><![CDATA[<p>继续考题分析1.10. 这题是对BGP peer group以及部分mpls的考察。</p>
+<span id="more"></span>
+
+<h1 id="Bringing-up-VPNv4-and-VPNv6-in-SP1"><a href="#Bringing-up-VPNv4-and-VPNv6-in-SP1" class="headerlink" title="Bringing up VPNv4 and VPNv6 in SP1"></a>Bringing up VPNv4 and VPNv6 in SP1</h1><p>下面是考题。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Configure routers r3,r4,r5,r6 in SP1 according to these requirements.</span><br><span class="line"></span><br><span class="line">Configure r3 through r6mutual vpnv4 and vpnv6 route exchange</span><br><span class="line"></span><br><span class="line">configgure r3 as a router-reflector</span><br><span class="line"></span><br><span class="line">configure r4,r5 and r6 as clients of router-reflector</span><br><span class="line"></span><br><span class="line">use minimal configuration for achieving this task</span><br><span class="line"></span><br><span class="line">use peer-group GlobalSP</span><br><span class="line"></span><br><span class="line">use lo0 ipv4 addresses for peering</span><br><span class="line"></span><br><span class="line">configuration r3 through r6 to assign(allocate&#x2F;bind) as few unique MPLS labels to all existing and future vpnv4 and vpnv6 routes as possible.</span><br><span class="line"></span><br><span class="line">on routers r3 through r6，prevent any existing and future customer from discovering detail about the inter topology of SP1, it is not allowed to use ACLs to accomplish this requirement.</span><br></pre></td></tr></table></figure>
+
+<p>lab1.10的拓扑如下<br><img src="https://rancho333.github.io/pictures/lab_1.10.png"></p>
+<p>共设计到4台设备，分别是r3,r4,r5,r6，其中r1,r2的所有接口开启mpls，SP1中就是典型<code>f-VRF+MPLS</code>的拓扑。r3作为bgp的路由反射器，通过peer group与另外三台建立邻居，r4,5,6作为客户端。此外，配置mpls隐藏sp1内部拓扑，相同vpn使用同一个lable。</p>
+<p>配置思路如下：</p>
+<ul>
+<li>配置r3作为路由反射器，与r4,5,6建立iBGP邻居</li>
+<li>配置mpls</li>
+<li>分别配置r4,5,6与r3建立iBGP邻居</li>
+</ul>
+<p>解法如下：</p>
+<ol>
+<li><p>配置r3</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">router bgp 10000</span><br><span class="line">    bgp router-id 100.255.54.3          &#x2F;&#x2F; 手动配置bgp router-id</span><br><span class="line">    no bgp default ipv4-unicast         &#x2F;&#x2F; 不默认激活ipv4邻居</span><br><span class="line"></span><br><span class="line">    neighbor GlobalSP peer-group</span><br><span class="line">    neighbor GlobalSP remote-as 10000</span><br><span class="line">    neighbor GlobalSP update-source lo0        &#x2F;&#x2F; 配置对等体</span><br><span class="line"></span><br><span class="line">    neighbor 100.255.254.4 peer-group GlobalSP</span><br><span class="line">    neighbor 100.255.254.5 peer-group GlobalSP</span><br><span class="line">    neighbor 100.255.254.6 peer-group GlobalSP  &#x2F;&#x2F; 给对等体添加成员</span><br><span class="line"></span><br><span class="line">    address-family vpnv4</span><br><span class="line">        neighbor 100.255.254.4 active</span><br><span class="line">        neighbor 100.255.254.5 active</span><br><span class="line">        neighbor 100.255.254.6 active           &#x2F;&#x2F; 激活对等体中的邻居</span><br><span class="line">        neighbor GlobalSP route-reflector-client    &#x2F;&#x2F; 配置RR客户端</span><br></pre></td></tr></table></figure></li>
+<li><p>配置mpls</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">r3,4,5,6：</span><br><span class="line">mpls label all-vrfs protocol bgp-vpnv4 per-vrf</span><br><span class="line">mpls label all-vrfs protocol bgp-vpnv6 per-vrf      &#x2F;&#x2F; vpnv4和vpnv6所有的地址族，基于每一个vrf一个标签</span><br><span class="line">no mpls ip propagate-ttl forwarded          &#x2F;&#x2F; 在mpls域内的边界PE上关闭TTL繁衍，防止mpls内部拓扑被发现</span><br></pre></td></tr></table></figure></li>
+<li><p>配置r4,5,6</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">router bgp 10000</span><br><span class="line">    no bgp default ipv4-unicast</span><br><span class="line">    bgp router-id 100.255.254.4&#x2F;5&#x2F;6</span><br><span class="line"></span><br><span class="line">    neighbor 100.255.254.3 remote-as 10000</span><br><span class="line">    neighbor 100.255.254.3 update-source lo0</span><br><span class="line">address vpnv4</span><br><span class="line">    neighbor 100.255.254.3 active</span><br><span class="line">address vpnv6</span><br><span class="line">    neighbor 100.255.254.3 active        &#x2F;&#x2F; 在vpnv4和vpnv6下分别激活邻居</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>配置完成之后在r3上查看bgp邻居，在vpnv4和vpnv6下分别与r4,5,6建立bgp邻居，vpnv4下另外两个邻居r11和r21是在1.9中建立的。<br><img src="https://rancho333.github.io/pictures/lab_1.10_neighbor.png"></p>
+<p>label这玩意也不是太懂，加个配置就行了，现象后面再研究吧。R70的lo0已经预配通过BGP通告路由，R11现在可以ping通<code>10.7.255.70</code>.<br><img src="https://rancho333.github.io/pictures/lab_1.10_ping_r70.png"></p>
+<p>通过tracroute解析每一跳，可以发现SP1中的路径被隐藏。<br><img src="https://rancho333.github.io/pictures/lab_1.10_tracroute_r70.png"></p>
 ]]></content>
       <tags>
         <tag>CCIE</tag>
