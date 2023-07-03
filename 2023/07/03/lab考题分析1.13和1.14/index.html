@@ -21,19 +21,19 @@
     var CONFIG = {"hostname":"rancho333.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="继续考题分析，1.13和1.14。 1.13是让主机拿ip，1.14是选择题。 1.13 IPv4 networks on legacy Branchs下面是题目。 1234567891011121314151617181920212223242526272829303132On sw211 in DC, complete the DHCP server configuration accordi">
+  <meta name="description" content="继续考题分析，1.13和1.14。 1.13是让主机拿ip，1.14是选择题。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="lab考题分析1.13和1.14">
 <meta property="og:url" content="https://rancho333.github.io/2023/07/03/lab%E8%80%83%E9%A2%98%E5%88%86%E6%9E%901.13%E5%92%8C1.14/index.html">
 <meta property="og:site_name" content="Rancho Blog">
-<meta property="og:description" content="继续考题分析，1.13和1.14。 1.13是让主机拿ip，1.14是选择题。 1.13 IPv4 networks on legacy Branchs下面是题目。 1234567891011121314151617181920212223242526272829303132On sw211 in DC, complete the DHCP server configuration accordi">
+<meta property="og:description" content="继续考题分析，1.13和1.14。 1.13是让主机拿ip，1.14是选择题。">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://rancho333.github.io/pictures/lab_1.13.png">
 <meta property="og:image" content="https://rancho333.github.io/pictures/lab_1.13_dhcp.png">
 <meta property="og:image" content="https://rancho333.github.io/pictures/lab_1.13_stanby.png">
 <meta property="og:image" content="https://rancho333.github.io/pictures/lab_1.13_track.png">
 <meta property="article:published_time" content="2023-07-03T07:59:39.000Z">
-<meta property="article:modified_time" content="2023-07-03T09:24:40.265Z">
+<meta property="article:modified_time" content="2023-07-03T09:30:43.545Z">
 <meta property="article:author" content="Rancho">
 <meta property="article:tag" content="CCIE">
 <meta name="twitter:card" content="summary">
@@ -240,7 +240,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2023-07-03 15:59:39 / 修改时间：17:24:40" itemprop="dateCreated datePublished" datetime="2023-07-03T15:59:39+08:00">2023-07-03</time>
+              <time title="创建时间：2023-07-03 15:59:39 / 修改时间：17:30:43" itemprop="dateCreated datePublished" datetime="2023-07-03T15:59:39+08:00">2023-07-03</time>
             </span>
 
           
@@ -264,6 +264,8 @@
 
       
         <p>继续考题分析，1.13和1.14。 1.13是让主机拿ip，1.14是选择题。</p>
+<span id="more"></span>
+
 <h1 id="1-13-IPv4-networks-on-legacy-Branchs"><a href="#1-13-IPv4-networks-on-legacy-Branchs" class="headerlink" title="1.13 IPv4 networks on legacy Branchs"></a>1.13 IPv4 networks on legacy Branchs</h1><p>下面是题目。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">On sw211 in DC, complete the DHCP server configuration according to these requirements：</span><br><span class="line">1. Create ipv4 DHCP pools named br3_v2000 and br3_v2001 for branch3 vlan2000(10.6.100.0&#x2F;24) and 2001(10.6.101.0&#x2F;24), respectively</span><br><span class="line"></span><br><span class="line">2. Create IPv4 DHCP pool named br4_v1 for the subnet 10.7.1.0&#x2F;24 on branch4.</span><br><span class="line"></span><br><span class="line">3. In each subnet assign addresser from .101 up to .254 inclusively and the appropriate gateway to clients</span><br><span class="line"></span><br><span class="line">On branch3 complete and correct the configuration on switches s601，s602 and s610 to allow HSRP and DHCPrelay operation in vlans 2000 and 2001 according to these requirements：</span><br><span class="line">1. HSRP must implicitly usr the vMAC address range of 0000.0c9f.f000 through 0000.0c9f.ffff</span><br><span class="line"></span><br><span class="line">2. The group number must be 100 for vlan200 and 101 for vlan2001</span><br><span class="line"></span><br><span class="line">3. s601 must be active gateway for vlan2000 with a priority of 110; the active role ownership must be deterministic</span><br><span class="line"></span><br><span class="line">4. sw602 must be active gateway for vlan2001 with a priority of 110; the active role ownership must be deterministic</span><br><span class="line"></span><br><span class="line">5. each active switch must track its uplink interface g0&#x2F;1 and gi0&#x2F;2. If either of these interface goes down, the active switch must allow the other switch to become active. However，it is not allowed for the tracking ro modify the HSRP priority to accomplish this requirements. You must use only one tracking statement when configuring the vlan interfaces for tracking。</span><br><span class="line"></span><br><span class="line">6. Both sw601 and sw602 must be configured as DHCP relay agent in both vlans 2000 and 2001,pointing toward the DHCP server 10.2.255.211 at sw211. however， at anytime， only the active router in the particular vlan should relay the DHCP messages</span><br><span class="line"></span><br><span class="line">7. place host61 and host62 into vlans 2000 and 2001 respectively and make sure they are assigned their correct ipv4 configuration</span><br><span class="line"></span><br><span class="line">8. It is not permitted to use any kind of scripting to complete this task</span><br><span class="line"></span><br><span class="line">On branch4 complete the configuration of the router r70 according to these requirements：</span><br><span class="line">1. assign ip address 10.7.1.1&#x2F;24 to ge0&#x2F;2</span><br><span class="line"></span><br><span class="line">2. enable dhcp relay on this interface and point it to the dhcp server 10.2.255.211 at sw211</span><br><span class="line"></span><br><span class="line">3. It is allowed to add one additional missing command to the r70 configuration to allow clients connected to g0&#x2F;2 obtain their ipv4 configuration</span><br><span class="line"></span><br><span class="line">4. Make sure that host r71 and r72 are assigned their correct ipv4 configuration</span><br></pre></td></tr></table></figure>
 
