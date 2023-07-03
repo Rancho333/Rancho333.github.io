@@ -5,7 +5,7 @@ date: 2023-07-03 11:54:32
 tags: CCIE
 ---
 
-继续考题分析，1.11和1.12. 主要是DMVPN相关。
+继续考题分析，1.11和1.12. 主要是DMVPN相关。简单概括下，1.11是修复DMVPN；1.12是通过隧道建立eigrp下发默认路由.
 <!--more-->
 
 # 1.11 Fixing broken DMVPN between DC and Branch3&4
