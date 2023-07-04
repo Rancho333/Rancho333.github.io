@@ -174,7 +174,7 @@ In the table below，for each configuration command，select all router types wh
 | ip pim passive | Y | Y | |
 
 基本说明如下：
-- spt(short path tree), 最短路径树，一般在最后一条开启，用于和source之间建立最短路径树。貌似也可以在RP上开启
+- spt(short path tree), 最短路径树，一般在最后一条开启，用于和source之间建立最短路径树。貌似也可以在RP上开启。cisco设备的阈值是0，也就是最后一跳会立即和source建立SPT。
 - igmp当然是最后一跳了
 - refister-source   指定发送register报文的源ip，类似ping指定源，用于第一跳向RP发送register报文使用
 - sparse mode用于指定PIM的模式，所有路由器都可配置
