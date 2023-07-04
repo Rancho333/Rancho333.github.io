@@ -6,6 +6,7 @@ tags: CCIE
 ---
 
 继续考题分析，1.15与1.16。1.15比较杂，是将HQ和IaaS通过SP1l连通，1.16主要是NAT。
+<!--more-->
 
 # 1.15  Extending connectivity to IaaS
 下面是考题。
@@ -122,6 +123,8 @@ sw101上有r30 lo0的路由，r4上也有HQ内的ipv6路由：
 
 最后HQ内的host可以ping通r30的lo0：
 ![](https://rancho333.github.io/pictures/lab_1.15_ping_r30.png)
+
+注意考场上r30的lo0地址是`2001:db8:14:4::1`, 实验台预配有点小问题。
 
 排错思路：
 - 如果sw101上有lo0的路由但是ping不通，检查r4上有没有HQ的路由，是不是r11上双向重定向没做好
