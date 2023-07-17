@@ -208,676 +208,6 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2022/07/07/RSTP802-1w%E7%AE%80%E8%BF%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/pictures/R-W.png">
-      <meta itemprop="name" content="Rancho">
-      <meta itemprop="description" content="No pain, no gain!">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Rancho Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/07/07/RSTP802-1w%E7%AE%80%E8%BF%B0/" class="post-title-link" itemprop="url">RSTP802.1w简述</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-07-07 15:49:15" itemprop="dateCreated datePublished" datetime="2022-07-07T15:49:15+08:00">2022-07-07</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-07-29 15:43:30" itemprop="dateModified" datetime="2022-07-29T15:43:30+08:00">2022-07-29</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p><code>《STP(802.1d)简述》</code>中描述了STP协议实现loop-free的原理，举例说明了根桥及端口的选举规则，当发生链路故障时的收敛过程，最后列举了加快STP收敛的特性及安全特性。STP的最大收敛时间可达50秒左右，为了加快收敛时间，RSTP(rapid STP)诞生了。RSTP主要通过<code>P/A机制</code>减少端口状态切换时间，通过处理<code>inferior BPDU</code>减少BPDU老化时间，并且集成了portfast、uplinkfast、backbonefast机制。下面主要阐述两者之间的差异，以及RSTP实现快速收敛的一些细节。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/07/07/RSTP802-1w%E7%AE%80%E8%BF%B0/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2022/07/07/STP802-1d%E7%AE%80%E8%BF%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/pictures/R-W.png">
-      <meta itemprop="name" content="Rancho">
-      <meta itemprop="description" content="No pain, no gain!">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Rancho Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/07/07/STP802-1d%E7%AE%80%E8%BF%B0/" class="post-title-link" itemprop="url">STP802.1d简述</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-07-07 15:35:21" itemprop="dateCreated datePublished" datetime="2022-07-07T15:35:21+08:00">2022-07-07</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-07-29 15:43:36" itemprop="dateModified" datetime="2022-07-29T15:43:36+08:00">2022-07-29</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>本文旨在描述STP(802.1d)的一些基本概念，搞清楚其消除二层环路的原理，为后面的RSTP已经MSTP的学习做铺垫。STP是一个高度自动化的协议，一两条简单的命令就可以让其自动计算，链路故障时也可以自动恢复，但只有真正掌握其实现原理，才能在故障时进行修复，才能合理的使用其安全特性和优化特性。现有的STP有多个版本，包括标准STP(802.1d),快速RSTP(802.1w), 多实例MSTP(802.1s)。思科使用PVSTP(per-vlan stp)替代标准STP.</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/07/07/STP802-1d%E7%AE%80%E8%BF%B0/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/10/20/vrf%E7%AE%80%E8%BF%B0%E5%8F%8A%E4%BB%BF%E7%9C%9F%E5%AE%9E%E9%AA%8C/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/pictures/R-W.png">
-      <meta itemprop="name" content="Rancho">
-      <meta itemprop="description" content="No pain, no gain!">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Rancho Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/10/20/vrf%E7%AE%80%E8%BF%B0%E5%8F%8A%E4%BB%BF%E7%9C%9F%E5%AE%9E%E9%AA%8C/" class="post-title-link" itemprop="url">vrf简述及仿真实验</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-10-20 13:14:53" itemprop="dateCreated datePublished" datetime="2021-10-20T13:14:53+08:00">2021-10-20</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-08-31 15:19:02" itemprop="dateModified" datetime="2022-08-31T15:19:02+08:00">2022-08-31</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
-<ul>
-<li><a href="#%E4%BB%80%E4%B9%88%E6%98%AFvrf">什么是VRF</a><ul>
-<li><a href="#vrf%E7%9A%84%E4%BD%9C%E7%94%A8">vrf的作用</a></li>
-</ul>
-</li>
-<li><a href="#vrf%E4%BB%BF%E7%9C%9F%E5%AE%9E%E9%AA%8C">VRF仿真实验</a><ul>
-<li><a href="#vrf%E8%A7%A3%E5%86%B3%E5%9C%B0%E5%9D%80%E9%87%8D%E5%8F%A0--ip%E9%9A%94%E7%A6%BB">VRF解决地址重叠 &amp;&amp; IP隔离</a></li>
-<li><a href="#vrf%E8%B7%AF%E7%94%B1%E9%9A%94%E7%A6%BB%E4%BB%A5%E5%8F%8A%E8%B7%AF%E7%94%B1%E6%B3%84%E9%9C%B2">VRF路由隔离以及路由泄露</a><ul>
-<li><a href="#vrf%E8%B7%AF%E7%94%B1%E6%B3%84%E9%9C%B2%E5%AE%9E%E9%AA%8C%E5%A4%B1%E8%B4%A5">vrf路由泄露实验失败</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99">参考资料</a></li>
-</ul>
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/10/20/vrf%E7%AE%80%E8%BF%B0%E5%8F%8A%E4%BB%BF%E7%9C%9F%E5%AE%9E%E9%AA%8C/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/10/08/SONiC%E8%87%AA%E5%8A%A8%E5%8C%96%E7%BC%96%E8%AF%91%E7%AE%80%E8%BF%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/pictures/R-W.png">
-      <meta itemprop="name" content="Rancho">
-      <meta itemprop="description" content="No pain, no gain!">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Rancho Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/10/08/SONiC%E8%87%AA%E5%8A%A8%E5%8C%96%E7%BC%96%E8%AF%91%E7%AE%80%E8%BF%B0/" class="post-title-link" itemprop="url">SONiC自动化编译简述</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-10-08 10:58:42" itemprop="dateCreated datePublished" datetime="2021-10-08T10:58:42+08:00">2021-10-08</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-07-07 12:13:48" itemprop="dateModified" datetime="2022-07-07T12:13:48+08:00">2022-07-07</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="关于SONiC自动化编译"><a href="#关于SONiC自动化编译" class="headerlink" title="关于SONiC自动化编译"></a>关于SONiC自动化编译</h1><ul>
-<li><p>当gitlab仓库有push动作时触发自动编译，仓库地址为：<a target="_blank" rel="noopener" href="http://cshgitlab.cn-csh.celestica.com/sonic-sdk/brixia_sonic.git">http://cshgitlab.cn-csh.celestica.com/sonic-sdk/brixia_sonic.git</a></p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/10/08/SONiC%E8%87%AA%E5%8A%A8%E5%8C%96%E7%BC%96%E8%AF%91%E7%AE%80%E8%BF%B0/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/09/29/NAT%E7%AE%80%E8%BF%B0%E5%8F%8A%E4%BB%BF%E7%9C%9F%E5%AE%9E%E9%AA%8C/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/pictures/R-W.png">
-      <meta itemprop="name" content="Rancho">
-      <meta itemprop="description" content="No pain, no gain!">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Rancho Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/09/29/NAT%E7%AE%80%E8%BF%B0%E5%8F%8A%E4%BB%BF%E7%9C%9F%E5%AE%9E%E9%AA%8C/" class="post-title-link" itemprop="url">NAT简述及仿真实验</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-09-29 13:52:24" itemprop="dateCreated datePublished" datetime="2021-09-29T13:52:24+08:00">2021-09-29</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-07-07 12:13:48" itemprop="dateModified" datetime="2022-07-07T12:13:48+08:00">2022-07-07</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
-<ul>
-<li><a href="#%E5%85%B3%E4%BA%8Enat%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E6%9C%AC%E9%97%AE%E9%A2%98">关于NAT的一些基本问题</a><ul>
-<li><a href="#%E4%BB%80%E4%B9%88%E6%98%AFnat">什么是NAT?</a></li>
-<li><a href="#nat%E7%9A%84%E5%B7%A5%E4%BD%9C%E6%96%B9%E5%BC%8F">NAT的工作方式</a></li>
-<li><a href="#nat%E7%9A%84%E5%BC%8A%E7%AB%AF%E5%8F%8A%E5%A4%84%E7%90%86%E6%96%B9%E5%BC%8F">NAT的弊端及处理方式</a><ul>
-<li><a href="#alg">ALG</a></li>
-<li><a href="#icmp%E6%8A%A5%E6%96%87%E7%9A%84%E7%89%B9%E6%AE%8A%E5%A4%84%E7%90%86">ICMP报文的特殊处理</a></li>
-<li><a href="#ip%E5%88%86%E7%89%87%E7%9A%84%E7%89%B9%E6%AE%8A%E5%A4%84%E7%90%86">IP分片的特殊处理</a>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/09/29/NAT%E7%AE%80%E8%BF%B0%E5%8F%8A%E4%BB%BF%E7%9C%9F%E5%AE%9E%E9%AA%8C/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/09/06/SONiC%E4%B8%ADsyncd%E8%B0%83%E7%94%A8SAI%E7%AE%80%E6%9E%90/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/pictures/R-W.png">
-      <meta itemprop="name" content="Rancho">
-      <meta itemprop="description" content="No pain, no gain!">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Rancho Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/09/06/SONiC%E4%B8%ADsyncd%E8%B0%83%E7%94%A8SAI%E7%AE%80%E6%9E%90/" class="post-title-link" itemprop="url">SONiC中syncd调用SAI简析</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-09-06 13:45:19" itemprop="dateCreated datePublished" datetime="2021-09-06T13:45:19+08:00">2021-09-06</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-07-07 12:13:48" itemprop="dateModified" datetime="2022-07-07T12:13:48+08:00">2022-07-07</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>本文以SONiC<code>202012</code>版本进行<code>syncd</code>模块初始化分析。sycnd与orchagent强相关，主要有5个动作，分别是<code>create</code>、<code>remove</code>、<code>set</code>、<code>get</code>以及<code>notify</code>。对于前三个动作，orchagent调用sairedis api写往ASIC_DB即返回成功，<code>get</code>动作会阻塞等待syncd的答复，当syncd接收到<code>notify</code>事件后会通过ASIC_DB通知到orchagent。本文暂分析syncd的初始化动作。 </p>
-<p>本文可以总结成一句话：SONiC上层根据objecttype获取对应的info结构，从而调用里面的具体方法，完成sai的调用。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/09/06/SONiC%E4%B8%ADsyncd%E8%B0%83%E7%94%A8SAI%E7%AE%80%E6%9E%90/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/08/23/SONiC%E4%B8%ADcoredump%E8%B0%83%E8%AF%95/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/pictures/R-W.png">
-      <meta itemprop="name" content="Rancho">
-      <meta itemprop="description" content="No pain, no gain!">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Rancho Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/08/23/SONiC%E4%B8%ADcoredump%E8%B0%83%E8%AF%95/" class="post-title-link" itemprop="url">SONiC中coredump调试</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-08-23 10:01:28" itemprop="dateCreated datePublished" datetime="2021-08-23T10:01:28+08:00">2021-08-23</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-07-07 12:13:48" itemprop="dateModified" datetime="2022-07-07T12:13:48+08:00">2022-07-07</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>在进行<code>sonic-testbed</code>中的<code>process monitor</code>用例调试的时候，发现<code>swss</code>容器中的<code>orchagent</code>进程产生coredump导致测试失败。本文将简单介绍coredump以及如何编译debug版本SONiC进行coredump调试。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/08/23/SONiC%E4%B8%ADcoredump%E8%B0%83%E8%AF%95/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/08/19/SONiC%E4%B8%8A%E5%B1%82%E5%BA%94%E7%94%A8%E4%B9%8BSWSS/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/pictures/R-W.png">
-      <meta itemprop="name" content="Rancho">
-      <meta itemprop="description" content="No pain, no gain!">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Rancho Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/08/19/SONiC%E4%B8%8A%E5%B1%82%E5%BA%94%E7%94%A8%E4%B9%8BSWSS/" class="post-title-link" itemprop="url">SONiC上层应用之SWSS</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-08-19 10:42:23" itemprop="dateCreated datePublished" datetime="2021-08-19T10:42:23+08:00">2021-08-19</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-07-07 12:13:48" itemprop="dateModified" datetime="2022-07-07T12:13:48+08:00">2022-07-07</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/07/21/SONiC%E4%B8%AD%E4%BA%A4%E6%8D%A2%E8%8A%AF%E7%89%87%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E7%AE%80%E8%BF%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/pictures/R-W.png">
-      <meta itemprop="name" content="Rancho">
-      <meta itemprop="description" content="No pain, no gain!">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Rancho Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/07/21/SONiC%E4%B8%AD%E4%BA%A4%E6%8D%A2%E8%8A%AF%E7%89%87%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E7%AE%80%E8%BF%B0/" class="post-title-link" itemprop="url">SONiC中交换芯片启动流程简述</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-07-21 17:15:56" itemprop="dateCreated datePublished" datetime="2021-07-21T17:15:56+08:00">2021-07-21</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-07-07 12:13:48" itemprop="dateModified" datetime="2022-07-07T12:13:48+08:00">2022-07-07</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>本文基于SONiC 202012分支进行交换芯片启动流程的分析。源码部分主要涉及<code>sonic-swss</code>和<code>sonic-sairedis</code>以及<code>ocp-sai</code>. 一句话说明所有流程：swss模块通知syncd模块进行ASIC初始化。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/07/21/SONiC%E4%B8%AD%E4%BA%A4%E6%8D%A2%E8%8A%AF%E7%89%87%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E7%AE%80%E8%BF%B0/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/04/28/SONiC%E4%B8%ADVxlan-decap%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B%E7%AE%80%E6%9E%90/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -946,10 +276,664 @@
   
   
 
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/04/26/SONiC%E4%B8%ADARP%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B%E7%AE%80%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/pictures/R-W.png">
+      <meta itemprop="name" content="Rancho">
+      <meta itemprop="description" content="No pain, no gain!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rancho Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/04/26/SONiC%E4%B8%ADARP%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B%E7%AE%80%E6%9E%90/" class="post-title-link" itemprop="url">SONiC中ARP测试用例简析</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-04-26 16:08:45" itemprop="dateCreated datePublished" datetime="2021-04-26T16:08:45+08:00">2021-04-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-07-29 15:27:31" itemprop="dateModified" datetime="2022-07-29T15:27:31+08:00">2022-07-29</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>本文简要分析SONiC testbed中ARP测试用例的实现，作为对<a href="https://rancho333.github.io/2020/12/25/ARP%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0%E5%8F%8A%E5%BA%94%E7%94%A8/">ARP协议简述及应用</a>的补充。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/04/26/SONiC%E4%B8%ADARP%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B%E7%AE%80%E6%9E%90/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/04/23/SONiC%E4%B8%ADOSPF%E4%BD%BF%E7%94%A8%E7%AE%80%E8%BF%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/pictures/R-W.png">
+      <meta itemprop="name" content="Rancho">
+      <meta itemprop="description" content="No pain, no gain!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rancho Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/04/23/SONiC%E4%B8%ADOSPF%E4%BD%BF%E7%94%A8%E7%AE%80%E8%BF%B0/" class="post-title-link" itemprop="url">SONiC中OSPF使用简述</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-04-23 15:32:20" itemprop="dateCreated datePublished" datetime="2021-04-23T15:32:20+08:00">2021-04-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-07-29 15:27:31" itemprop="dateModified" datetime="2022-07-29T15:27:31+08:00">2022-07-29</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>承接上文<a href="https://rancho333.github.io/2021/04/08/SONiC%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/">SONiC路由协议简述</a>，这边文章记录SONiC上使能OSPF的过程。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/04/23/SONiC%E4%B8%ADOSPF%E4%BD%BF%E7%94%A8%E7%AE%80%E8%BF%B0/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/04/19/OSPF%E5%AD%A6%E4%B9%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/pictures/R-W.png">
+      <meta itemprop="name" content="Rancho">
+      <meta itemprop="description" content="No pain, no gain!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rancho Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/04/19/OSPF%E5%AD%A6%E4%B9%A0/" class="post-title-link" itemprop="url">OSPF学习</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-04-19 15:31:37" itemprop="dateCreated datePublished" datetime="2021-04-19T15:31:37+08:00">2021-04-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-07-29 15:27:31" itemprop="dateModified" datetime="2022-07-29T15:27:31+08:00">2022-07-29</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>跟着上文<a href="https://rancho333.github.io/2021/04/08/SONiC%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/">SONiC路由协议简述</a>, 这篇文章记录一下OSPF协议的学习内容。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/04/19/OSPF%E5%AD%A6%E4%B9%A0/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/04/08/SONiC%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/pictures/R-W.png">
+      <meta itemprop="name" content="Rancho">
+      <meta itemprop="description" content="No pain, no gain!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rancho Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/04/08/SONiC%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/" class="post-title-link" itemprop="url">SONiC路由协议简述</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-04-08 17:38:53" itemprop="dateCreated datePublished" datetime="2021-04-08T17:38:53+08:00">2021-04-08</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-07-29 15:27:31" itemprop="dateModified" datetime="2022-07-29T15:27:31+08:00">2022-07-29</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>本文通过研究SONiC中已支持的路由协议BGP，了解SONiC中路由模块的工作流程，进而为支持SONiC中暂未支持的路由协议（ospf、rip、pim）的porting打下基础。以协议栈收包，协议栈状态机运转，协议栈表项生成下发至SDK为方向进行研究。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/04/08/SONiC%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/03/02/sonic-testbed%E7%9A%84%E7%90%86%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/pictures/R-W.png">
+      <meta itemprop="name" content="Rancho">
+      <meta itemprop="description" content="No pain, no gain!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rancho Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/03/02/sonic-testbed%E7%9A%84%E7%90%86%E8%A7%A3/" class="post-title-link" itemprop="url">sonic-testbed的理解</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-03-02 19:00:15" itemprop="dateCreated datePublished" datetime="2021-03-02T19:00:15+08:00">2021-03-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-07-07 12:13:49" itemprop="dateModified" datetime="2022-07-07T12:13:49+08:00">2022-07-07</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>这篇文章用来记录对sonic testbed的一些理解以及一些较核心的知识点。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/03/02/sonic-testbed%E7%9A%84%E7%90%86%E8%A7%A3/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/02/25/%E5%AF%B9SONiC%E9%A1%B9%E7%9B%AE%E7%9A%84%E8%AE%A4%E8%AF%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/pictures/R-W.png">
+      <meta itemprop="name" content="Rancho">
+      <meta itemprop="description" content="No pain, no gain!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rancho Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/02/25/%E5%AF%B9SONiC%E9%A1%B9%E7%9B%AE%E7%9A%84%E8%AE%A4%E8%AF%86/" class="post-title-link" itemprop="url">对SONiC项目的认识</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-02-25 13:36:57" itemprop="dateCreated datePublished" datetime="2021-02-25T13:36:57+08:00">2021-02-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-07-29 15:27:31" itemprop="dateModified" datetime="2022-07-29T15:27:31+08:00">2022-07-29</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="SONiC简介"><a href="#SONiC简介" class="headerlink" title="SONiC简介"></a>SONiC简介</h1><p>不做过多赘述，SONiC本质就是一个Linux交换机网络操作系统，它有两个特点。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/02/25/%E5%AF%B9SONiC%E9%A1%B9%E7%9B%AE%E7%9A%84%E8%AE%A4%E8%AF%86/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/02/23/shell%E9%87%8D%E5%AE%9A%E5%90%91/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/pictures/R-W.png">
+      <meta itemprop="name" content="Rancho">
+      <meta itemprop="description" content="No pain, no gain!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rancho Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/02/23/shell%E9%87%8D%E5%AE%9A%E5%90%91/" class="post-title-link" itemprop="url">shell重定向</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-02-23 13:28:38" itemprop="dateCreated datePublished" datetime="2021-02-23T13:28:38+08:00">2021-02-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-07-07 12:13:49" itemprop="dateModified" datetime="2022-07-07T12:13:49+08:00">2022-07-07</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="shell重定向"><a href="#shell重定向" class="headerlink" title="shell重定向"></a>shell重定向</h1><p>shell重定向即重新确定数据的流向，是通过改变文件描述符目标来实现的，如流向<code>1</code>的数据让其流向<code>/tmp/a.c</code>。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/02/23/shell%E9%87%8D%E5%AE%9A%E5%90%91/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/02/22/shell%E5%8F%98%E9%87%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/pictures/R-W.png">
+      <meta itemprop="name" content="Rancho">
+      <meta itemprop="description" content="No pain, no gain!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rancho Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/02/22/shell%E5%8F%98%E9%87%8F/" class="post-title-link" itemprop="url">shell变量</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-02-22 16:28:14" itemprop="dateCreated datePublished" datetime="2021-02-22T16:28:14+08:00">2021-02-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-07-07 12:13:48" itemprop="dateModified" datetime="2022-07-07T12:13:48+08:00">2022-07-07</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <ul>
+<li><a href="#shell%E5%8F%98%E9%87%8F">shell变量</a></li>
+<li><a href="#%E5%8F%98%E9%87%8F%E7%9B%B8%E5%85%B3%E7%9A%84%E4%B8%80%E4%BA%9B%E5%91%BD%E4%BB%A4">变量相关的一些命令</a></li>
+<li><a href="#%E7%89%B9%E6%AE%8A%E5%8F%98%E9%87%8F">特殊变量</a></li>
+<li><a href="#%E5%B8%B8%E8%A7%81%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F">常见环境变量</a></li>
+</ul>
+<h1 id="shell变量"><a href="#shell变量" class="headerlink" title="shell变量"></a>shell变量</h1><p>标准的UNIX变量分为两类，环境变量和shell变量。广义上而言，<code>shell变量</code>只应用于当前的shell实例，是用来设置短期工作情况的; <code>环境变量</code>有更长远的意义，这些变量在登录时设置，在整个会话期都是有效的。一般约定，环境变量使用大写变量表示，shell变量使用小写表示。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/02/22/shell%E5%8F%98%E9%87%8F/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2021/02/22/shell%E6%A0%B8%E5%BF%83%E6%9C%BA%E5%88%B6%E4%B9%8B%E5%AD%90shell%E4%B8%8Eshell%E7%8E%AF%E5%A2%83/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/pictures/R-W.png">
+      <meta itemprop="name" content="Rancho">
+      <meta itemprop="description" content="No pain, no gain!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rancho Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/02/22/shell%E6%A0%B8%E5%BF%83%E6%9C%BA%E5%88%B6%E4%B9%8B%E5%AD%90shell%E4%B8%8Eshell%E7%8E%AF%E5%A2%83/" class="post-title-link" itemprop="url">shell核心机制之子shell与shell环境</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-02-22 10:49:31" itemprop="dateCreated datePublished" datetime="2021-02-22T10:49:31+08:00">2021-02-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-07-07 12:13:48" itemprop="dateModified" datetime="2022-07-07T12:13:48+08:00">2022-07-07</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="深入了解shell必备的两个知识点"><a href="#深入了解shell必备的两个知识点" class="headerlink" title="深入了解shell必备的两个知识点"></a>深入了解shell必备的两个知识点</h1><p>子shell与shell环境是深入了解shell所必备的两个知识点。shell的实现方式有多种，如bash，sh，zsh等，这些软件本质就是一个shell解释器，最常用的是bash，因为其在几乎所有的Linux发行版中都预安装了。<br>子shell是shell命令的运行机制，而shell环境是shell命令的运行环境，就是我们常说的环境变量了。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/02/22/shell%E6%A0%B8%E5%BF%83%E6%9C%BA%E5%88%B6%E4%B9%8B%E5%AD%90shell%E4%B8%8Eshell%E7%8E%AF%E5%A2%83/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/3/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span><a class="page-number" href="/page/5/">5</a><span class="space">&hellip;</span><a class="page-number" href="/page/9/">9</a><a class="extend next" rel="next" href="/page/5/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <a class="extend prev" rel="prev" href="/page/3/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span><a class="page-number" href="/page/5/">5</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><a class="extend next" rel="next" href="/page/5/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1017,7 +1001,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">86</span>
+          <span class="site-state-item-count">77</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1030,7 +1014,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">42</span>
+        <span class="site-state-item-count">41</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -1071,7 +1055,7 @@
 
 <div class="theme-info">
   <div class="powered-by"></div>
-  <span class="post-count">全站共 129.2k 字</span>
+  <span class="post-count">全站共 116k 字</span>
 </div>
 
         
