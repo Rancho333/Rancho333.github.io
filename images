@@ -5,6 +5,15 @@ ping_arp.png
 general_arp_agent.png
 local_arp_agent.png
 varp_mlag_vrrp.png
+vs-sonic-environment.png
+vs-sonic-vlan.png
+vs-sonic-vlan-vpc.png
+vs-sonic-vpc1-vpc2.png
+vs-sonic-mac-arp.png
+vs-sonic-if-ip.png
+vs-sonic-bgp-neighbor.png
+vs-sonic-bgp-routes.png
+vs-sonic-ping-finally.png
 main.png
 segmentation_fault.png
 weak.png
