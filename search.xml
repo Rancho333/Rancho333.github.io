@@ -5175,7 +5175,9 @@
     <url>/2023/09/07/Basic-L2-L3-test-for-CLS-VS-SONIC/</url>
     <content><![CDATA[<h1 id="Environment-setup"><a href="#Environment-setup" class="headerlink" title="Environment setup"></a>Environment setup</h1><p>Firstly, we setup the test environment like below picture.</p>
 <p><img src="https://rancho333.github.io/pictures/vs-sonic-environment.png"></p>
-<p>vpc1 and vpc2 perform L2 basic test in vlan100. q2a-1 and q2a-2 establish eBGP neighbors to perform l3 basic test, so that vpc1 and vpc3 can communicate.</p>
+<span id="more"></span>
+
+<p>vpc1 and vpc2 perform L2 basic test in vlan100. q2a-1 and q2a-2 establish eBGP neighbors to perform l3 basic test, so that vpc1,vpc2 and vpc3 can communicate.</p>
 <h1 id="L2-basic-test"><a href="#L2-basic-test" class="headerlink" title="L2 basic test"></a>L2 basic test</h1><p>We create vlan100 and create SVI as vlan100 gateway. Eth1 and Eth2 are the vlan100 member ports. Please pay attention to the mapping relationship between the port name of eveng and the port name of sonic.</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">q2a-1:</span><br><span class="line">config vlan add 100                              &#x2F;&#x2F; create vlan100</span><br><span class="line">config vlan member add 100 Ethernet4 -u          &#x2F;&#x2F; add vlan member, SONiC Ethernet4 mapping eveng Ethernet1</span><br><span class="line">config vlan member add 100 Ethernet8 -u          &#x2F;&#x2F; SONiC Ethernet8 mapping eveng Ethernet2</span><br><span class="line">config interface ip add Vlan100 192.168.1.1&#x2F;24   &#x2F;&#x2F; create SVI</span><br></pre></td></tr></table></figure>
 

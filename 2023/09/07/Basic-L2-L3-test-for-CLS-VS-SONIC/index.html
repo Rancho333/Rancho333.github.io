@@ -21,12 +21,12 @@
     var CONFIG = {"hostname":"rancho333.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="Environment setupFirstly, we setup the test environment like below picture.  vpc1 and vpc2 perform L2 basic test in vlan100. q2a-1 and q2a-2 establish eBGP neighbors to perform l3 basic test, so that">
+  <meta name="description" content="Environment setupFirstly, we setup the test environment like below picture.">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Basic-L2-L3-test-for-CLS_VS_SONIC">
 <meta property="og:url" content="https://rancho333.github.io/2023/09/07/Basic-L2-L3-test-for-CLS-VS-SONIC/index.html">
 <meta property="og:site_name" content="Rancho Blog">
-<meta property="og:description" content="Environment setupFirstly, we setup the test environment like below picture.  vpc1 and vpc2 perform L2 basic test in vlan100. q2a-1 and q2a-2 establish eBGP neighbors to perform l3 basic test, so that">
+<meta property="og:description" content="Environment setupFirstly, we setup the test environment like below picture.">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://rancho333.github.io/pictures/vs-sonic-environment.png">
 <meta property="og:image" content="https://rancho333.github.io/pictures/vs-sonic-vlan.png">
@@ -38,7 +38,7 @@
 <meta property="og:image" content="https://rancho333.github.io/pictures/vs-sonic-bgp-routes.png">
 <meta property="og:image" content="https://rancho333.github.io/pictures/vs-sonic-ping-finally.png">
 <meta property="article:published_time" content="2023-09-07T02:11:13.000Z">
-<meta property="article:modified_time" content="2023-09-08T03:20:19.731Z">
+<meta property="article:modified_time" content="2023-09-08T03:44:18.994Z">
 <meta property="article:author" content="Rancho">
 <meta property="article:tag" content="SONiC">
 <meta name="twitter:card" content="summary">
@@ -251,7 +251,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-09-08 11:20:19" itemprop="dateModified" datetime="2023-09-08T11:20:19+08:00">2023-09-08</time>
+                <time title="修改时间：2023-09-08 11:44:18" itemprop="dateModified" datetime="2023-09-08T11:44:18+08:00">2023-09-08</time>
               </span>
 
           
@@ -263,7 +263,7 @@
               <span id="busuanzi_value_page_pv"></span>
             </span>
             <span class="post-meta-divider">|</span>
-<span title="post.wordcount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span>字数： 320</span>
+<span title="post.wordcount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span>字数： 321</span>
 
         </div>
       </header>
@@ -276,7 +276,9 @@
       
         <h1 id="Environment-setup"><a href="#Environment-setup" class="headerlink" title="Environment setup"></a>Environment setup</h1><p>Firstly, we setup the test environment like below picture.</p>
 <p><img src="https://rancho333.github.io/pictures/vs-sonic-environment.png"></p>
-<p>vpc1 and vpc2 perform L2 basic test in vlan100. q2a-1 and q2a-2 establish eBGP neighbors to perform l3 basic test, so that vpc1 and vpc3 can communicate.</p>
+<span id="more"></span>
+
+<p>vpc1 and vpc2 perform L2 basic test in vlan100. q2a-1 and q2a-2 establish eBGP neighbors to perform l3 basic test, so that vpc1,vpc2 and vpc3 can communicate.</p>
 <h1 id="L2-basic-test"><a href="#L2-basic-test" class="headerlink" title="L2 basic test"></a>L2 basic test</h1><p>We create vlan100 and create SVI as vlan100 gateway. Eth1 and Eth2 are the vlan100 member ports. Please pay attention to the mapping relationship between the port name of eveng and the port name of sonic.</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">q2a-1:</span><br><span class="line">config vlan add 100                              &#x2F;&#x2F; create vlan100</span><br><span class="line">config vlan member add 100 Ethernet4 -u          &#x2F;&#x2F; add vlan member, SONiC Ethernet4 mapping eveng Ethernet1</span><br><span class="line">config vlan member add 100 Ethernet8 -u          &#x2F;&#x2F; SONiC Ethernet8 mapping eveng Ethernet2</span><br><span class="line">config interface ip add Vlan100 192.168.1.1&#x2F;24   &#x2F;&#x2F; create SVI</span><br></pre></td></tr></table></figure>
 
