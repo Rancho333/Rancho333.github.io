@@ -10,7 +10,9 @@ Firstly, we setup the test environment like below picture.
 
 ![](https://rancho333.github.io/pictures/vs-sonic-environment.png)
 
-vpc1 and vpc2 perform L2 basic test in vlan100. q2a-1 and q2a-2 establish eBGP neighbors to perform l3 basic test, so that vpc1 and vpc3 can communicate.
+<!--more-->
+
+vpc1 and vpc2 perform L2 basic test in vlan100. q2a-1 and q2a-2 establish eBGP neighbors to perform l3 basic test, so that vpc1,vpc2 and vpc3 can communicate.
 
 # L2 basic test
 
