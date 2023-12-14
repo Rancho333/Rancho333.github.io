@@ -1,7 +1,8 @@
 ---
 title: 开机启动WSL并SSH登陆
 date: 2023-12-14 14:25:05
-tags: - WSL
+tags: 
+    - WSL
 ---
 
 # 背景说明
