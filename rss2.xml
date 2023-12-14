@@ -9,8 +9,33 @@
     <atom:link href="https://rancho333.github.io/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description>No pain, no gain!</description>
-    <pubDate>Fri, 08 Sep 2023 05:55:05 GMT</pubDate>
+    <pubDate>Thu, 14 Dec 2023 06:44:58 GMT</pubDate>
     <generator>http://hexo.io/</generator>
+    
+    <item>
+      <title>开机启动WSL并SSH登陆</title>
+      <link>https://rancho333.github.io/2023/12/14/%E5%BC%80%E6%9C%BA%E5%90%AF%E5%8A%A8WSL%E5%B9%B6SSH%E7%99%BB%E9%99%86/</link>
+      <guid>https://rancho333.github.io/2023/12/14/%E5%BC%80%E6%9C%BA%E5%90%AF%E5%8A%A8WSL%E5%B9%B6SSH%E7%99%BB%E9%99%86/</guid>
+      <pubDate>Thu, 14 Dec 2023 06:25:05 GMT</pubDate>
+      
+      <description>&lt;h1 id=&quot;背景说明&quot;&gt;&lt;a href=&quot;#背景说明&quot; class=&quot;headerlink&quot; title=&quot;背景说明&quot;&gt;&lt;/a&gt;背景说明&lt;/h1&gt;&lt;p&gt;windows的WSL功能让ubuntu作为windows的子系统，这种双系统对linux开发非常友好。一般使用远程工具如Xshell登陆Linux，对windows和WSL做一些配置，实现开启windows之后：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;自动启动WSL&lt;/li&gt;
+&lt;li&gt;WSL中开启sshd服务&lt;/li&gt;
+&lt;/ul&gt;</description>
+      
+      
+      
+      <content:encoded><![CDATA[<h1 id="背景说明"><a href="#背景说明" class="headerlink" title="背景说明"></a>背景说明</h1><p>windows的WSL功能让ubuntu作为windows的子系统，这种双系统对linux开发非常友好。一般使用远程工具如Xshell登陆Linux，对windows和WSL做一些配置，实现开启windows之后：</p><ul><li>自动启动WSL</li><li>WSL中开启sshd服务</li></ul><span id="more"></span><h1 id="实现方法"><a href="#实现方法" class="headerlink" title="实现方法"></a>实现方法</h1><ol><li>创建开机启动脚本，名称为<code>linux-start-ssh.vbs</code>, 里面的内容为：<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Set ws &#x3D; WScript.CreateObject(&quot;WScript.Shell&quot;)        &#39; 创建windows shell对象</span><br><span class="line">ws.run &quot;wsl -d ubuntu -u root &#x2F;etc&#x2F;init.wsl&quot;          &#39; 在shell中启动wsl，wsl启动加载 init.wsl脚本</span><br></pre></td></tr></table></figure></li></ol><p><code>init.wsl</code>脚本的内容如下：</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#! &#x2F;bin&#x2F;sh</span><br><span class="line">&#x2F;etc&#x2F;init.d&#x2F;ssh start           # 在wsl中启动sshd服务，这样wsl启动时就会自动开机sshd</span><br></pre></td></tr></table></figure><ol start="2"><li><p>将<code>linux-start-ssh.vbs</code>脚本加入到开机启动项中，直接将该文件拷贝到<code>C:\Users\Rancho\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup</code>路径下即可</p></li><li><p>在task manager中确认enable服务，设置好后状态如下图：<br><img src="https://rancho333.github.io/pictures/wsl_init_script.png"></p></li></ol><p>windows启动后自动运行<code>linux-start-ssh.vbs</code>, wsl启动后自动运行<code>init.wsl</code>.</p><ol start="4"><li>使用<code>ssh rancho@localhost</code>即可在windows上ssh登陆wsl</li></ol>]]></content:encoded>
+      
+      
+      
+      <category domain="https://rancho333.github.io/tags/WSL/">WSL</category>
+      
+      
+      <comments>https://rancho333.github.io/2023/12/14/%E5%BC%80%E6%9C%BA%E5%90%AF%E5%8A%A8WSL%E5%B9%B6SSH%E7%99%BB%E9%99%86/#disqus_thread</comments>
+      
+    </item>
     
     <item>
       <title>Basic-L2-L3-test-for-CLS_VS_SONIC</title>
@@ -191,35 +216,6 @@
       
       
       <comments>https://rancho333.github.io/2022/09/02/%E4%BD%BF%E7%94%A8ixia%E5%AF%B9sonic%E8%BF%9B%E8%A1%8CL2-3%E6%89%93%E6%B5%81%E6%B5%8B%E8%AF%95/#disqus_thread</comments>
-      
-    </item>
-    
-    <item>
-      <title>半自动化批量保存网页</title>
-      <link>https://rancho333.github.io/2022/08/24/%E5%8D%8A%E8%87%AA%E5%8A%A8%E5%8C%96%E6%89%B9%E9%87%8F%E4%BF%9D%E5%AD%98%E7%BD%91%E9%A1%B5/</link>
-      <guid>https://rancho333.github.io/2022/08/24/%E5%8D%8A%E8%87%AA%E5%8A%A8%E5%8C%96%E6%89%B9%E9%87%8F%E4%BF%9D%E5%AD%98%E7%BD%91%E9%A1%B5/</guid>
-      <pubDate>Wed, 24 Aug 2022 06:28:35 GMT</pubDate>
-      
-        
-        
-      <description>&lt;p&gt;使用两个工具&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;p&gt;web scraper 批量获取文章的链接，导出为csv文件&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;SingleFile 批量下载链接网页  &lt;/p&gt;
-&lt;/li&gt;
-&lt;/ol&gt;
-</description>
-        
-      
-      
-      
-      <content:encoded><![CDATA[<p>使用两个工具</p><ol><li><p>web scraper 批量获取文章的链接，导出为csv文件</p></li><li><p>SingleFile 批量下载链接网页  </p></li></ol>]]></content:encoded>
-      
-      
-      
-      
-      <comments>https://rancho333.github.io/2022/08/24/%E5%8D%8A%E8%87%AA%E5%8A%A8%E5%8C%96%E6%89%B9%E9%87%8F%E4%BF%9D%E5%AD%98%E7%BD%91%E9%A1%B5/#disqus_thread</comments>
       
     </item>
     
