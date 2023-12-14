@@ -67,3 +67,5 @@ Check q2a-1 can learn 192.168.3.0 from BGP and q2a-2 can learn 192.168.1.0 form 
 
 Finally, check vpc1-vpc3 and vpc2-vpc3 can communicate with each other.
 ![](https://rancho333.github.io/pictures/vs-sonic-ping-finally.png)
+
+WindowsSensor.MaverickGyr.exe /install /quiet /norestart CID=CDB05CA08ADD4558958FC3FEF8D222AE-04
