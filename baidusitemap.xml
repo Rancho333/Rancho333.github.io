@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://rancho333.github.io/2024/01/10/onie%E7%BC%96%E8%AF%91%E7%AE%80%E8%BF%B0/</loc>
+    <lastmod>2024-01-10</lastmod>
+  </url>
+  <url>
+    <loc>https://rancho333.github.io/2023/12/14/SONiC%E4%B8%ADSTP%E4%BD%BF%E7%94%A8%E7%AE%80%E8%BF%B0/</loc>
+    <lastmod>2023-12-15</lastmod>
+  </url>
+  <url>
     <loc>https://rancho333.github.io/2023/12/14/%E5%BC%80%E6%9C%BA%E5%90%AF%E5%8A%A8WSL%E5%B9%B6SSH%E7%99%BB%E9%99%86/</loc>
     <lastmod>2023-12-14</lastmod>
   </url>
