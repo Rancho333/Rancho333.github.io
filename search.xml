@@ -2416,7 +2416,7 @@
 <li>单引号和双引号表示字符串的区别</li>
 <li>有的命令和<code>sudo</code>一起用就<code>command not found</code></li>
 </ol>
-<h1 id="标准输入和参数的区别"><a href="#标准输入和参数的区别" class="headerlink" title="标准输入和参数的区别"></a>标准输入和参数的区别</h1><p>最初遇到这个问题的时候是在shell下面使用<code>管道</code>操作，例如：<code>find ./ -name &quot;*.c&quot; | xargs grep -rn zhw</code>,这条命令的含义是：在当前路径下的所有<code>.c</code>文件中查找<code>zhw</code>关键字，注意这里在管道的右侧加了关键字<code>xargs</code>，表示将<code>find</code>找到的结果作为<em>参数</em>传递给<code>grep</code>，grep是不接受标准输入的。</p>
+<h1 id="标准输入和参数的区别"><a href="#标准输入和参数的区别" class="headerlink" title="标准输入和参数的区别"></a>标准输入和参数的区别</h1><p>最初遇到这个问题的时候是在shell下面使用<code>管道</code>操作，例如：<code>find ./ -name &quot;*.c&quot; | xargs grep -rn zhw</code>,这条命令的含义是：在当前路径下的所有<code>.c</code>文件中查找<code>zhw</code>关键字，注意这里在管道的右侧加了关键字<code>xargs</code>，表示将<code>find</code>找到的结果作为<em>参数</em>传递给<code>grep</code>，否则grep则是直接查找标准输入中的内容，加上xargs参数后则是查找文件中的内容。</p>
 <p>标准输入就是编程语言中诸如<code>scanf</code>或者<code>readline</code>获取到的信息；而参数是指程序的<code>main</code>函数传入的<code>args</code>字符串数组。管道符和重定向符都是将数据作为程序的标准输入，下面这个示例：<br><img src="https://rancho333.github.io/pictures/grep.png"></p>
 <ol>
 <li>grep要搜索的文件作为参数是可选的，<code>-r</code>可以在当前路径下递归查找</li>
