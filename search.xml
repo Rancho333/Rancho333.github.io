@@ -2225,7 +2225,7 @@
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">root@client:&#x2F;# ifconfig eth0</span><br><span class="line">eth0      Link encap:Ethernet  HWaddr 50:00:00:03:00:00  </span><br><span class="line">          inet addr:192.168.0.11  Bcast:192.168.0.255  Mask:255.255.255.0</span><br><span class="line">          inet6 addr: fe80::5200:ff:fe03:0&#x2F;64 Scope:Link</span><br><span class="line">          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1</span><br><span class="line">          RX packets:1265 errors:0 dropped:0 overruns:0 frame:0</span><br><span class="line">          TX packets:1245 errors:0 dropped:0 overruns:0 carrier:0</span><br><span class="line">          collisions:0 txqueuelen:1000 </span><br><span class="line">          RX bytes:2892497 (2.7 MiB)  TX bytes:105530 (103.0 KiB)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
 <p>此时client可以正常访问<code>www.baidu.com</code>, 但是无法访问google.</p>
-<h2 id="OpenClash部署"><a href="#OpenClash部署" class="headerlink" title="OpenClash部署"></a>OpenClash部署</h2><p>这个版本的openwrt中并没有直接集成Openwrt, 按照下面的命令进行安装。</p>
+<h2 id="OpenClash部署"><a href="#OpenClash部署" class="headerlink" title="OpenClash部署"></a>OpenClash部署</h2><p>这个版本的openwrt中并没有直接集成OpenClash, 按照下面的命令进行安装。</p>
 <p>安装iptables及依赖。也可以使用nftables.</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">opkg update</span><br><span class="line">opkg install bash iptables dnsmasq-full curl ca-bundle ipset ip-full iptables-mod-tproxy iptables-mod-extra ruby ruby-yaml kmod-tun kmod-inet-diag unzip luci-compat luci luci-base</span><br></pre></td></tr></table></figure>
 
@@ -2234,7 +2234,7 @@
 <p>注意去github上下载最新的版本，不然安装好还要更新。</p>
 <p>之后就可以在网页上看到openclash服务。<br><img src="https://rancho333.github.io/pictures/eveng_openwrt-openclash.png"></p>
 <p>在配置订阅中添加自己的机场订阅链接.<br><img src="https://rancho333.github.io/pictures/eveng_openclash-subscribe.png"></p>
-<p>之后做几处设置：<code>Plugin Setting  ——&gt;  DNS setting</code> 中关闭 <code>Redirect Local DNS Setting</code><br>确保<code>Traffic Control</code>中的<code>Wan interface name</code>列表式空。</p>
+<p>之后做几处设置：<code>Plugin Setting  ——&gt;  DNS setting</code> 中关闭 <code>Redirect Local DNS Setting</code><br>确保<code>Traffic Control</code>中的<code>Wan interface name</code>列表是空。</p>
 <h2 id="外网测试"><a href="#外网测试" class="headerlink" title="外网测试"></a>外网测试</h2><p>配置完成之后，openclash页面中的Access Check可以全部pass.<br><img src="https://rancho333.github.io/pictures/eveng_openclash-access.png"></p>
 <p>在client上测试能够正常访问google.<br><img src="https://rancho333.github.io/pictures/eveng_openclash-google.png"></p>
 ]]></content>
