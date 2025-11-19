@@ -41,7 +41,7 @@ eth0      Link encap:Ethernet  HWaddr 50:00:00:03:00:00
 
 ## OpenClash部署
 
-这个版本的openwrt中并没有直接集成Openwrt, 按照下面的命令进行安装。
+这个版本的openwrt中并没有直接集成OpenClash, 按照下面的命令进行安装。
 
 安装iptables及依赖。也可以使用nftables.
 ```
@@ -63,7 +63,7 @@ opkg install openclash.ipk
 ![](https://rancho333.github.io/pictures/eveng_openclash-subscribe.png)
 
 之后做几处设置：`Plugin Setting  ——>  DNS setting` 中关闭 `Redirect Local DNS Setting`
-确保`Traffic Control`中的`Wan interface name`列表式空。
+确保`Traffic Control`中的`Wan interface name`列表是空。
 
 ## 外网测试
 
