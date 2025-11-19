@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/pictures/R-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/pictures/R-16x16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"rancho333.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="写在前面最初，SONiC的所有测试用例都是用ansible playbook写的。2019年开始使用pytest， 2020年9月份之后，只有用pytest写的测试用例才被采纳。但是ansible依然很重要，pytest-ansible插件连接pytest与ansible。pytest通过ansible进行多设备协同工作。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="sonic-testbed">
+<meta property="og:url" content="https://rancho333.github.io/2020/12/18/sonic-testbed/index.html">
+<meta property="og:site_name" content="Rancho Blog">
+<meta property="og:description" content="写在前面最初，SONiC的所有测试用例都是用ansible playbook写的。2019年开始使用pytest， 2020年9月份之后，只有用pytest写的测试用例才被采纳。但是ansible依然很重要，pytest-ansible插件连接pytest与ansible。pytest通过ansible进行多设备协同工作。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://rancho333.github.io/pictures/physical-topology.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/testbed-server.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/testbed-direct.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/testbed-injected.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/testbed-t1.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/testbed-t1-lag.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/testbed-ptf32.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/testbed-ptf64.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/testbed-t0.png">
+<meta property="article:published_time" content="2020-12-18T15:29:56.000Z">
+<meta property="article:modified_time" content="2025-11-19T01:41:17.840Z">
+<meta property="article:author" content="Rancho">
+<meta property="article:tag" content="SONiC">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://rancho333.github.io/pictures/physical-topology.png">
+
+<link rel="canonical" href="https://rancho333.github.io/2020/12/18/sonic-testbed/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>sonic-testbed | Rancho Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/rss2.xml" title="Rancho Blog" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Rancho Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">知行合一，致良知！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>公益 404</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/Rancho333" class="github-corner" title="Rancho&#39;s GitHub" aria-label="Rancho&#39;s GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2020/12/18/sonic-testbed/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/pictures/R-W.png">
+      <meta itemprop="name" content="Rancho">
+      <meta itemprop="description" content="No pain, no gain!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rancho Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          sonic-testbed
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-12-18 15:29:56" itemprop="dateCreated datePublished" datetime="2020-12-18T15:29:56+00:00">2020-12-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-11-19 01:41:17" itemprop="dateModified" datetime="2025-11-19T01:41:17+00:00">2025-11-19</time>
+              </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+            <span class="post-meta-divider">|</span>
+<span title="post.wordcount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span>字数： 3.8k</span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>最初，SONiC的所有测试用例都是用ansible playbook写的。2019年开始使用pytest， 2020年9月份之后，只有用pytest写的测试用例才被采纳。<br>但是ansible依然很重要，pytest-ansible插件连接pytest与ansible。pytest通过ansible进行多设备协同工作。</p>
+<span id="more"></span>
+<h2 id="物理拓扑"><a href="#物理拓扑" class="headerlink" title="物理拓扑"></a>物理拓扑</h2><p><img src="https://rancho333.github.io/pictures/physical-topology.png"></p>
+<ol>
+<li>DUT和leaf fanout的端口一一互联</li>
+<li>leaf fanout与DUT相连的端口进行VLAN隔离</li>
+<li>root fanout连接leaf fanout与testbed server</li>
+<li>root fanout的端口工作在vlan trunk模式下</li>
+<li>任一testbed server可以发送带有vlan tag的包到达DUT端口（root fanout的trunk口需要使能该vlan tag）</li>
+</ol>
+<h3 id="Fanout-switch"><a href="#Fanout-switch" class="headerlink" title="Fanout switch"></a>Fanout switch</h3><p><em>Fanout switch是使能了vlan trunking的物理交换机</em></p>
+<ul>
+<li>Et33是一个vlan trunking端口，并且和linux host的eth0连接</li>
+<li>Et1-Et32是vlan access端口，并且与DUT连接</li>
+<li>使能LACP/LLDP</li>
+<li>关闭STP功能</li>
+</ul>
+<h3 id="Testbed-server"><a href="#Testbed-server" class="headerlink" title="Testbed server"></a>Testbed server</h3><p><img src="https://rancho333.github.io/pictures/testbed-server.png"></p>
+<h4 id="网络连接"><a href="#网络连接" class="headerlink" title="网络连接"></a>网络连接</h4><ul>
+<li>testbed server有两个网络接口<ul>
+<li>trunk端口连接root fanout</li>
+<li>management port管理服务器以及服务器上的VMs和PTF容器</li>
+</ul>
+</li>
+</ul>
+<h3 id="VMs"><a href="#VMs" class="headerlink" title="VMs"></a>VMs</h3><p>VMs使用的是Arista的vEOS。它们用来设置测试协议，例如BGP、LACP、LLDP等。它们通过<code>testbed-cli.sh start-vms</code>进行创建。每一个VM使用2G内存并且拥有10个网络接口。<br>    * 8个前面板端口。这些端口用来连接到openvswitch网桥，连接到vlan interfaces.vlan interface通过物理接口连接到fanout。<br>    * 一个后背板端口。所有VMs通过这个背板口互联。<br>    * 一个管理网口。用来管理VMs.</p>
+<h3 id="PTF"><a href="#PTF" class="headerlink" title="PTF"></a>PTF</h3><p>PTF容器通过发送和接收数据包来验证DUT的数据面。<br>PTF with direct port<br><img src="https://rancho333.github.io/pictures/testbed-direct.png"></p>
+<p>DUT的前面板口直连到一个PTF容器的端口。一般的PTF容器的eth0连接到DUT的Ethernet0，eth1连接到Ethernet4。这一般在PTF拓扑中用来连接DUT端口和PTF容器端口。</p>
+<p><img src="https://rancho333.github.io/pictures/testbed-injected.png"></p>
+<p>DUT的前面板口和一个VM的接口直连。但是我们在这个连接上有个tap。从vlan interface中收到的包被发送给VMs和PTF容器。从VM和PTF容器中发出的包被送到vlan interface。这允许我们可以同时从PTF host往DUT注入包和维持VM与DUT之间的BGP会话。</p>
+<h3 id="SONiC-Tested-with-keysight-IxNetwork-as-Traffic-Generator"><a href="#SONiC-Tested-with-keysight-IxNetwork-as-Traffic-Generator" class="headerlink" title="SONiC Tested with keysight IxNetwork as Traffic Generator"></a>SONiC Tested with keysight IxNetwork as Traffic Generator</h3><p>TO BE DONE！！</p>
+<h2 id="Testbed设置"><a href="#Testbed设置" class="headerlink" title="Testbed设置"></a>Testbed设置</h2><p>下面讲述testbed的设置步骤以及拓扑的部署。</p>
+<h3 id="准备testbed服务器"><a href="#准备testbed服务器" class="headerlink" title="准备testbed服务器"></a>准备testbed服务器</h3><ul>
+<li>系统要求：ubuntu 18.04 amd64</li>
+<li>设置管理口，使用如下示例：<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">root@server-1:~# cat &#x2F;etc&#x2F;network&#x2F;interfaces</span><br><span class="line"># The management network interface</span><br><span class="line">auto ma0</span><br><span class="line">iface ma0 inet manual</span><br><span class="line"></span><br><span class="line"># Server, VM and PTF management interface</span><br><span class="line">auto br1</span><br><span class="line">iface br1 inet static</span><br><span class="line">    bridge_ports ma0</span><br><span class="line">    bridge_stp off</span><br><span class="line">    bridge_maxwait 0</span><br><span class="line">    bridge_fd 0</span><br><span class="line">    address 10.250.0.245</span><br><span class="line">    netmask 255.255.255.0</span><br><span class="line">    network 10.250.0.0</span><br><span class="line">    broadcast 10.250.0.255</span><br><span class="line">    gateway 10.250.0.1</span><br><span class="line">    dns-nameservers 10.250.0.1 10.250.0.2</span><br><span class="line">    # dns-* options are implemented by the resolvconf package, if installed</span><br></pre></td></tr></table></figure></li>
+<li>安装python2.7（Ansible需要）</li>
+<li>添加Docker的官方GPG key：<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ curl -fsSL https:&#x2F;&#x2F;download.docker.com&#x2F;linux&#x2F;ubuntu&#x2F;gpg | sudo apt-key add -</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="为docker-pth设置docker仓库"><a href="#为docker-pth设置docker仓库" class="headerlink" title="为docker-pth设置docker仓库"></a>为<code>docker-pth</code>设置docker仓库</h3><ol>
+<li>build <code>docker-pth</code>镜像<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git clone --recursive https:&#x2F;&#x2F;github.com&#x2F;Azure&#x2F;sonic-buildimage.git</span><br><span class="line">cd sonic-buildimage</span><br><span class="line">make configure PLATFORM&#x3D;generic</span><br><span class="line">make target&#x2F;docker-ptf.gz</span><br></pre></td></tr></table></figure></li>
+<li>设置自己的docker仓库并将<code>docker-ptf</code>上传</li>
+</ol>
+<h3 id="创建并且运行docker-sonic-mgmt"><a href="#创建并且运行docker-sonic-mgmt" class="headerlink" title="创建并且运行docker-sonic-mgmt"></a>创建并且运行<code>docker-sonic-mgmt</code></h3><p>管理testbed和运行测试用例需要很多依赖。将所有的依赖部署到<code>docker-sonic-mgmt</code>中，这样就可以很方便的使用<code>ansible-playbook</code>，<code>pytest</code>，<code>spytest</code>。</p>
+<ol>
+<li><p>构建<code>docker-sonic-mgmt</code>镜像</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git clone --recursive https:&#x2F;&#x2F;github.com&#x2F;Azure&#x2F;sonic-buildimage.git</span><br><span class="line">cd sonic-buildimage</span><br><span class="line">make configure PLATFORM&#x3D;generic</span><br><span class="line">make target&#x2F;docker-sonic-mgmt.gz</span><br></pre></td></tr></table></figure>
+<p>或者从<a target="_blank" rel="noopener" href="https://sonic-jenkins.westus2.cloudapp.azure.com/job/bldenv/job/docker-sonic-mgmt/lastSuccessfulBuild/artifact/sonic-buildimage/target/docker-sonic-mgmt.gz">这里</a>下载事先编译好的镜像。</p>
+</li>
+<li><p>克隆<code>sonic-mgmt</code>库到testbed server的工作目录</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone https:&#x2F;&#x2F;github.com&#x2F;Azure&#x2F;sonic-mgmt</span><br></pre></td></tr></table></figure></li>
+<li><p>创建<code>docker-sonic-mgmt</code>容器，注意需要将上面克隆的<code>sonic-mgmt</code>挂载到容器中去:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">docker load &lt; docker-sonic-mgmt.gz</span><br><span class="line">docker run -v $PWD:&#x2F;data -it docker-sonic-mgmt bash</span><br><span class="line">cd ~&#x2F;sonic-mgmt</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p><em>注意：之后的所有操作都是在<code>docker-sonic-mgmt</code>容器中操作</em></p>
+<h3 id="准备Testbed配置"><a href="#准备Testbed配置" class="headerlink" title="准备Testbed配置"></a>准备Testbed配置</h3><p>进入到容器之后，我们需要修改testbed的配置文件使之与实验拓扑映射起来。</p>
+<ul>
+<li><p>Testbed Server</p>
+<ul>
+<li>在<code>ansible/veos</code>中更新server的管理IP</li>
+<li>在<code>ansible/group_vars/vm_host/creds.yml</code>中更新server的凭证</li>
+<li>在<code>ansible/host_vars/STA-ACS-SERV-01.yml</code>中更新server的网络配置（for VMs和PTF management）<ul>
+<li><code>external_port</code>：server的trunk口名称（连接到fanout switch）</li>
+<li><code>mgmt_gw</code>：VM管理端口的网关IP</li>
+<li><code>mgmt_prefixlen</code>: 管理网口子网掩码</li>
+</ul>
+</li>
+<li>检查ansible可以与这个host连接<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ansible -m ping -i veos vm_host_1 </span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p>VMs</p>
+<ul>
+<li>从Arista下载<a target="_blank" rel="noopener" href="https://www.arista.com/en/support/software-download">vEOS</a></li>
+<li>将镜像文件拷贝到<code>ansible/veos</code><ul>
+<li><code>Aboot-veos-serial-8.0.0.iso</code></li>
+<li><code>vEOS-lab-4.20.15M.vmdk</code></li>
+</ul>
+</li>
+<li>将VM的IP地址更新到<code>ansible/veos</code>. 这个IP地址应该和定义的管理IP在同一个子网中</li>
+<li>在<code>ansible/group_vars/eos/creds.yml</code>中更新VM的凭证</li>
+</ul>
+</li>
+<li><p>PTF容器</p>
+<ul>
+<li>在<code>vars/docker_registry.yml</code>中更新docker仓库信息</li>
+</ul>
+</li>
+</ul>
+<h3 id="设置VMs"><a href="#设置VMs" class="headerlink" title="设置VMs"></a>设置VMs</h3><ol>
+<li>开启VMs：<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.&#x2F;testbed-cli.sh start-vms server_1 password.txt</span><br></pre></td></tr></table></figure>
+<code>password.txt</code>是ansible的密码文件，如果不使用直接创建一个空文件即可。</li>
+</ol>
+<ol start="2">
+<li>检查所有的VMs是否启动并且在运行中<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ansible -m ping -i veos server_1</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h3 id="部署Fanout交换机的Vlan"><a href="#部署Fanout交换机的Vlan" class="headerlink" title="部署Fanout交换机的Vlan"></a>部署Fanout交换机的Vlan</h3><p>在部署Fanout和运行测试用例之前需要明确环境中的所有物理连接。<br>在<code>roles/fanout</code>下的playbook只是用来部署Arista的Vlan配置。如果使用其它类型的交换机，请手动配置Vlan，或者部署一个2层交换机。</p>
+<h3 id="部署拓扑"><a href="#部署拓扑" class="headerlink" title="部署拓扑"></a>部署拓扑</h3><ul>
+<li>使用自己的数据更新<code>testbed.csv</code>。至少需要更新PTF管理接口的配置。</li>
+<li>部署拓扑请运行：<code>/testbed-cli.sh add-topo vms-t1 ~/.password</code></li>
+<li>移除拓扑请运行: <code>./testbed-cli.sh remove-topo vms-t1 ~/.password</code></li>
+</ul>
+<p>注意：<code>testbed-cli.sh</code>的最后一步试图在root fanout中重新部署vlan范围（与拓扑中规定的相匹配）。Arista的正常工作，其它型号的需要手动修改？</p>
+<h2 id="Docker容器设置"><a href="#Docker容器设置" class="headerlink" title="Docker容器设置"></a>Docker容器设置</h2><p>使用<code>setup-container.sh</code>脚本去自动创建和配置sonic-mgmt的docker容器。使用普通用户user创建即可。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">.&#x2F;setuo-container.sh -n container_name -i image_id -d directory</span><br><span class="line">image_id是在sonic-buildimage中创建的docker-sonic-mgmt.tar</span><br><span class="line">directory是主机与docker进行mount的文件夹</span><br></pre></td></tr></table></figure>
+<p>创建完dokcer容器之后，可以进入容器中：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker exec -u &lt;user&gt; -it &lt;container name&gt; bash</span><br></pre></td></tr></table></figure>
+
+<h2 id="KVM-testbed设置"><a href="#KVM-testbed设置" class="headerlink" title="KVM testbed设置"></a>KVM testbed设置</h2><p>可以给testbed创建虚拟的交换机，在上面部署T0拓扑，运行一个快速测试去验证是否符合预期。<br>即物理设备都虚拟化在服务器上，对内存资源要求比较高，我们现在使用物理设备连接，暂不研究这块内容。<br>这里面有vEOS与cEOS的介绍，分别是基于KVM和docker的技术。</p>
+<h2 id="cEOS"><a href="#cEOS" class="headerlink" title="cEOS"></a>cEOS</h2><p>如何使用cEOS作为DUT的邻居设备。<br>cEOS是容器化的EOS。所有的软件在容器中运行。与vEOS相比，cEOS内存暂用更少。</p>
+<h3 id="网络设置"><a href="#网络设置" class="headerlink" title="网络设置"></a>网络设置</h3><p>首先创建一个基容器<code>net_$&#123;testbed_name&#125;_$&#123;vm_name&#125;</code>，在基容器中创建6个以太口。然后在基容器基础上启动cEOS<code>ceos_$&#123;testbed_name&#125;_$&#123;vm_name&#125;</code>容器。这6个网口分别用来：</p>
+<ul>
+<li>一个管理网口</li>
+<li>4个前面板端口用来连接DUT</li>
+<li>一个背板口连接PTF容器<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">+------------+                      +----+</span><br><span class="line">|  cEOS  Ma0 +--------- VM0100-m ---+ br |</span><br><span class="line">|            |                      +----+</span><br><span class="line">|            |</span><br><span class="line">|            |                      +--------------+</span><br><span class="line">|        Et1 +----------VM0100-t0---+  br-VM0100-0 |</span><br><span class="line">|            |                      +--------------+</span><br><span class="line">|            |</span><br><span class="line">|            |                      +--------------+</span><br><span class="line">|        Et2 +----------VM0100-t1---+  br-VM0100-1 |</span><br><span class="line">|            |                      +--------------+</span><br><span class="line">|            |</span><br><span class="line">|            |                      +--------------+</span><br><span class="line">|        Et3 +----------VM0100-t2---+  br-VM0100-2 |</span><br><span class="line">|            |                      +--------------+</span><br><span class="line">|            |</span><br><span class="line">|            |                      +--------------+</span><br><span class="line">|        Et4 +----------VM0100-t3---+  br-VM0100-3 |</span><br><span class="line">|            |                      +--------------+</span><br><span class="line">|            |</span><br><span class="line">|            |                       +--------------+</span><br><span class="line">|        Et5 +----------VM0100-back--+  br-b-vms6-1 |</span><br><span class="line">|            |                       +--------------+</span><br><span class="line">+------------+</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h3><p>cEOS容器中的<code>/mnt/flash</code>挂载到主机的<code>/data/ceos/ceos_$&#123;testbed_name&#125;_$&#123;vm_name&#125;</code>。</p>
+<h3 id="登录"><a href="#登录" class="headerlink" title="登录"></a>登录</h3><p>两种方式登录到cEOS容器。</p>
+<ol>
+<li><p>docker exec</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker exec -it ceos_vms6-1_VM0100 Cli</span><br></pre></td></tr></table></figure></li>
+<li><p>ssh</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">lgh@jenkins-worker-15:~$ ssh admin@10.250.0.51</span><br><span class="line">Password: </span><br><span class="line">ARISTA01T1&gt;show int status</span><br><span class="line">Port       Name      Status       Vlan     Duplex Speed  Type            Flags Encapsulation</span><br><span class="line">Et1                  connected    in Po1   full   unconf EbraTestPhyPort                    </span><br><span class="line">Et2                  connected    1        full   unconf EbraTestPhyPort                    </span><br><span class="line">Et3                  connected    1        full   unconf EbraTestPhyPort                    </span><br><span class="line">Et4                  connected    1        full   unconf EbraTestPhyPort                    </span><br><span class="line">Et5        backplane connected    routed   full   unconf EbraTestPhyPort                    </span><br><span class="line">Ma0                  connected    routed   full   10G    10&#x2F;100&#x2F;1000                        </span><br><span class="line">Po1                  connected    routed   full   unconf N&#x2F;A                                </span><br><span class="line"></span><br><span class="line">ARISTA01T1&gt;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="testbed路由设计"><a href="#testbed路由设计" class="headerlink" title="testbed路由设计"></a>testbed路由设计</h2><p>下面说明testbed中的BGP路由设计。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">              +------+</span><br><span class="line">              +  VM  +---------+</span><br><span class="line">              +------+         |</span><br><span class="line">                               |</span><br><span class="line">              +------+         |</span><br><span class="line">              +  VM  +---------+</span><br><span class="line">              +------+         |</span><br><span class="line">+-------+                  +---+---+     </span><br><span class="line">|  PTF  +------------------+  DUT  |</span><br><span class="line">+-------+                  +---+---+</span><br><span class="line">              +------+         |</span><br><span class="line">              +  VM  +---------+</span><br><span class="line">              +------+         |</span><br><span class="line">                               |</span><br><span class="line">              +------+         |</span><br><span class="line">              +  VM  +---------+</span><br><span class="line">              +------+</span><br></pre></td></tr></table></figure>
+<p>在这个拓扑中，VMs（vEOS）充当DUT的BGP邻居。VMs生成并且宣告BGP路由给DUT.这种方式有几个问题：</p>
+<ul>
+<li>在vEOS很难生成任意路由，例如，写一个复杂的路由表，过滤生成需要的路由</li>
+<li>消耗很多内存在vENOS中</li>
+<li>特定的NOS规则。如果我们打算从VN切换到SONiC，我们需要重写所有的路由表。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">              +------+</span><br><span class="line">    +---------+  VM  +---------+</span><br><span class="line">    |         +------+         |</span><br><span class="line">    |                          |</span><br><span class="line">    |         +------+         |</span><br><span class="line">    +---------+  VM  +---------+</span><br><span class="line">    |         +------+         |</span><br><span class="line">+---+---+                  +---+---+     </span><br><span class="line">|  PTF  |                  |  DUT  |</span><br><span class="line">+---+---+                  +---+---+</span><br><span class="line">    |         +------+         |</span><br><span class="line">    +---------+  VM  +---------+</span><br><span class="line">    |         +------+         |</span><br><span class="line">    |                          |</span><br><span class="line">    |         +------+         |</span><br><span class="line">    +---------+  VM  +---------+</span><br><span class="line">              +------+</span><br></pre></td></tr></table></figure>
+新的方法是将VM作为一个透传设备，我们在PTF容器上运行exabgp,exabgp通告如有信息给VM，VM再将路由信息通告给DUT。这种方式有几个好处：</li>
+<li>VM模板变得简单很多。只有基础的端口，lag，BGP配置</li>
+<li>VM的内存开销变小</li>
+<li>exbgp可以生成复杂路由条目</li>
+<li>容易支持不同的NOS作为邻居设备，例如SONiC vm</li>
+</ul>
+<h2 id="拓扑"><a href="#拓扑" class="headerlink" title="拓扑"></a>拓扑</h2><ol>
+<li>配置testbed的拓扑定义在一个文件中：<code>testbed.csv</code></li>
+<li>一个脚本去操作所有的testbed:<code>testbed-cli.sh</code></li>
+<li>灵活的拓扑允许将VM_SET和PTF容器作为一个实体看待</li>
+<li>所有的VM管理网口ip定义在：<code>veos</code></li>
+<li>PTF容器在所有拓扑中被使用</li>
+<li>自动构建fanout switch的配置（需要被重构）</li>
+<li>请看示例模块如果你想设置任意的testbed的拓扑</li>
+</ol>
+<h3 id="testbed拓扑配置"><a href="#testbed拓扑配置" class="headerlink" title="testbed拓扑配置"></a>testbed拓扑配置</h3><ul>
+<li><code>testbed.csv</code>文件由以下组成：<ul>
+<li>物理拓扑；VMs和PTF容器的端口如何与DUT连接</li>
+<li>VMs的配置模板</li>
+</ul>
+</li>
+<li>拓扑在<code>vars/topo_*.yml</code>文件中</li>
+<li>当前的拓扑有：<ul>
+<li>t1:32个VMs + 用来端口注入的PTF容器</li>
+<li>t1-lag：24个VMs + 用来端口注入的PTF容器。其中8个VMs在每一LAG中有两个端口</li>
+<li>ptf32: 拥有32个个端口的PTF容器与DUT端口直连</li>
+<li>ptf64: 和ptf32相同，但是拥有64个端口</li>
+<li>t0：4个VMs + PTF容器（4个用来端口注入，28个用来直连DUT）</li>
+</ul>
+</li>
+</ul>
+<h3 id="当前的拓扑"><a href="#当前的拓扑" class="headerlink" title="当前的拓扑"></a>当前的拓扑</h3><h4 id="t1"><a href="#t1" class="headerlink" title="t1"></a>t1</h4><p><img src="https://rancho333.github.io/pictures/testbed-t1.png"></p>
+<ul>
+<li>需要32个VMs</li>
+<li>所有的DUT端口直连VMs</li>
+<li>PTF容器只有注入端口</li>
+</ul>
+<h4 id="t1-lag"><a href="#t1-lag" class="headerlink" title="t1-lag"></a>t1-lag</h4><p><img src="https://rancho333.github.io/pictures/testbed-t1-lag.png"></p>
+<ul>
+<li>需要24个VMs</li>
+<li>所有的DUT端口直连VMs</li>
+<li>PTF容器只有注入端口</li>
+</ul>
+<h4 id="ptf32"><a href="#ptf32" class="headerlink" title="ptf32"></a>ptf32</h4><p><img src="https://rancho333.github.io/pictures/testbed-ptf32.png"></p>
+<ul>
+<li>不需要VMs</li>
+<li>所有的DUT端口直连PTF容器</li>
+<li>PTF容器没有注入端口</li>
+</ul>
+<h4 id="ptf64"><a href="#ptf64" class="headerlink" title="ptf64"></a>ptf64</h4><p><img src="https://rancho333.github.io/pictures/testbed-ptf64.png"><br>和ptf32一样</p>
+<h4 id="t0"><a href="#t0" class="headerlink" title="t0"></a>t0</h4><p><img src="https://rancho333.github.io/pictures/testbed-t0.png"></p>
+<ul>
+<li>需要4个VMs</li>
+<li>4个DUT端口连接到VMs</li>
+<li>PTF容器有4个注入端口与28个直连端口</li>
+</ul>
+<h2 id="testbed配置"><a href="#testbed配置" class="headerlink" title="testbed配置"></a>testbed配置</h2><h3 id="testbed清单"><a href="#testbed清单" class="headerlink" title="testbed清单"></a>testbed清单</h3><ul>
+<li><code>ansible/lab</code>：包含实验的所有DUTs， fanout switch, testbed server拓扑</li>
+<li><code>ansible/veos</code>：所有的server和VMs</li>
+</ul>
+<h3 id=""><a href="#" class="headerlink" title=""></a></h3><h2 id="Sonic-Mgmt-testbed设置"><a href="#Sonic-Mgmt-testbed设置" class="headerlink" title="Sonic-Mgmt testbed设置"></a>Sonic-Mgmt testbed设置</h2><p>从github上将sonic testbed设置到自己的环境中将会是一个冗长的过程。在将测试用例跑起来之前有十多个文件需要更新。<br>然而，这个过程可以通过testbed.yaml和TestbedProcessing.py自动完成。testbed.yaml是一个配置文件（编译所有需要运行testcase的数据到一个文件中）。TestbedProcess.py的工作原理是：从配置文件拉取信息，然后将信息推送到它们属于的文件中去。这篇指南将会勾勒并简易化testbed的设置。</p>
+<h3 id="目标"><a href="#目标" class="headerlink" title="目标"></a>目标</h3><p>通过使用testbed.yaml和TestbedProcessing.py来完成testbed的设置。这篇指南结束后，应该完成sonic-mgmt testbed的设置并且将testcases跑起来。</p>
+<h3 id="预迁移设置"><a href="#预迁移设置" class="headerlink" title="预迁移设置"></a>预迁移设置</h3><p> sonic-mgmt启动并运行测试用例需要下述的设备：</p>
+<ul>
+<li>Linux服务器</li>
+<li>root fanout</li>
+<li>leaf fanout</li>
+<li>DUT (device under test)<br>testbed的信息和拓扑可以从overview中获取到。</li>
+</ul>
+<h3 id="修改-Testbed-yaml配置文件"><a href="#修改-Testbed-yaml配置文件" class="headerlink" title="修改 Testbed.yaml配置文件"></a>修改 Testbed.yaml配置文件</h3><p>在testbed.yaml中有7个主要的部分需要编辑：</p>
+<ol>
+<li>device_groups</li>
+<li>devices</li>
+<li>host_vars</li>
+<li>veos_groups</li>
+<li>veos</li>
+<li>testbed</li>
+<li>topology<br>每一部分文件的作用都需要按顺序的写好。具体信息在Sonic-Mgmt testbed Configuration中有描述</li>
+</ol>
+<p>对于testbed.yaml文件（在ansible下面有个testbed-new.yaml文件）：</p>
+<h4 id="（可选）testbed-config部分："><a href="#（可选）testbed-config部分：" class="headerlink" title="（可选）testbed_config部分："></a>（可选）testbed_config部分：</h4><ul>
+<li>name - 给testbed配置文件选择一个名字</li>
+<li>alias - 给testbed配置文件选择一个别名</li>
+</ul>
+<h5 id="device-groups部分"><a href="#device-groups部分" class="headerlink" title="device_groups部分"></a>device_groups部分</h5><p>用法：lab</p>
+<p>device_group部分生成lab文件，是用来设置testbed的的必须清单文件。配置文件的格式是yaml格式，脚本会将之转换成INI格式。device_group部分包含实验室中所有DUTs, fanout switchs，testbed server拓扑。组子节点从下面的device部分介绍。在大多数情况下可以不用管这一部分。</p>
+<h4 id="devices部分"><a href="#devices部分" class="headerlink" title="devices部分"></a>devices部分</h4><p>用法：files/sonic_lab_devices, group_vars/fanout/secrets, group_vars/lab/secrets, lab</p>
+<p>device部分是包含所有设备和主机的字典。这部分不包含PTF容器的信息。关于PTF容器的信息，查看testbed.csv文件。<br>对每一个你添加的设备，添加下面的信息：</p>
+<table>
+<thead>
+<tr>
+<th>Hostname</th>
+<th>ansible_host</th>
+<th>ansible_ssh_user</th>
+<th>ansible_ssh_pass</th>
+<th>HwSKU</th>
+<th>device_type</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>str-msn2700-01</td>
+<td>[IP Address]</td>
+<td>[username]</td>
+<td>[password]</td>
+<td>DevSonic</td>
+<td>DevSonic</td>
+</tr>
+<tr>
+<td>str-7260-10</td>
+<td>[IP Address]</td>
+<td>[username]</td>
+<td>[password]</td>
+<td>Arista-7260QX-64</td>
+<td>FanoutRoot</td>
+</tr>
+<tr>
+<td>str-7260-10</td>
+<td>[IP Address]</td>
+<td>[username]</td>
+<td>[password]</td>
+<td>Arista-7260QX-64</td>
+<td>FanoutLeaf</td>
+</tr>
+<tr>
+<td>str-acs-serv-01</td>
+<td>[IP Address]</td>
+<td>[username]</td>
+<td>[password]</td>
+<td>TestServ</td>
+<td>Server</td>
+</tr>
+</tbody></table>
+<ul>
+<li>hostname - 设备名称</li>
+<li>ansible_host - 设备的管理IP</li>
+<li>ansible_ssh_user - 设备登录名称</li>
+<li>ansible_ssh_pass - 设备登录密码</li>
+<li>hesku - 这是用来查阅验证的值（在/group_vars/all/labinfo.json）。没有这部分，就爱那个会失败。确保这部分在labinfo.json中有准确的数据。</li>
+<li>device_type - 设备类型。如果只有4种设备，可以将提供标签留白不填写。</li>
+</ul>
+<p>lab server部分需要不同的字段输入：ansible_become_pass, sonicadmin_user(用户名), sonicadmin_password, sonic_inital_password. 这些字段是可选的，因为它们是直接从group_var/lab/secrets.yml中获取的变量。所以为了便利，这部分的配置文件作为一个拷贝。</p>
+<h4 id="host-vars部分"><a href="#host-vars部分" class="headerlink" title="host_vars部分"></a>host_vars部分</h4><p>用法：所有的host_val数据</p>
+<p>host的参数在此处设置。在这篇指南中，我们在此处定义server（str-acs-serv-01）：<br>对于每一个你添加的host，定义或确认如下数据：</p>
+<ul>
+<li>mgmt_bridge</li>
+<li>mgmt_prefixlen (这个应该和mgmt_subnet_mask_length匹配)</li>
+<li>mgmt_gw</li>
+<li>external_about</li>
+</ul>
+<h4 id="veos-groups部分"><a href="#veos-groups部分" class="headerlink" title="veos_groups部分"></a>veos_groups部分</h4><p>用法：veos</p>
+<h4 id="veos部分"><a href="#veos部分" class="headerlink" title="veos部分"></a>veos部分</h4><p>用法：group_vars/eos/cred, main.yml, group_vars/vm_host/creds</p>
+<h4 id="testbed部分"><a href="#testbed部分" class="headerlink" title="testbed部分"></a>testbed部分</h4><p>用法： testbed.csv</p>
+<h4 id="拓扑部分"><a href="#拓扑部分" class="headerlink" title="拓扑部分"></a>拓扑部分</h4><p>用法： files/sonic_lab_links.csv</p>
+<h4 id="docker-registry部分"><a href="#docker-registry部分" class="headerlink" title="docker_registry部分"></a>docker_registry部分</h4><p>用法： /vars/docker_registry.yml</p>
+<h3 id="testbed运行脚本"><a href="#testbed运行脚本" class="headerlink" title="testbed运行脚本"></a>testbed运行脚本</h3><p>当testbed.yaml文件配置好后，将TestbedProcess.py和testbed.yaml文件放在sonic-mgmt/ansible下面。</p>
+<p>运行TestbedProcessing.py脚本：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">python TestbedProcessing.py -i testbed.yaml</span><br><span class="line">options:</span><br><span class="line">-i &#x3D; 解析testbed.yaml文件</span><br><span class="line">-basedir &#x3D; 项目的根目录</span><br><span class="line">-backup &#x3D; 文件的备份文件夹</span><br></pre></td></tr></table></figure>
+
+<h4 id="VMS命令"><a href="#VMS命令" class="headerlink" title="VMS命令"></a>VMS命令</h4><p>开启VMS（使用vms_1）:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.&#x2F;testbed-cli.sh start-vms vms_1 password.txt</span><br></pre></td></tr></table></figure>
+<p>停止VMS（使用vms_1）:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.&#x2F;testbed-cli.sh stop-vms vms_1 password.txt</span><br></pre></td></tr></table></figure>
+
+<h3 id="部署（PTF32）拓扑容器"><a href="#部署（PTF32）拓扑容器" class="headerlink" title="部署（PTF32）拓扑容器"></a>部署（PTF32）拓扑容器</h3><p>在这篇指南中，将会使用testbed-cli.sh添加ptf32-1作为示例</p>
+<p>移除拓扑 ptf32-1:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.&#x2F;testbed-cli.sh remove-topo ptf32-1 password.txt</span><br></pre></td></tr></table></figure>
+
+<p>添加拓扑 ptf32-1:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.&#x2F;testbed-cli.sh add-topo ptf32-1 password.txt</span><br></pre></td></tr></table></figure>
+<p>可以使用”docker ps”或者”dokcer container ls”命令去检查是否添加或移除。</p>
+<h3 id="运行第一个测试用例（Neighbour）"><a href="#运行第一个测试用例（Neighbour）" class="headerlink" title="运行第一个测试用例（Neighbour）"></a>运行第一个测试用例（Neighbour）</h3><p>当VMs和ptf32-1拓扑成功添加后，第一个测试用例“neighbour”就可以运行起来了。testbed的名字和测试用例的名字需要通过变量声明出来。请检查一下，之后，playbook就可以运行了。<br>运行如下命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">export TESTBED_NAME&#x3D;ptf32-1</span><br><span class="line">export TESTCASE_NAME&#x3D;neighbour</span><br><span class="line">echo $TESTBED_NAME</span><br><span class="line">echo $TESTCASE_NAME</span><br><span class="line">ansible-playbook -i lab -l sonic-ag9032 test_sonic.ynl -e testbed_name&#x3D;$TESTBED_NAME -e testcase_name&#x3D;$TESTCASE_NAME</span><br></pre></td></tr></table></figure>
+
+<h2 id="排错"><a href="#排错" class="headerlink" title="排错"></a>排错</h2><p>问题：Testbed命令行提示没有password文件<br>解决方式：创建一个空的password文件去绕过这个问题</p>
+<p>问题：即使在我运行完stop-vms命令后IPs不可达<br>解决方式：如果运行了stop-vms命令后这个问题依然存在，运行如下命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">virsh</span><br><span class="line">list</span><br><span class="line">destory VM_Name (删除占用这个IP的VM)</span><br><span class="line">exit(退出virsh)，在永久删除这个IPs前请确保没有其它VM使用这个IPs</span><br></pre></td></tr></table></figure>
+
+<p>问题：任务设置失败。SSH Error：data could not be sent to the remote host<br>解决方式：导致这个现象的问题可能有很多。<br>    1. 确保这台主机可以通过SSH到达<br>    2. group_vars/all/lab_info.json文件中包含了正确的凭证吗？<br>    3. 设备在files/sonic_lab_devices.cav中有正确的hwsku吗？<br>    4. 确保lab文件中在IPs后面没有”/“，INI文件无法识别<br>    5. 重新检查testbed.yaml配置文件，是否获取了IPs和正确的凭证</p>
+
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Rancho
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://rancho333.github.io/2020/12/18/sonic-testbed/" title="sonic-testbed">https://rancho333.github.io/2020/12/18/sonic-testbed/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/SONiC/" rel="tag"># SONiC</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/12/15/SONiC%E7%BC%96%E8%AF%91%E7%AE%80%E8%BF%B0%E5%8F%8A%E4%BC%98%E5%8C%96/" rel="prev" title="SONiC编译简述及优化">
+      <i class="fa fa-chevron-left"></i> SONiC编译简述及优化
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/12/21/%E5%8A%A0%E5%BC%98%E8%B7%91%E5%9B%A2/" rel="next" title="加弘跑团">
+      加弘跑团 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="nav-number">1.</span> <span class="nav-text">写在前面</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%A9%E7%90%86%E6%8B%93%E6%89%91"><span class="nav-number">1.1.</span> <span class="nav-text">物理拓扑</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Fanout-switch"><span class="nav-number">1.1.1.</span> <span class="nav-text">Fanout switch</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Testbed-server"><span class="nav-number">1.1.2.</span> <span class="nav-text">Testbed server</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">网络连接</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#VMs"><span class="nav-number">1.1.3.</span> <span class="nav-text">VMs</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PTF"><span class="nav-number">1.1.4.</span> <span class="nav-text">PTF</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SONiC-Tested-with-keysight-IxNetwork-as-Traffic-Generator"><span class="nav-number">1.1.5.</span> <span class="nav-text">SONiC Tested with keysight IxNetwork as Traffic Generator</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Testbed%E8%AE%BE%E7%BD%AE"><span class="nav-number">1.2.</span> <span class="nav-text">Testbed设置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%86%E5%A4%87testbed%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">1.2.1.</span> <span class="nav-text">准备testbed服务器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BAdocker-pth%E8%AE%BE%E7%BD%AEdocker%E4%BB%93%E5%BA%93"><span class="nav-number">1.2.2.</span> <span class="nav-text">为docker-pth设置docker仓库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E5%B9%B6%E4%B8%94%E8%BF%90%E8%A1%8Cdocker-sonic-mgmt"><span class="nav-number">1.2.3.</span> <span class="nav-text">创建并且运行docker-sonic-mgmt</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%86%E5%A4%87Testbed%E9%85%8D%E7%BD%AE"><span class="nav-number">1.2.4.</span> <span class="nav-text">准备Testbed配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AEVMs"><span class="nav-number">1.2.5.</span> <span class="nav-text">设置VMs</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2Fanout%E4%BA%A4%E6%8D%A2%E6%9C%BA%E7%9A%84Vlan"><span class="nav-number">1.2.6.</span> <span class="nav-text">部署Fanout交换机的Vlan</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%E6%8B%93%E6%89%91"><span class="nav-number">1.2.7.</span> <span class="nav-text">部署拓扑</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Docker%E5%AE%B9%E5%99%A8%E8%AE%BE%E7%BD%AE"><span class="nav-number">1.3.</span> <span class="nav-text">Docker容器设置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#KVM-testbed%E8%AE%BE%E7%BD%AE"><span class="nav-number">1.4.</span> <span class="nav-text">KVM testbed设置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cEOS"><span class="nav-number">1.5.</span> <span class="nav-text">cEOS</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E8%AE%BE%E7%BD%AE"><span class="nav-number">1.5.1.</span> <span class="nav-text">网络设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE"><span class="nav-number">1.5.2.</span> <span class="nav-text">配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%99%BB%E5%BD%95"><span class="nav-number">1.5.3.</span> <span class="nav-text">登录</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#testbed%E8%B7%AF%E7%94%B1%E8%AE%BE%E8%AE%A1"><span class="nav-number">1.6.</span> <span class="nav-text">testbed路由设计</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8B%93%E6%89%91"><span class="nav-number">1.7.</span> <span class="nav-text">拓扑</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#testbed%E6%8B%93%E6%89%91%E9%85%8D%E7%BD%AE"><span class="nav-number">1.7.1.</span> <span class="nav-text">testbed拓扑配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BD%93%E5%89%8D%E7%9A%84%E6%8B%93%E6%89%91"><span class="nav-number">1.7.2.</span> <span class="nav-text">当前的拓扑</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#t1"><span class="nav-number">1.7.2.1.</span> <span class="nav-text">t1</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#t1-lag"><span class="nav-number">1.7.2.2.</span> <span class="nav-text">t1-lag</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ptf32"><span class="nav-number">1.7.2.3.</span> <span class="nav-text">ptf32</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ptf64"><span class="nav-number">1.7.2.4.</span> <span class="nav-text">ptf64</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#t0"><span class="nav-number">1.7.2.5.</span> <span class="nav-text">t0</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#testbed%E9%85%8D%E7%BD%AE"><span class="nav-number">1.8.</span> <span class="nav-text">testbed配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#testbed%E6%B8%85%E5%8D%95"><span class="nav-number">1.8.1.</span> <span class="nav-text">testbed清单</span></a></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">1.8.2.</span> <span class="nav-text"></span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Sonic-Mgmt-testbed%E8%AE%BE%E7%BD%AE"><span class="nav-number">1.9.</span> <span class="nav-text">Sonic-Mgmt testbed设置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%AE%E6%A0%87"><span class="nav-number">1.9.1.</span> <span class="nav-text">目标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A2%84%E8%BF%81%E7%A7%BB%E8%AE%BE%E7%BD%AE"><span class="nav-number">1.9.2.</span> <span class="nav-text">预迁移设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9-Testbed-yaml%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">1.9.3.</span> <span class="nav-text">修改 Testbed.yaml配置文件</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%EF%BC%88%E5%8F%AF%E9%80%89%EF%BC%89testbed-config%E9%83%A8%E5%88%86%EF%BC%9A"><span class="nav-number">1.9.3.1.</span> <span class="nav-text">（可选）testbed_config部分：</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#device-groups%E9%83%A8%E5%88%86"><span class="nav-number">1.9.3.1.1.</span> <span class="nav-text">device_groups部分</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#devices%E9%83%A8%E5%88%86"><span class="nav-number">1.9.3.2.</span> <span class="nav-text">devices部分</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#host-vars%E9%83%A8%E5%88%86"><span class="nav-number">1.9.3.3.</span> <span class="nav-text">host_vars部分</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#veos-groups%E9%83%A8%E5%88%86"><span class="nav-number">1.9.3.4.</span> <span class="nav-text">veos_groups部分</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#veos%E9%83%A8%E5%88%86"><span class="nav-number">1.9.3.5.</span> <span class="nav-text">veos部分</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#testbed%E9%83%A8%E5%88%86"><span class="nav-number">1.9.3.6.</span> <span class="nav-text">testbed部分</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8B%93%E6%89%91%E9%83%A8%E5%88%86"><span class="nav-number">1.9.3.7.</span> <span class="nav-text">拓扑部分</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#docker-registry%E9%83%A8%E5%88%86"><span class="nav-number">1.9.3.8.</span> <span class="nav-text">docker_registry部分</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#testbed%E8%BF%90%E8%A1%8C%E8%84%9A%E6%9C%AC"><span class="nav-number">1.9.4.</span> <span class="nav-text">testbed运行脚本</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#VMS%E5%91%BD%E4%BB%A4"><span class="nav-number">1.9.4.1.</span> <span class="nav-text">VMS命令</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%EF%BC%88PTF32%EF%BC%89%E6%8B%93%E6%89%91%E5%AE%B9%E5%99%A8"><span class="nav-number">1.9.5.</span> <span class="nav-text">部署（PTF32）拓扑容器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E7%AC%AC%E4%B8%80%E4%B8%AA%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B%EF%BC%88Neighbour%EF%BC%89"><span class="nav-number">1.9.6.</span> <span class="nav-text">运行第一个测试用例（Neighbour）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%92%E9%94%99"><span class="nav-number">1.10.</span> <span class="nav-text">排错</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Rancho"
+      src="/pictures/R-W.png">
+  <p class="site-author-name" itemprop="name">Rancho</p>
+  <div class="site-description" itemprop="description">No pain, no gain!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">83</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">45</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Rancho333" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Rancho333" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Rancho</span>
+</div>
+
+<div class="theme-info">
+  <div class="powered-by"></div>
+  <span class="post-count">全站共 118.8k 字</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/ Relative)","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"left","width":100,"height":180},"mobile":{"show":false},"react":{"opacityDefault":0.7}});</script></body>
+</html>

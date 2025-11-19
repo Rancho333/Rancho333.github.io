@@ -1,0 +1,974 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <url>
+    <loc>https://rancho333.github.io/2025/11/19/eveng%E4%B8%AD%E9%83%A8%E7%BD%B2openwrt/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/index.html</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2020/02/26/%E5%85%B3%E4%BA%8E%E5%8A%A8%E6%80%81%E5%BA%93%E4%BB%A5%E5%8F%8Aconstructor%E5%B1%9E%E6%80%A7%E7%9A%84%E4%BD%BF%E7%94%A8/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/01/05/%E5%85%B3%E4%BA%8E%E7%BB%88%E7%AB%AF%E5%9B%9E%E6%98%BE%E7%9A%84%E9%97%AE%E9%A2%98/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2020/12/21/%E5%8A%A0%E5%BC%98%E8%B7%91%E5%9B%A2/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/08/24/%E5%8D%8A%E8%87%AA%E5%8A%A8%E5%8C%96%E6%89%B9%E9%87%8F%E4%BF%9D%E5%AD%98%E7%BD%91%E9%A1%B5/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/07/12/%E5%8F%8C%E7%82%B9%E5%8F%8C%E5%90%91%E9%87%8D%E5%88%86%E5%B8%83/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/02/25/%E5%AF%B9SONiC%E9%A1%B9%E7%9B%AE%E7%9A%84%E8%AE%A4%E8%AF%86/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2023/12/14/%E5%BC%80%E6%9C%BA%E5%90%AF%E5%8A%A8WSL%E5%B9%B6SSH%E7%99%BB%E9%99%86/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/02/02/%E6%A0%91%E8%8E%93%E6%B4%BE%E5%81%9A%E4%B8%B2%E5%8F%A3%E6%9C%8D%E5%8A%A1%E5%99%A8/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/07/12/%E8%B7%AF%E7%94%B1%E6%A0%87%E8%AE%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2020/03/08/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%AD%98%E5%82%A8%E4%BD%93%E7%B3%BB/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2019/07/14/%E9%80%9A%E8%BF%87Hexo%E4%B8%8EGithub-io%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/about/index.html</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/categories/index.html</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/03/02/sonic-testbed%E7%9A%84%E7%90%86%E8%A7%A3/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/07/28/vpn%E6%8A%80%E6%9C%AF%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/10/13/vrf-lite-route-leaking/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/10/20/vrf%E7%AE%80%E8%BF%B0%E5%8F%8A%E4%BB%BF%E7%9C%9F%E5%AE%9E%E9%AA%8C/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2020/03/06/%E4%B8%80%E4%BA%9Bshell%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2020/03/10/%E4%B8%AD%E6%96%AD%E5%AD%A6%E4%B9%A0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/09/02/%E4%BD%BF%E7%94%A8ixia%E5%AF%B9sonic%E8%BF%9B%E8%A1%8CL2-3%E6%89%93%E6%B5%81%E6%B5%8B%E8%AF%95/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2019/07/25/%E5%85%B3%E4%BA%8EUbuntu%E7%9A%84%E8%BD%AF%E4%BB%B6%E6%BA%90source-list%E5%AD%A6%E4%B9%A0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2020/12/18/sonic-testbed/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/02/03/vxlan%E5%AD%A6%E4%B9%A0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2020/03/11/kernel%E7%BC%96%E8%AF%91%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2025/06/19/lab%E8%80%83%E8%AF%95%E5%9F%BA%E6%9C%AC%E4%BB%8B%E7%BB%8D%E5%8F%8A%E8%80%83%E9%A2%98%E5%88%86%E6%9E%901.2/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/02/09/mpls%E5%AD%A6%E4%B9%A0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/07/07/mstp802-1s%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/07/14/offset-list-and-pbr/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2024/01/10/onie%E7%BC%96%E8%AF%91%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/02/20/shell-tips-tricks/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/02/22/shell%E5%8F%98%E9%87%8F/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/02/22/shell%E6%A0%B8%E5%BF%83%E6%9C%BA%E5%88%B6%E4%B9%8B%E5%AD%90shell%E4%B8%8Eshell%E7%8E%AF%E5%A2%83/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/02/20/shell%E8%84%9A%E6%9C%AC%E6%89%A7%E8%A1%8C%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/02/20/shell%E8%AF%AD%E6%B3%95%E7%AE%80%E6%9E%90/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/02/23/shell%E9%87%8D%E5%AE%9A%E5%90%91/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/09/10/snake-traffic%E5%8E%9F%E7%90%86%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/07/07/VRRP%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/10/11/VTP%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/01/19/broadcom-sdk-cmd/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/07/07/glbp%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/09/06/eveng%E8%99%9A%E6%8B%9F%E7%BD%91%E7%BB%9C%E7%8E%AF%E5%A2%83%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2019/07/25/hexo%E4%B8%AD%E8%B8%A9%E8%BF%87%E7%9A%84%E5%9D%91/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/07/07/hsrp%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2019/09/10/igmp-snooping%E5%AD%A6%E4%B9%A0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/07/14/ip-sla/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/07/22/ipv6%E5%8D%95%E7%82%B9%E5%8F%8C%E5%90%91%E9%87%8D%E5%88%86%E5%B8%83/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/01/26/Systemd%E5%AD%A6%E4%B9%A0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/04/26/SONiC%E4%B8%ADARP%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B%E7%AE%80%E6%9E%90/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/04/23/SONiC%E4%B8%ADOSPF%E4%BD%BF%E7%94%A8%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2023/12/14/SONiC%E4%B8%ADSTP%E4%BD%BF%E7%94%A8%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/04/28/SONiC%E4%B8%ADVxlan-decap%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B%E7%AE%80%E6%9E%90/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/08/23/SONiC%E4%B8%ADcoredump%E8%B0%83%E8%AF%95/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/09/06/SONiC%E4%B8%ADsyncd%E8%B0%83%E7%94%A8SAI%E7%AE%80%E6%9E%90/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/07/21/SONiC%E4%B8%AD%E4%BA%A4%E6%8D%A2%E8%8A%AF%E7%89%87%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/01/29/SONiC%E5%90%AF%E5%8A%A8%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2020/12/31/SONiC%E6%B7%BB%E5%8A%A0%E6%96%B0%E7%9A%84device/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2020/12/15/SONiC%E7%BC%96%E8%AF%91%E7%AE%80%E8%BF%B0%E5%8F%8A%E4%BC%98%E5%8C%96/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/10/08/SONiC%E8%87%AA%E5%8A%A8%E5%8C%96%E7%BC%96%E8%AF%91%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/04/08/SONiC%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/07/07/STP802-1d%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2019/09/06/Linux%E7%A7%91%E5%AD%A6%E4%B8%8A%E7%BD%91%E8%AE%B0%E5%BD%95/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2020/03/16/Linux%E7%B3%BB%E7%BB%9F%E7%A7%BB%E6%A4%8D%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/02/08/Linux%E8%B7%AF%E7%94%B1%E4%BF%A1%E6%81%AF%E5%AD%A6%E4%B9%A0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2019/08/26/Makefile%E5%AD%A6%E4%B9%A0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2019/07/14/Markdown%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/04/19/OSPF%E5%AD%A6%E4%B9%A0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/10/12/PVLAN%E6%B5%85%E6%9E%90/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2023/03/27/Questone2A_25G_line_rate_test/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2023/04/03/Questone2A_snake_traffic_test/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/07/07/RSTP802-1w%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/08/19/SONiC%E4%B8%8A%E5%B1%82%E5%BA%94%E7%94%A8%E4%B9%8BSWSS/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/09/29/NAT%E7%AE%80%E8%BF%B0%E5%8F%8A%E4%BB%BF%E7%9C%9F%E5%AE%9E%E9%AA%8C/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/01/04/2021%E5%B9%B4%E5%A4%A9%E5%BC%98%E8%B7%91%E5%9B%A2%E6%95%B0%E6%8D%AE/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2023/09/07/Basic-L2-L3-test-for-CLS-VS-SONIC/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2020/03/03/C%E8%AF%AD%E8%A8%80%E5%BC%B1%E7%AC%A6%E5%8F%B7weak/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2020/03/02/ENOS%E4%B8%8A%E6%AE%B5%E9%94%99%E8%B0%83%E8%AF%95%E8%AE%B0%E5%BD%95/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/07/29/GRE%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2019/07/14/Hexo%E4%BD%BF%E7%94%A8%E4%BC%98%E5%8C%96/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2020/08/05/Linux%E4%B8%8B%E7%A8%8B%E5%BA%8F%E8%B0%83%E8%AF%95%E6%96%B9%E6%B3%95%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2021/01/26/Linux%E5%8F%8C%E7%BD%91%E5%8D%A1%E8%AE%BE%E7%BD%AE-%E5%86%85%E5%A4%96%E7%BD%91/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2020/03/09/Linux%E5%AF%86%E7%A0%81%E4%BF%AE%E6%94%B9/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2019/07/14/Linux%E6%9F%A5%E6%89%BEso%E6%96%87%E4%BB%B6%E6%89%80%E5%9C%A8pkg/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2020/12/25/ARP%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0%E5%8F%8A%E5%BA%94%E7%94%A8/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/2022/08/01/IPSec%E7%AE%80%E8%BF%B0/</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/404.html</loc>
+    
+    <lastmod>2025-11-19</lastmod>
+    
+  </url>
+  
+
+  <url>
+    <loc>https://rancho333.github.io/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/SONiC/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/%E5%BC%B1%E7%AC%A6%E5%8F%B7/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/%E6%AE%B5%E9%94%99%E8%AF%AF/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/vpn/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/Hexo/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/Linux/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/%E7%BD%91%E7%BB%9C/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/passwd/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/so%E6%96%87%E4%BB%B6/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/%E7%A7%91%E5%AD%A6%E4%B8%8A%E7%BD%91/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/%E7%B3%BB%E7%BB%9F%E7%A7%BB%E6%A4%8D/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/%E8%B7%AF%E7%94%B1/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/Markdown/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/%E9%80%9A%E4%BF%A1%E5%8D%8F%E8%AE%AE/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/STP/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/coredump/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/syncd/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/%E7%BC%96%E8%AF%91/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/jenkins/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/VRRP/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/eveng/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/openwrt/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/%E8%B8%A9%E5%9D%91/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/hexo/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/markdown/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/igmp-snooping/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/kernel/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/CCIE/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/routing/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/onie/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/shell/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/vrf/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/%E4%B8%AD%E6%96%AD/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/%E8%BD%AF%E4%BB%B6%E6%BA%90/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/%E5%8A%A8%E6%80%81%E5%BA%93so/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/attribute%E5%B1%9E%E6%80%A7/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/stty/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/%E8%B7%91%E6%AD%A5/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/AD/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/WSL/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/%E5%AD%98%E5%82%A8/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/flash/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/NAT/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/Systemd/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/tags/vxlan/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+
+  
+  <url>
+    <loc>https://rancho333.github.io/categories/Hexo/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/categories/Linux%E7%9B%B8%E5%85%B3/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/categories/Linux/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://rancho333.github.io/categories/SONiC/</loc>
+    <lastmod>2025-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+</urlset>

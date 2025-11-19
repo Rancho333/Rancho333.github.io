@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/pictures/R-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/pictures/R-16x16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"rancho333.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="写在前面在ENOS系统移植的过程中，对于Linux kernel，涉及到kernel的配置，编译，以及二进制镜像uImage的生成。这篇文章分为两块：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="kernel编译简述">
+<meta property="og:url" content="https://rancho333.github.io/2020/03/11/kernel%E7%BC%96%E8%AF%91%E7%AE%80%E8%BF%B0/index.html">
+<meta property="og:site_name" content="Rancho Blog">
+<meta property="og:description" content="写在前面在ENOS系统移植的过程中，对于Linux kernel，涉及到kernel的配置，编译，以及二进制镜像uImage的生成。这篇文章分为两块：">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://rancho333.github.io/pictures/arch.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/config.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/vmlinux.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/initramfs_kernel.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/kernel_initramfs.png">
+<meta property="article:published_time" content="2020-03-11T15:48:46.000Z">
+<meta property="article:modified_time" content="2025-11-19T01:41:17.839Z">
+<meta property="article:author" content="Rancho">
+<meta property="article:tag" content="kernel">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://rancho333.github.io/pictures/arch.png">
+
+<link rel="canonical" href="https://rancho333.github.io/2020/03/11/kernel%E7%BC%96%E8%AF%91%E7%AE%80%E8%BF%B0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>kernel编译简述 | Rancho Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/rss2.xml" title="Rancho Blog" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Rancho Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">知行合一，致良知！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>公益 404</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/Rancho333" class="github-corner" title="Rancho&#39;s GitHub" aria-label="Rancho&#39;s GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2020/03/11/kernel%E7%BC%96%E8%AF%91%E7%AE%80%E8%BF%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/pictures/R-W.png">
+      <meta itemprop="name" content="Rancho">
+      <meta itemprop="description" content="No pain, no gain!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rancho Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          kernel编译简述
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-03-11 15:48:46" itemprop="dateCreated datePublished" datetime="2020-03-11T15:48:46+00:00">2020-03-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-11-19 01:41:17" itemprop="dateModified" datetime="2025-11-19T01:41:17+00:00">2025-11-19</time>
+              </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+            <span class="post-meta-divider">|</span>
+<span title="post.wordcount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span>字数： 2.2k</span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>在ENOS系统移植的过程中，对于Linux kernel，涉及到kernel的配置，编译，以及二进制镜像uImage的生成。这篇文章分为两块：</p>
+<span id="more"></span>
+<ol>
+<li>内核配置系统浅析</li>
+<li>vmlinux,uImage,Image的关系或区别</li>
+</ol>
+<h1 id="内核配置系统浅析"><a href="#内核配置系统浅析" class="headerlink" title="内核配置系统浅析"></a>内核配置系统浅析</h1><p>Linux采用模块化的内核配置系统，保证了内核的可扩展性。Linux内核的配置系统由三个部分组成，分别是：</p>
+<ol>
+<li>Makefile：分部在Linux内核源码中的Makefile，定义Linux内核的编译规则</li>
+<li>配置文件（.config, Kconfig等）</li>
+<li>配置工具<ol>
+<li>配置命令解释器，对配置脚本中使用的配置命令进行解释</li>
+<li>配置用户界面，分为基于字符（make config）,基于Ncurses图形界面（make menuconfig），基于Xwindows图形界面（make xconfig）</li>
+</ol>
+</li>
+</ol>
+<h2 id="Makefile"><a href="#Makefile" class="headerlink" title="Makefile"></a>Makefile</h2><p>Makefile的作用是根据配置的情况，构造出需要编译的源文件列表，然后分别编译，并把目标代码链接到一起，最终形成Linux内核二进制文件。kernel中Makefile相关的文件有：</p>
+<ol>
+<li>顶层Makefile，是整个内核配置、编译的总体控制文件，产生vmlinux文件和内核模块（module）</li>
+<li>.config：内核配置文件，是执行完内核配置的结果，如果没有指定kernel根目录下没有.config，可以在make时指定特定的配置文件进行编译，之后也会在根目录下产生.config</li>
+<li>arch/*/Makefile：不同CPU体系的Makefile，系统移植需要多关注一些这部分</li>
+<li>各子目录下的Makefile，如drivers下的，负责所在子目录下源代码的管理</li>
+<li>Rules.make：规则文件，被所有的Makefile使用</li>
+</ol>
+<p>用户通过make config后，这里实际就是收集各目录下的Kconfig/deconfig文件生成配置界面，供用户进行功能选择，最后产生<code>.config</code>，如果.config文件存在，则是直接通过.config生成配置界面。顶层Makefile读入.config中的配置选择进行具体模块的编译。顶层Makefiel中会包含具体arch的Makefile<br><img src="https://rancho333.github.io/pictures/arch.png"><br>Rules.make其实就是不同模块之间会共用到的Makefile规则。</p>
+<p>在ENOS中，系统架构人员将生成好的ARCH的config文件存放ARCH的目录下，上层开发人员编译时直接使用指定的config文件编译即可。<br><img src="https://rancho333.github.io/pictures/config.png"><br>之后在指定的<code>O</code>目录下会生成编译过程中生成的文件，这样可以避免污染源码（make clean不能清除么），或者是更便于管理和模块化考虑。<br>如果需要进行kernel的二次配置，需要到<code>O</code>目录下去执行make menuconfig，之后将重新生成的<code>.config</code>拷回<code>ARCH</code>目录覆盖之前的配置文件。这是基于ARCH缺省配置的一种应用，在向内核代码增加了新的功能后，如果新功能对于这个ARCH是必需的，就需要修改此ARCH的缺省配置，修改方法如下：</p>
+<ol>
+<li>备份.config文件</li>
+<li>cp arch/arm/deconfig .config</li>
+<li>修改.config</li>
+<li>cp .config arch/arm/deconfig</li>
+<li>恢复.config</li>
+</ol>
+<h3 id="配置变量CONFIG"><a href="#配置变量CONFIG" class="headerlink" title="配置变量CONFIG_*"></a>配置变量CONFIG_*</h3><p>.config文件中用配置变量等式来说明用户的配置结果，等式左边是模块/功能,右侧是控制选项，有三种：</p>
+<ol>
+<li><code>y</code>表示后本编译选项对用的内核代码被静态编译进Linux内核</li>
+<li><code>m</code> 表示本编译选项对应的内核代码被编译成模块</li>
+<li><code>n</code>表示不选择此编译选项<br>如果根本没有选择某模块，该模块是被注释掉的</li>
+</ol>
+<h1 id="vmlinux-uImage-Image的关系或区别"><a href="#vmlinux-uImage-Image的关系或区别" class="headerlink" title="vmlinux,uImage,Image的关系或区别"></a>vmlinux,uImage,Image的关系或区别</h1><p>Linux内核有多种格式的镜像，包括vmlinux、Image、zImage、bzImage、uImage、xipImage、bootpImage等。<br>vmlinux是编译出来的最原始的内核文件，未经压缩，vm代表virtual memory Linux支持虚拟内存；<br>Image是经过objcopy处理的只包含二进制数据的内核代码，未经压缩，不是elf格式；objcopy的实质是将所有的符号和 重定位信息都抛弃，只剩下二进制数据。<br>zImage是vmlinux加上解压代码经gzip压缩而成，是ARM linux常用的一种压缩镜像文件。这种格式的Linux镜像多存放在NAND上。bzImage与之类似，只不过是采用了压缩率更高的算法。<br>uImage是uboot专用的镜像文件，它是在zImage之前加上一个长度为0x40的tag，里面包含了镜像文件的类型、加载位置、生成时间、大小等信息。通过mkimage命令可以制作uImage。<br>xipImage多放在NorFlash上直接运行。<br>这里只是一些简单的描述，有待在今后的项目中去加深理解各种格式的使用，存在肯定是有其对应的使用场景的！<br><img src="https://rancho333.github.io/pictures/vmlinux.png"></p>
+<h1 id="对于文件系统的一点理解"><a href="#对于文件系统的一点理解" class="headerlink" title="对于文件系统的一点理解"></a>对于文件系统的一点理解</h1><p>加在这里可能不是很符合这篇文章的主题！<br>Linux下一切皆文件。Linux系统中任何文件系统的挂载必须满足两个条件：挂载点和文件系统。rootfs之所以存在，是因为需要在VFS机制下给系统提供最原始的挂载点。<br>rootfs其实就是文件系统顶层的<code>/</code>，使用pwd命令后看到的第一个字符，它有三个特点：</p>
+<ol>
+<li>它是系统自己创建并加载的第一个文件系统，是Linux内核自己创建的，并不是我们常说的外部根文件系统，将外部根文件系统解压或者说挂载到<code>/</code>后就是用户能看到的Linux文件系统，里面有很多的文件夹，如’etc’、’bin’等。<em>不能被unmount或者删除</em>，通过<code>cat /proc/mounts</code>也可以看出。下述的rootfs特指<code>/</code></li>
+<li>该文件系统的挂载点就是它自己的根目录项对象</li>
+<li>该文件系统仅仅存在于内存中<br>VFS是Linux文件系统实现遵循的一种机制，rootfs是一种是一种具体实现的文件系统，Linux下所有文件系统的实现都必须符合VFS机制（符合VFS的接口），这是二者的真正关系。</li>
+</ol>
+<p>Linux系统移植过程有一项是制作根文件系统，这里所谓的根文件系统实际上是外部根文件系统，用来释放到rootfs里面。有几个概念<code>ramfs initramfs</code>，ramfs是linux中的一个内存文件系统,initramfs是一种压缩（可以是lzma，zip等，看kernel的支持情况）的cpio格式的归档文件，initrd（initramdisk）也是一中ramfs镜像文件，它是用来在启动过程中初始化系统的，它可以被卸载。区别如下：</p>
+<ol>
+<li>它必须是和kernel分离的一种形式存在</li>
+<li>他只是一个zip压缩的文件系统，而不是cpio文件</li>
+<li>initrd中的/initrd程序只是做一些setup操作并最后返回到kernel中执行，而initramfs中的/init执行完后不返回到kernel</li>
+</ol>
+<p>对于initramfs，也就是系统移植时需要制作的文件系统。它存在于两处，一种是内核编译后自动生成的内部initramfs(在/usr目录下)，另一种是用户自己制作的，通过cmdline将地址传递给kernel的外部initramfs<br>对于内部initramfs，这个文件系统里面实际上啥也没有：<br><img src="https://rancho333.github.io/pictures/initramfs_kernel.png"><br>rootfs挂载之后，首先会先释放这个内部的initramfs到rootfs（很显然啥也干不了！<em>没搞清楚为什么会存在，但肯定有原因！</em>）,然后kernel会尝试在rootfs中寻找/init，一旦找到就执行init，kernel也就完成了启动工作，之后init就会接管接下来的工作。如果kernel找不到，就会去找外部initramfs然后释放（uboot下通过initrd参数指定位置）或者按照标准做法解析参数<code>root=</code>（这里面是解压好到某个介质分区的文件系统），试图找到一个文件系统并挂载到rootfs，之后就init。</p>
+<p>所以我们实际使用的肯定是外部文件系统了，对于外部的文件系统，我们可以通过不同的方法将它挂载到rootfs。</p>
+<ol>
+<li>制作一个独立的cpio.lzma包，然后告诉bootloader它的地址，通过cmdline将参数传递给kernel</li>
+<li>制作一个独立的包，通过mkimge(只针对于uboot)将kernel+initramfs+dtb打包成一个文件，在uboot下启动（实验过可行）</li>
+<li>用外部的initramfs替换kernel自动生成的initramfs，有两种方法：<ol>
+<li>先编译kernel，让它生成内部intramfs，然后制作外部initramfs，拷贝替换掉，最后重新编译内核。外部initramfs就会和kernel编成一个文件。ENOS里面使用的是这种方法。</li>
+<li>使用内核编译选项CONFIG_INITRAMFS_SOURCE指定根文件系统路径，即kernel会根据给定的文件生成内部initramfs，这里面又有集中不同的给定方式，这里不表。<br><img src="https://rancho333.github.io/pictures/kernel_initramfs.png"><br>外部initramfs替换内部initramfs之后，kernel会在第一时间找到/init,所以<code>root=，initrd=</code>这些参数都不会起作用了。</li>
+</ol>
+</li>
+</ol>
+<p>参考资料：<br><a target="_blank" rel="noopener" href="https://www.ibm.com/developerworks/cn/linux/kernel/l-kerconf/">Linux内核配置系统浅析</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/ultraman_hs/article/details/52838989">zImage和uImage的区别联系</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/rikeyone/article/details/52048972">ramfs,rootfs,initramfs,initrd</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/sunjing_/article/details/53081306">initramfs的使用方法</a></p>
+
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Rancho
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://rancho333.github.io/2020/03/11/kernel%E7%BC%96%E8%AF%91%E7%AE%80%E8%BF%B0/" title="kernel编译简述">https://rancho333.github.io/2020/03/11/kernel编译简述/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/kernel/" rel="tag"># kernel</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/03/10/%E4%B8%AD%E6%96%AD%E5%AD%A6%E4%B9%A0/" rel="prev" title="中断学习">
+      <i class="fa fa-chevron-left"></i> 中断学习
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/03/16/Linux%E7%B3%BB%E7%BB%9F%E7%A7%BB%E6%A4%8D%E7%AE%80%E8%BF%B0/" rel="next" title="Linux系统移植简述">
+      Linux系统移植简述 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="nav-number">1.</span> <span class="nav-text">写在前面</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E9%85%8D%E7%BD%AE%E7%B3%BB%E7%BB%9F%E6%B5%85%E6%9E%90"><span class="nav-number">2.</span> <span class="nav-text">内核配置系统浅析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Makefile"><span class="nav-number">2.1.</span> <span class="nav-text">Makefile</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E5%8F%98%E9%87%8FCONFIG"><span class="nav-number">2.1.1.</span> <span class="nav-text">配置变量CONFIG_*</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#vmlinux-uImage-Image%E7%9A%84%E5%85%B3%E7%B3%BB%E6%88%96%E5%8C%BA%E5%88%AB"><span class="nav-number">3.</span> <span class="nav-text">vmlinux,uImage,Image的关系或区别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AF%B9%E4%BA%8E%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E4%B8%80%E7%82%B9%E7%90%86%E8%A7%A3"><span class="nav-number">4.</span> <span class="nav-text">对于文件系统的一点理解</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Rancho"
+      src="/pictures/R-W.png">
+  <p class="site-author-name" itemprop="name">Rancho</p>
+  <div class="site-description" itemprop="description">No pain, no gain!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">83</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">45</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Rancho333" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Rancho333" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Rancho</span>
+</div>
+
+<div class="theme-info">
+  <div class="powered-by"></div>
+  <span class="post-count">全站共 118.8k 字</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/ Relative)","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"left","width":100,"height":180},"mobile":{"show":false},"react":{"opacityDefault":0.7}});</script></body>
+</html>

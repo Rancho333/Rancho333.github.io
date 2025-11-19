@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/pictures/R-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/pictures/R-16x16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"rancho333.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="写在前面本文简要介绍写cisco的私有vlan中继协议VTP(vlan trunking protocol)，然后使用eveng环境做一些简单实验。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="VTP协议简述">
+<meta property="og:url" content="https://rancho333.github.io/2022/10/11/VTP%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/index.html">
+<meta property="og:site_name" content="Rancho Blog">
+<meta property="og:description" content="写在前面本文简要介绍写cisco的私有vlan中继协议VTP(vlan trunking protocol)，然后使用eveng环境做一些简单实验。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://rancho333.github.io/pictures/vtp_pruning.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/vtp_topology.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/vtp_packet.png">
+<meta property="article:published_time" content="2022-10-11T15:05:08.000Z">
+<meta property="article:modified_time" content="2025-11-19T01:41:17.838Z">
+<meta property="article:author" content="Rancho">
+<meta property="article:tag" content="Racncho, Rancho Blog, 嵌入式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://rancho333.github.io/pictures/vtp_pruning.png">
+
+<link rel="canonical" href="https://rancho333.github.io/2022/10/11/VTP%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>VTP协议简述 | Rancho Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/rss2.xml" title="Rancho Blog" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Rancho Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">知行合一，致良知！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>公益 404</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/Rancho333" class="github-corner" title="Rancho&#39;s GitHub" aria-label="Rancho&#39;s GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2022/10/11/VTP%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/pictures/R-W.png">
+      <meta itemprop="name" content="Rancho">
+      <meta itemprop="description" content="No pain, no gain!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rancho Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          VTP协议简述
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-10-11 15:05:08" itemprop="dateCreated datePublished" datetime="2022-10-11T15:05:08+00:00">2022-10-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-11-19 01:41:17" itemprop="dateModified" datetime="2025-11-19T01:41:17+00:00">2025-11-19</time>
+              </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+            <span class="post-meta-divider">|</span>
+<span title="post.wordcount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span>字数： 1.8k</span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>本文简要介绍写cisco的私有vlan中继协议VTP(vlan trunking protocol)，然后使用eveng环境做一些简单实验。</p>
+<span id="more"></span>
+<p>当二层环境中有多台交换机，并且需要配置多个vlan的时候，这是一个繁琐且无聊的配置行为。VTP协议可以让我们只用在一台交换机上创建vlan，其它交换机则会同步创建的vlan。</p>
+<h1 id="了解VTP"><a href="#了解VTP" class="headerlink" title="了解VTP"></a>了解VTP</h1><p>VTP设备有三种角色：</p>
+<ol>
+<li>VTP server：可以修改vlan配置，生成VTP通告</li>
+<li>VTP  client：不可以通过CLI修改vlan配置，只能通过同步VTP通告修改vlan配置</li>
+<li>VTP transparent：透传VTP通告但是不同步，可以修改本地vlan，修改也只在本地生效</li>
+</ol>
+<p>VTP三种模式的能力概要如下：</p>
+<table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="left">VTP server</th>
+<th align="left">VTP Client</th>
+<th align="left">VTP transparent</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">创建/修改/删除 vlans</td>
+<td align="left">yes</td>
+<td align="left">no</td>
+<td align="left">only local</td>
+</tr>
+<tr>
+<td align="left">同步</td>
+<td align="left">yes</td>
+<td align="left">yes</td>
+<td align="left">no</td>
+</tr>
+<tr>
+<td align="left">透传</td>
+<td align="left">yes</td>
+<td align="left">yes</td>
+<td align="left">yes</td>
+</tr>
+</tbody></table>
+<p>通过下面几条说明来简单了解下VTP：</p>
+<ol>
+<li>VTP可以自动添加，修改，删除vlans</li>
+<li>对于每一次改动，<code>revision</code>编号会增加</li>
+<li>最近一次的通告会被发送给所有的VTP clients</li>
+<li>VTP clients会同步接收到的通告</li>
+</ol>
+<p>VTP虽然可以减少vlan配置的工作量，但是会存在一些风险。根本原因是：<br>  VTP server同时也是VTP client, 而VTP client会同步接收到的revision号比自己大的通告。</p>
+<p>如果我们在现有的网络环境中添加一台VTP server，而这台VTP server上的revision号比现有环境中设备的都大，那么新设备上的vlan配置会覆盖所有设备。本质就是环境中可能会有非预期设备的revision最大，覆盖环境的vlan配置。</p>
+<p>此外还需要了解VTP的另一个知识点：VTP pruning.<br><img src="https://rancho333.github.io/pictures/vtp_pruning.png"></p>
+<p>如图，交换机之间通过trunk互联。当左侧vlan10中的PC发送一个广播报文后，所有交换机都会收到泛洪的消息，而中间交换机的下联口中并没有vlan10，上联交换机泛洪流量就是在浪费带宽了。<br>在非VTP环境下，泛洪流量会发送给所有的trunk端口(trunk允许该vlan通过)，因为交换机并不知道trunk对端是否有在该vlan的成员。<br>在VTP环境下，交换机知道trunk对端配置了那些vlan，所以不在这些vlan范围的内泛洪流量就可以不发送给对端。这就是VTP pruning.</p>
+<h1 id="VTP的配置"><a href="#VTP的配置" class="headerlink" title="VTP的配置"></a>VTP的配置</h1><p>使用如下的拓扑来进行VTP的配置实验：<br><img src="https://rancho333.github.io/pictures/vtp_topology.png"></p>
+<p>将交换机之间的互联接口全部配置成trunk。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">S3#show vtp status </span><br><span class="line">VTP Version capable             : 1 to 3</span><br><span class="line">VTP version running             : 1</span><br><span class="line">VTP Domain Name                 : </span><br><span class="line">VTP Pruning Mode                : Disabled</span><br><span class="line">VTP Traps Generation            : Disabled</span><br><span class="line">Device ID                       : aabb.cc80.3000</span><br><span class="line">Configuration last modified by 0.0.0.0 at 0-0-00 00:00:00</span><br><span class="line">Local updater ID is 0.0.0.0 (no valid interface found)</span><br><span class="line"></span><br><span class="line">Feature VLAN:</span><br><span class="line">--------------</span><br><span class="line">VTP Operating Mode                : Server</span><br><span class="line">Maximum VLANs supported locally   : 1005</span><br><span class="line">Number of existing VLANs          : 5</span><br><span class="line">Configuration Revision            : 0</span><br><span class="line">MD5 digest                        : 0x57 0xCD 0x40 0x65 0x63 0x59 0x47 0xBD </span><br><span class="line">                                    0x56 0x9D 0x4A 0x3E 0xA5 0x69 0x35 0xBC </span><br></pre></td></tr></table></figure>
+<p>S4、S5的VTP信息和S3基本一致，对显示的信息做一个简单的说明：</p>
+<ul>
+<li><code>Configuration Revision 0</code>: 每一次修改vlan该数值都会加1. 0是初始值，没有任何vlan操作</li>
+<li><code>VTP Operating Mode</code> : 默认的模式是server模式</li>
+<li><code>VTP Pruning Mode</code> : 防止不必要的流量通过trunk链路</li>
+<li> <code>VTP version running</code> : 当前运行的vtp版本，默认是v1. v2与v1的差别不大，v2上主要引入对令牌环vlan的支持。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">S3(config)#vlan 10</span><br><span class="line">S3(config-vlan)#name first_vlan</span><br><span class="line"></span><br><span class="line">S3#show vlan brief </span><br><span class="line"></span><br><span class="line">VLAN Name                             Status    Ports</span><br><span class="line">---- -------------------------------- --------- -------------------------------</span><br><span class="line">1    default                          active    Et0&#x2F;0, Et0&#x2F;1, Et0&#x2F;2, Et0&#x2F;3</span><br><span class="line">10   first_vlan                       active    </span><br><span class="line"></span><br><span class="line">S3#show vtp status | include Revision</span><br><span class="line">Configuration Revision            : 1</span><br></pre></td></tr></table></figure>
+<p>在S3上创建名为first_vlan的vlan10, 可以看到revision号增加了1. 但是在S4、S5上并没有任何同步动作：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">S4#show vtp status | begin existing</span><br><span class="line">Number of existing VLANs          : 5</span><br><span class="line">Configuration Revision            : 0</span><br><span class="line"></span><br><span class="line">S5#show vtp status | begin existing   </span><br><span class="line">Number of existing VLANs          : 5</span><br><span class="line">Configuration Revision            : 0</span><br></pre></td></tr></table></figure>
+<p>这是因为必须要配置VTP domain才能正常同步。</p>
+<p>在S4、S5上开启VTP debug。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">S4#debug sw-vlan vtp events </span><br><span class="line">vtp events debugging is on</span><br><span class="line"></span><br><span class="line">S5#debug sw-vlan vtp events </span><br><span class="line">vtp events debugging is on</span><br></pre></td></tr></table></figure>
+
+<p>在S3上配置vtp domain:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">S3(config)#vtp domain rancho                   &#x2F;&#x2F; 配置vtp domain</span><br><span class="line">Changing VTP domain name from NULL to rancho</span><br><span class="line">S3(config)#</span><br><span class="line">*Oct 11 08:02:34.648: %SW_VLAN-6-VTP_DOMAIN_NAME_CHG: VTP domain name changed to rancho.</span><br></pre></td></tr></table></figure>
+
+<p>可以在S4、S5看到vtp domain会自动同步过来。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">S5#</span><br><span class="line">*Oct 11 08:14:23.822: VTP LOG RUNTIME: Summary packet received in NULL domain state</span><br><span class="line">*Oct 11 08:14:23.822: VTP LOG RUNTIME: Summary packet received, domain &#x3D; rancho, rev &#x3D; 1, followers &#x3D; 0, length 77, trunk Et0&#x2F;1</span><br><span class="line">*Oct 11 08:14:23.822: VTP LOG RUNTIME: Transitioning from NULL to rancho domain</span><br><span class="line">*Oct 11 08:14:23.822: VTP LOG RUNTIME: Summary packet rev 1 greater than domain rancho rev 0</span><br></pre></td></tr></table></figure>
+<p>我们可以看到两件有意思的事：</p>
+<ul>
+<li>S5收到来自domain为<code>rancho</code>的VTP报文，并且决定将自己的domain从<code>NULL</code>改成<code>rancho</code>。这只会存在于设备没有配置domain的时候</li>
+<li>S5发现VTP报文中revision(1)比自己当前(0)的高，同步报文中的vlan信息</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">S5#no debug all                        &#x2F;&#x2F; 关闭debug功能</span><br><span class="line"></span><br><span class="line">S5#show vtp status | begin existing</span><br><span class="line">Number of existing VLANs          : 6</span><br><span class="line">Configuration Revision            : 1       &#x2F;&#x2F; revision数值增减了，同步了S3的vlan配置</span><br><span class="line"></span><br><span class="line">S5#show vlan brief                         &#x2F;&#x2F; 确认配置信息同步，vlan10有了</span><br><span class="line"></span><br><span class="line">VLAN Name                             Status    Ports</span><br><span class="line">---- -------------------------------- --------- -------------------------------</span><br><span class="line">1    default                          active    Et0&#x2F;2, Et0&#x2F;3</span><br><span class="line">10   first_vlan                       active    </span><br><span class="line"></span><br><span class="line">S4#show vlan brief </span><br><span class="line"></span><br><span class="line">VLAN Name                             Status    Ports</span><br><span class="line">---- -------------------------------- --------- -------------------------------</span><br><span class="line">1    default                          active    Et0&#x2F;2, Et0&#x2F;3</span><br><span class="line">10   first_vlan                       active    </span><br></pre></td></tr></table></figure>
+
+<p>分别在S4、S5上各创建一个vlan</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">S4(config)#vlan 40</span><br><span class="line">S4(config-vlan)#name second_vlan</span><br><span class="line"></span><br><span class="line">S5(config)#vlan 50</span><br><span class="line">S5(config-vlan)#name third_vlan</span><br></pre></td></tr></table></figure>
+<p>在S3上可以正常同步到：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">S3#show vlan brief </span><br><span class="line"></span><br><span class="line">VLAN Name                             Status    Ports</span><br><span class="line">---- -------------------------------- --------- -------------------------------</span><br><span class="line">1    default                          active    Et0&#x2F;2, Et0&#x2F;3</span><br><span class="line">10   first_vlan                       active    </span><br><span class="line">40   second_vlan                      active    </span><br><span class="line">50   third_vlan                       active    </span><br><span class="line"></span><br><span class="line">S3#show vtp status | include Revision</span><br><span class="line">Configuration Revision            : 3            &#x2F;&#x2F; 同步两次，revision从1增加到3</span><br></pre></td></tr></table></figure>
+
+<p>修改S3的模式为client：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">S3(config)#vtp mode client </span><br><span class="line">S3#show vtp status | include Mode</span><br><span class="line">VTP Pruning Mode                : Disabled</span><br><span class="line">VTP Operating Mode                : Client</span><br><span class="line"></span><br><span class="line">S3(config)#vlan  100</span><br><span class="line">VTP VLAN configuration not allowed when device is in CLIENT mode.</span><br><span class="line">&#x2F;&#x2F; client模式就不能配置valn了</span><br></pre></td></tr></table></figure>
+
+<p>修改S3的模式为透传模式：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">S3(config)#vtp mode transparent </span><br><span class="line">Setting device to VTP Transparent mode for VLANS.</span><br><span class="line">&#x2F;&#x2F; 可以本地修改vlan信息，但是不会影响其它的vtp设备</span><br><span class="line"></span><br><span class="line">S4(config)#vlan 70</span><br><span class="line">S5#show spanning-tree | include Altn</span><br><span class="line">Et0&#x2F;0               Altn BLK 100       128.1    P2p    &#x2F;&#x2F; S4,5之间的直连链路被block了</span><br><span class="line">S5#show vlan brief </span><br><span class="line"></span><br><span class="line">VLAN Name                             Status    Ports</span><br><span class="line">---- -------------------------------- --------- -------------------------------</span><br><span class="line">1    default                          active    Et0&#x2F;2, Et0&#x2F;3</span><br><span class="line">10   first_vlan                       active    </span><br><span class="line">40   second_vlan                      active    </span><br><span class="line">50   third_vlan                       active    </span><br><span class="line">70   VLAN0070                         active           &#x2F;&#x2F;但是S5依然能学到S4的vlan, 走的是S3的透传</span><br><span class="line"></span><br><span class="line">S3#show vlan brief                  &#x2F;&#x2F; 透传模式的S3并没有学到vlan70</span><br><span class="line"></span><br><span class="line">VLAN Name                             Status    Ports</span><br><span class="line">---- -------------------------------- --------- -------------------------------</span><br><span class="line">1    default                          active    Et0&#x2F;2, Et0&#x2F;3</span><br><span class="line">10   first_vlan                       active    </span><br><span class="line">40   second_vlan                      active    </span><br><span class="line">50   third_vlan                       active    </span><br><span class="line">60   VLAN0060                         active    </span><br></pre></td></tr></table></figure>
+
+<p>最后一个小的知识点就是关于vlan的配置文件。只要开启vtp功能，vlan的配置信息是独立存放在vlan.data文件中的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">S3#dir unix: | include vlan</span><br><span class="line">917755  -rw-         796  Oct 11 2022 08:34:46 +00:00  vlan.dat-00048</span><br><span class="line">&#x2F;&#x2F; 不同的设备存放的路径可能不一样</span><br></pre></td></tr></table></figure>
+<p>并且vlan的配置信息在show run中是查看不到的，当关闭vtp时，vlan的配置信息就可以在show run中看到了。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">S3(config)#vtp mode off </span><br><span class="line"></span><br><span class="line">S3#show running-config | include vlan</span><br><span class="line">vlan 10</span><br><span class="line"> name first_vlan</span><br><span class="line">vlan 40</span><br><span class="line"> name second_vlan</span><br><span class="line">vlan 50</span><br><span class="line"> name third_vlan</span><br><span class="line">vlan 60 </span><br></pre></td></tr></table></figure>
+
+<p>最最后关于VTPv3, V3和V2兼容，和v1兼容。有比较大的差异，主要在：</p>
+<ul>
+<li>VTP primary Server</li>
+<li>Extended vlanss</li>
+<li>private vlanss</li>
+<li>rspan vlanss</li>
+<li>mst support</li>
+<li>authentication improvements<br>这里不做深入研究了，了解点VTPv2的皮毛先, 凑合用下吧。</li>
+</ul>
+<p>为了严谨点，附上一个VTP报文截图吧, 创建vlan80时抓的，看来vtp会携带所有的vlan信息。<br><img src="https://rancho333.github.io/pictures/vtp_packet.png"></p>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><p><a target="_blank" rel="noopener" href="https://www.cisco.com/c/zh_cn/support/docs/lan-switching/vtp/10558-21.html">了解 VLAN 中继协议 (VTP)</a></p>
+
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Rancho
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://rancho333.github.io/2022/10/11/VTP%E5%8D%8F%E8%AE%AE%E7%AE%80%E8%BF%B0/" title="VTP协议简述">https://rancho333.github.io/2022/10/11/VTP协议简述/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/09/10/snake-traffic%E5%8E%9F%E7%90%86%E7%AE%80%E8%BF%B0/" rel="prev" title="snake traffic原理简述">
+      <i class="fa fa-chevron-left"></i> snake traffic原理简述
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/10/12/PVLAN%E6%B5%85%E6%9E%90/" rel="next" title="PVLAN浅析">
+      PVLAN浅析 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="nav-number">1.</span> <span class="nav-text">写在前面</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%86%E8%A7%A3VTP"><span class="nav-number">2.</span> <span class="nav-text">了解VTP</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#VTP%E7%9A%84%E9%85%8D%E7%BD%AE"><span class="nav-number">3.</span> <span class="nav-text">VTP的配置</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-number">4.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Rancho"
+      src="/pictures/R-W.png">
+  <p class="site-author-name" itemprop="name">Rancho</p>
+  <div class="site-description" itemprop="description">No pain, no gain!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">83</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">45</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Rancho333" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Rancho333" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Rancho</span>
+</div>
+
+<div class="theme-info">
+  <div class="powered-by"></div>
+  <span class="post-count">全站共 118.8k 字</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/ Relative)","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"left","width":100,"height":180},"mobile":{"show":false},"react":{"opacityDefault":0.7}});</script></body>
+</html>

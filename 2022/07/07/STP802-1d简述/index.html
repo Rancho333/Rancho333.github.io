@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/pictures/R-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/pictures/R-16x16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"rancho333.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="写在前面本文旨在描述STP(802.1d)的一些基本概念，搞清楚其消除二层环路的原理，为后面的RSTP已经MSTP的学习做铺垫。STP是一个高度自动化的协议，一两条简单的命令就可以让其自动计算，链路故障时也可以自动恢复，但只有真正掌握其实现原理，才能在故障时进行修复，才能合理的使用其安全特性和优化特性。现有的STP有多个版本，包括标准STP(802.1d),快速RSTP(802.1w), 多实例M">
+<meta property="og:type" content="article">
+<meta property="og:title" content="STP802.1d简述">
+<meta property="og:url" content="https://rancho333.github.io/2022/07/07/STP802-1d%E7%AE%80%E8%BF%B0/index.html">
+<meta property="og:site_name" content="Rancho Blog">
+<meta property="og:description" content="写在前面本文旨在描述STP(802.1d)的一些基本概念，搞清楚其消除二层环路的原理，为后面的RSTP已经MSTP的学习做铺垫。STP是一个高度自动化的协议，一两条简单的命令就可以让其自动计算，链路故障时也可以自动恢复，但只有真正掌握其实现原理，才能在故障时进行修复，才能合理的使用其安全特性和优化特性。现有的STP有多个版本，包括标准STP(802.1d),快速RSTP(802.1w), 多实例M">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://rancho333.github.io/pictures/stp_election.png">
+<meta property="og:image" content="https://rancho333.github.io/pictures/stp_convergence.png">
+<meta property="article:published_time" content="2022-07-07T15:35:21.000Z">
+<meta property="article:modified_time" content="2025-11-19T01:41:17.837Z">
+<meta property="article:author" content="Rancho">
+<meta property="article:tag" content="STP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://rancho333.github.io/pictures/stp_election.png">
+
+<link rel="canonical" href="https://rancho333.github.io/2022/07/07/STP802-1d%E7%AE%80%E8%BF%B0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>STP802.1d简述 | Rancho Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/rss2.xml" title="Rancho Blog" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Rancho Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">知行合一，致良知！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>公益 404</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+  <a href="https://github.com/Rancho333" class="github-corner" title="Rancho&#39;s GitHub" aria-label="Rancho&#39;s GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rancho333.github.io/2022/07/07/STP802-1d%E7%AE%80%E8%BF%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/pictures/R-W.png">
+      <meta itemprop="name" content="Rancho">
+      <meta itemprop="description" content="No pain, no gain!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rancho Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          STP802.1d简述
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-07-07 15:35:21" itemprop="dateCreated datePublished" datetime="2022-07-07T15:35:21+00:00">2022-07-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-11-19 01:41:17" itemprop="dateModified" datetime="2025-11-19T01:41:17+00:00">2025-11-19</time>
+              </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+            <span class="post-meta-divider">|</span>
+<span title="post.wordcount"><span class="post-meta-item-icon"><i class="fa fa-file-word-o"></i></span>字数： 3.2k</span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>本文旨在描述STP(802.1d)的一些基本概念，搞清楚其消除二层环路的原理，为后面的RSTP已经MSTP的学习做铺垫。STP是一个高度自动化的协议，一两条简单的命令就可以让其自动计算，链路故障时也可以自动恢复，但只有真正掌握其实现原理，才能在故障时进行修复，才能合理的使用其安全特性和优化特性。现有的STP有多个版本，包括标准STP(802.1d),快速RSTP(802.1w), 多实例MSTP(802.1s)。思科使用PVSTP(per-vlan stp)替代标准STP.</p>
+<span id="more"></span>
+
+<h1 id="STP的作用"><a href="#STP的作用" class="headerlink" title="STP的作用"></a>STP的作用</h1><p>STP不仅仅是为了消除二层环路，其根本的作用是<code>提供L2线路冗余的同时避免环路</code>。二层环路会带来下面几个问题：</p>
+<ol>
+<li>广播风暴</li>
+<li>重复帧</li>
+<li>MAC地址跳跃</li>
+</ol>
+<h1 id="STP如何实现冗余及避免环路的"><a href="#STP如何实现冗余及避免环路的" class="headerlink" title="STP如何实现冗余及避免环路的"></a>STP如何实现冗余及避免环路的</h1><p>当有环的时候通过阻塞某些端口破坏环路，当线路挂掉的时候通过恢复之前阻塞的端口继续提供服务。要达到这样的效果，需要额外的检查，STP通过BPDU(bridge protocol data unit)来实现这种额外的检查。</p>
+<p>这种检查的基本逻辑是，确定设备的角色，然后再确定设备上端口的角色，确定端口的状态，根据角色、状态这两个属性确定端口对报文的接收、发送、转发、学习、丢弃能力。</p>
+<h1 id="STP中的一些重要概念"><a href="#STP中的一些重要概念" class="headerlink" title="STP中的一些重要概念"></a>STP中的一些重要概念</h1><h2 id="BID"><a href="#BID" class="headerlink" title="BID"></a>BID</h2><p>BID由优先级和参与STP计算的最小端口MAC地址组成，默认优先级是<code>32768</code>, 思科默认运行的PVSRT中会将vlan ID加到优先级中，所以它的默认优先级是<code>32768+1</code>。</p>
+<h2 id="根桥"><a href="#根桥" class="headerlink" title="根桥"></a>根桥</h2><p>STP的目的是形成一颗以根桥为起点的无环树状结构，根桥是BID最小的网桥。</p>
+<h2 id="3中端口角色"><a href="#3中端口角色" class="headerlink" title="3中端口角色"></a>3中端口角色</h2><table>
+<thead>
+<tr>
+<th align="left">端口角色</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">root port(RP)</td>
+<td align="left">非根交换机到跟交换机cost最小的端口，上联根桥的端口</td>
+</tr>
+<tr>
+<td align="left">designated port(DP)</td>
+<td align="left">根桥和非根桥上都有，根桥的所有端口都是DP，连接下游的端口</td>
+</tr>
+<tr>
+<td align="left">Alternate port(AP)</td>
+<td align="left">剩下的端口都是AP,AP端口一般都处于blocking状态, 只接收BPDU，不做任何转发处理</td>
+</tr>
+</tbody></table>
+<h2 id="5种端口状态"><a href="#5种端口状态" class="headerlink" title="5种端口状态"></a>5种端口状态</h2><table>
+<thead>
+<tr>
+<th align="left">状态</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">disabled</td>
+<td align="left">该状态下的端口没有激活，不参与STP的任何动作，不转发用户流量</td>
+</tr>
+<tr>
+<td align="left">blocking</td>
+<td align="left">只能接收BPDU</td>
+</tr>
+<tr>
+<td align="left">listening</td>
+<td align="left">该状态下的端口可以接收和发送BPDU，但不转发用户流量，不学习mac地址</td>
+</tr>
+<tr>
+<td align="left">learning</td>
+<td align="left">该状态下建立无环的转发表，不转发用户流量，学习mac地址</td>
+</tr>
+<tr>
+<td align="left">forwarding</td>
+<td align="left">接收和发送BPDU，也转发用户流量</td>
+</tr>
+</tbody></table>
+<h2 id="四个计时器"><a href="#四个计时器" class="headerlink" title="四个计时器"></a>四个计时器</h2><p>STP很多工作的完成都依赖计时器，这些计时器可以保证拓扑进入无环状态才转发数据，链路故障时完成收敛，同时也是其收敛时间过长的原因。不同厂家在此都有一些优化策略。</p>
+<table>
+<thead>
+<tr>
+<th align="left">计时器</th>
+<th align="left">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">message age</td>
+<td align="left">每经过交换机relay一次加1秒，类似IP报文中的TTL，大于MAX_age后不处理，防止网络半径太大</td>
+</tr>
+<tr>
+<td align="left">max age</td>
+<td align="left">消息老化时间，默认20秒</td>
+</tr>
+<tr>
+<td align="left">hello time</td>
+<td align="left">发送两个消息之间的间隔，默认2秒</td>
+</tr>
+<tr>
+<td align="left">forward delag</td>
+<td align="left">控制listening和learning之间的状态切换延时，默认15秒</td>
+</tr>
+</tbody></table>
+<h2 id="BPDU"><a href="#BPDU" class="headerlink" title="BPDU"></a>BPDU</h2><p>BPDU是STP协议的核心，BPDU承载上述的某些参数，完成根桥的选举，端口的选举。BPDU报文字段如下：</p>
+<table>
+<thead>
+<tr>
+<th align="left">protocol identical</th>
+<th align="left">protocol version</th>
+<th align="left">BPDU type</th>
+<th align="left">flags</th>
+<th align="left">root identifier</th>
+<th align="left">root path cost</th>
+<th align="left">bridge identifier</th>
+<th align="left">port identifier</th>
+<th align="left">message age</th>
+<th align="left">max age</th>
+<th align="left">hello time</th>
+<th align="left">forward delay</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">ID为0</td>
+<td align="left">stp为0，rstp为2，mstp为3</td>
+<td align="left">0x00:配置BPDU,0x80:TCN BPDU，0x02：RST BPDU或MST BPDU</td>
+<td align="left">最高位为1表示TCA，最低位为1表示TC</td>
+<td align="left">根桥ID</td>
+<td align="left">发送桥到根桥的开销</td>
+<td align="left">sender BID</td>
+<td align="left">sender PID</td>
+<td align="left">同上</td>
+<td align="left">同上</td>
+<td align="left">同上</td>
+<td align="left">同上</td>
+</tr>
+</tbody></table>
+<p><code>root past cost</code>与带宽相关，一般ethernet(10M)的cost是100, 数值越小优先级越高。<br><code>port ID</code>由<code>优先级.端口号</code>组成，优先级默认为128, 如Eth0的port ID为<code>128.1</code><br>这些参数可以在<code>show spanning</code>命令下看到。</p>
+<p>根桥的选举，端口角色的选举，本质就是不同设备BPDU的对比，不同端口收到的BPDU的选举。这里介绍一个概念<code>superior BPDU</code>. superior BPDU满足如下条件：</p>
+<ol>
+<li>BID最优</li>
+<li>如果条件1一致，root past cost最优的为superior BPDU</li>
+<li>如果条件1,2一致，sender BID最优的为superior BPDU</li>
+<li>如果1,2,3一致，sender PID最优的为superior BPDU</li>
+<li>如果1,2,3,4一致，receiver PID最优的为superior BPDU<br>STP中涉及到参数比较的都是数值越小优先级越高，BID和PID类似，都是先比较优先级，如果优先级一致，再比较mac地址或端口号。与之相对不满足上述条件的则成为<code>inferior BPDU</code>。</li>
+</ol>
+<p>此外需要知道一个细节，端口会存储最近收到的superior BPDU(加上该端口的cost)，并对他进行老化，老化时间为max_age-message_age。典型场景是AP收不到superior BPDU, 20秒后老化变成DP，这样可以保证超时信息从拓扑中移除。只有RP和AP上会存储superior BPDU, DP只负责转发。</p>
+<h1 id="STP的选举流程"><a href="#STP的选举流程" class="headerlink" title="STP的选举流程"></a>STP的选举流程</h1><p><img src="https://rancho333.github.io/pictures/stp_election.png"></p>
+<ol>
+<li><p>根桥的选举<br>刚开始时，所有的交换机认为自己是根桥，所有端口都是DP(listening)，将<code>root id</code>和<code>bridge id</code>字段都填充自己的BID向外发送(组播)，经过一段时间收敛后，BID最优的被选成根桥。本质就是不同交换机之间BPDU的比较，根桥的BPDU为superior BPDU.根桥选定之后，只有根桥向外发送配置BPDU，其它交换机只负责接收和转发，端口都是DP(listening).<br>如图所示，S1的BID优先级最小，选举成为根桥。</p>
+</li>
+<li><p>根端口的选举<br>在成环的拓扑中，非根桥会从多个端口收到根桥发来的BPDU，从这些BPDU中选出superior BPDU作为根端口。<br>如图所示，以S3为例，会从eth0,eth2,eth3三个端口收到根桥发来的BPDU，eth3收到的是S2中继的BPDU，cost值大，而eth0和eth2收到的BPDU的cost为0, 所以在eth0和eth2之间选。sender BID都是S1，看PID，S3上eth0收到的是S1上eth1发出，PID小(优先级一样，看端口号), 所以S3上eth0是RP。换言之，S3的3个端口收到的BPDU中，eth0收到的是superior BPDU。</p>
+</li>
+<li><p>指定端口的选举<br>根桥上的所有端口都是DP，对于非根桥设备，除RP外，将端口收到的BPDU与发出的BPDU对比，superior BPDU的作为DP，inferior BPDU则作为AP.<br>任一链路中肯定有一个DP，如图所示，以S2为例，eth0是RP，剩下eth2进行DP选举，eth2中继eth0收到的BPDU给S3的eth3(发出的BPDU)，S3的eth3中继eth0收到的BPDU给S2的eth2(收到的BPDU)，cost一致，比较sender BID，两者优先级一致，但S2的MAC更小，所以S2的eth2是DP, 同理，S3的eth3是AP。换言之，S2的eth2发出的BPDU相较于收到的BPDU是superior BPDU。</p>
+</li>
+</ol>
+<p>选举完成之后，DP和RP经过listening和learning的时延后进入forwarding状态，AP则处于blocking状态，破除拓扑的环路。根桥周期向外发送配置BPDU，非根桥从RP接收superior BPDU，加上RP的cost，将<code>bridge ID</code>字段改成自己的，从DP向外中继该BPDU(源MAC改成DP的MAC). </p>
+<h1 id="STP收敛场景描述"><a href="#STP收敛场景描述" class="headerlink" title="STP收敛场景描述"></a>STP收敛场景描述</h1><p>只有当RP挂点后才有收敛的意义(链路必定有一端是RP)。交换机通过两种方式可以感知到线路故障。</p>
+<h2 id="直接感知"><a href="#直接感知" class="headerlink" title="直接感知"></a>直接感知</h2><p>链路物理上是直连的。这种场景下又可以分两种情况。</p>
+<h3 id="交换机上没有存储BPDU的端口"><a href="#交换机上没有存储BPDU的端口" class="headerlink" title="交换机上没有存储BPDU的端口"></a>交换机上没有存储BPDU的端口</h3><p>当交换机感知到端口down掉后，会立马清除该端口上存储的BPDU, 如果没有其它存储BPDU的端口，那么该交换机就会宣告自己是新的根桥，并将自己的配置BPDU向外发送，由于真实根桥依然存在，其它交换机收到的是inferior BPDU, 不会对其做任何处理，直至收到inferior BPDU的端口超时。</p>
+<p>如STP选举流程中的图示，当S2的eth0端口down掉之后，S2认为自己是根桥，通过eth2给S3的eth3发送inferior BPDU(TC置位)，S3的eth3一直收不到superior BPDU，最终会超时(20秒)，之后变成DP(经过listening，learning的30秒时延后变成forwarding状态，通过RP发送TCN)，并立即向S2中继superior BPDU，S2收到之后知道根桥的存在，停止发送BPDU，并将eth2选举成RP(原则上应该经历listening，learning再转成forwarding，思科上直接变成forwarding，应该是做了优化)，RP变成forwarding状态后发送TCN报文，所以收敛的总耗时接近50秒(超时没有算message_age).</p>
+<h3 id="交换机上有存储BPDU的端口"><a href="#交换机上有存储BPDU的端口" class="headerlink" title="交换机上有存储BPDU的端口"></a>交换机上有存储BPDU的端口</h3><p>同上，如果交换机上有其它存储BPDU的端口，那么会在这些端口中选出superior BPDU的端口作为新的RP。</p>
+<p>如STP选举流程中的图示，当S3的eth0端口down掉之后，S3会在eth2和eth3之间选举出新的RP，很明显eth2上市superior BPDU，eth2成为RP，经过listening和learning之后变成forwarding，并发送TCN报文。收敛时间是30秒。</p>
+<h2 id="间接感知"><a href="#间接感知" class="headerlink" title="间接感知"></a>间接感知</h2><p>链路物理上是非直连的，比如中间链路中间有个hub。这种情况下只能等待BPDU报文超时触发。之后的处理流程和<code>直接感知</code>一致，需要加上额外的20秒BPDU报文超时时间。</p>
+<h1 id="STP拓扑变化带来的问题"><a href="#STP拓扑变化带来的问题" class="headerlink" title="STP拓扑变化带来的问题"></a>STP拓扑变化带来的问题</h1><p>L2依据Mac地址表进行转发，拓扑变换可能导致Mac地址表失效. 当stp收敛之后，虽然会重新学习到正确的mac地址，但是会耗费相当多的时间，特别是当某条mac地址不存在或超时时间恰好是最大值(默认300秒). 为此，当拓扑变化时，通过TCN BPDU通知根桥，根桥通过TCN ACK BPDU通知所有交换机，收到此报文的交换机将mac地址表超时改成forward_time，发送TCN BPDU的交换机收到ACK后会停止发送TCN.</p>
+<p>缩短mac地址的老化时间会使拓扑不稳定，会存在泛洪流量，当大量拓扑发生改变时，这种情况是很危险的。RSTP中也有这个问题。</p>
+<h1 id="STP收敛的几个优化配置"><a href="#STP收敛的几个优化配置" class="headerlink" title="STP收敛的几个优化配置"></a>STP收敛的几个优化配置</h1><p>思科设备上提供了几种优化配置来减少收敛时间, 降低不必要的mac地址表刷新。</p>
+<p><img src="https://rancho333.github.io/pictures/stp_convergence.png"></p>
+<p><code>portfast</code>在edge port上开启，当端口状态发生变化时，不会发送TCN BPDU，避免刷新MAC地址表，端口可以直接从block状态变成forwarding状态，不需要等待30秒。开启命令如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Switch(config-if)#spanning-tree portfast edge	 &#x2F;&#x2F; 在eth2上开启portfast</span><br></pre></td></tr></table></figure>
+<p>如上图，在eth2上开启portfast后，eth2会直接变成forwarding状态，并且不会发送TCN报文。</p>
+<p><code>uplinkfast</code>当RP失效后，AP跳过listening和learning的30秒，直接变成RP的forwarding状态, 开启命令如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Switch(config)#spanning-tree uplinkfast		&#x2F;&#x2F; 全局开启uplinkfast</span><br></pre></td></tr></table></figure>
+<p>如上图，shutdown S3上的RP eth0, eth1会从AP直接变成RP的forwarding状态。<br>注意，配置uplinkfast后，交换机优先级会调整32768+4096(不会选成根桥)，端口cost会增加3000(不会选成DP)</p>
+<p><code>backbonefast</code>AP端口收到inferior BPDU后ignore，直到max_age超时后变成DP，耗时20秒，开启backbonefast后，不用等到超时，AP直接变成DP，开启命令如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Switch(config)#spanning-tree backbonefast		&#x2F;&#x2F; 需要在所有交换机上开启才生效,原理上应该只需要在收到inferior BPDU的switch上开启就行，模拟器bug?</span><br></pre></td></tr></table></figure>
+<p>如上图，S2的eth0 down掉后，认为自己是根桥向S3发送inferior BPDU，正常情况下S3忽略，直到eth1超时变成DP(20秒), 然后S3向S2转发superior BPDU，eth1再经过listening和learning的30秒时延后进入forwarding状态，完成收敛。开启backbonefast后，eth1不用等待20秒超时，直接变成DP，然后再经过30秒状态变化后进入forwarding，收敛时间由50秒变成30秒。<br>很多文档中有direct和indirect的区分，其实没啥必要，命令行中也没体现，直接分析错误场景，分析BPDU的比较即可。</p>
+<h1 id="几种安全机制"><a href="#几种安全机制" class="headerlink" title="几种安全机制"></a>几种安全机制</h1><p><code>BPDU gard/filter</code>如果端口使能BPDU gard，当端口收到BPDU时将端口down掉(error disable)。应该在所有的access端口使能，即只有交换机互联的端口跑STP。可以避免交换机attacks(攻击者伪装成根交换机监听流量)和incident(非 STP/RSTP 感知交换机插入网络导致环路)。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Switch(config-if)#spanning-tree bpduguard enable		&#x2F;&#x2F; 端口下开启bpduguard，收到bpdu将端口errordisable</span><br><span class="line">Switch(config-if)#spanning-tree bpdufilter enable		&#x2F;&#x2F; 不shutdown端口，只是ignore收到的bpdu，其它流量正常转发，在AP上开启，BPDU超时后会变成DP，形成环路</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Rancho
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://rancho333.github.io/2022/07/07/STP802-1d%E7%AE%80%E8%BF%B0/" title="STP802.1d简述">https://rancho333.github.io/2022/07/07/STP802-1d简述/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/STP/" rel="tag"># STP</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/10/20/vrf%E7%AE%80%E8%BF%B0%E5%8F%8A%E4%BB%BF%E7%9C%9F%E5%AE%9E%E9%AA%8C/" rel="prev" title="vrf简述及仿真实验">
+      <i class="fa fa-chevron-left"></i> vrf简述及仿真实验
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/07/07/RSTP802-1w%E7%AE%80%E8%BF%B0/" rel="next" title="RSTP802.1w简述">
+      RSTP802.1w简述 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="nav-number">1.</span> <span class="nav-text">写在前面</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#STP%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="nav-number">2.</span> <span class="nav-text">STP的作用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#STP%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%86%97%E4%BD%99%E5%8F%8A%E9%81%BF%E5%85%8D%E7%8E%AF%E8%B7%AF%E7%9A%84"><span class="nav-number">3.</span> <span class="nav-text">STP如何实现冗余及避免环路的</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#STP%E4%B8%AD%E7%9A%84%E4%B8%80%E4%BA%9B%E9%87%8D%E8%A6%81%E6%A6%82%E5%BF%B5"><span class="nav-number">4.</span> <span class="nav-text">STP中的一些重要概念</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#BID"><span class="nav-number">4.1.</span> <span class="nav-text">BID</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%B9%E6%A1%A5"><span class="nav-number">4.2.</span> <span class="nav-text">根桥</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3%E4%B8%AD%E7%AB%AF%E5%8F%A3%E8%A7%92%E8%89%B2"><span class="nav-number">4.3.</span> <span class="nav-text">3中端口角色</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5%E7%A7%8D%E7%AB%AF%E5%8F%A3%E7%8A%B6%E6%80%81"><span class="nav-number">4.4.</span> <span class="nav-text">5种端口状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E4%B8%AA%E8%AE%A1%E6%97%B6%E5%99%A8"><span class="nav-number">4.5.</span> <span class="nav-text">四个计时器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#BPDU"><span class="nav-number">4.6.</span> <span class="nav-text">BPDU</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#STP%E7%9A%84%E9%80%89%E4%B8%BE%E6%B5%81%E7%A8%8B"><span class="nav-number">5.</span> <span class="nav-text">STP的选举流程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#STP%E6%94%B6%E6%95%9B%E5%9C%BA%E6%99%AF%E6%8F%8F%E8%BF%B0"><span class="nav-number">6.</span> <span class="nav-text">STP收敛场景描述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%B4%E6%8E%A5%E6%84%9F%E7%9F%A5"><span class="nav-number">6.1.</span> <span class="nav-text">直接感知</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%A4%E6%8D%A2%E6%9C%BA%E4%B8%8A%E6%B2%A1%E6%9C%89%E5%AD%98%E5%82%A8BPDU%E7%9A%84%E7%AB%AF%E5%8F%A3"><span class="nav-number">6.1.1.</span> <span class="nav-text">交换机上没有存储BPDU的端口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%A4%E6%8D%A2%E6%9C%BA%E4%B8%8A%E6%9C%89%E5%AD%98%E5%82%A8BPDU%E7%9A%84%E7%AB%AF%E5%8F%A3"><span class="nav-number">6.1.2.</span> <span class="nav-text">交换机上有存储BPDU的端口</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%97%B4%E6%8E%A5%E6%84%9F%E7%9F%A5"><span class="nav-number">6.2.</span> <span class="nav-text">间接感知</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#STP%E6%8B%93%E6%89%91%E5%8F%98%E5%8C%96%E5%B8%A6%E6%9D%A5%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">7.</span> <span class="nav-text">STP拓扑变化带来的问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#STP%E6%94%B6%E6%95%9B%E7%9A%84%E5%87%A0%E4%B8%AA%E4%BC%98%E5%8C%96%E9%85%8D%E7%BD%AE"><span class="nav-number">8.</span> <span class="nav-text">STP收敛的几个优化配置</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%87%A0%E7%A7%8D%E5%AE%89%E5%85%A8%E6%9C%BA%E5%88%B6"><span class="nav-number">9.</span> <span class="nav-text">几种安全机制</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Rancho"
+      src="/pictures/R-W.png">
+  <p class="site-author-name" itemprop="name">Rancho</p>
+  <div class="site-description" itemprop="description">No pain, no gain!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">83</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">45</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Rancho333" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Rancho333" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Rancho</span>
+</div>
+
+<div class="theme-info">
+  <div class="powered-by"></div>
+  <span class="post-count">全站共 118.8k 字</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/ Relative)","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"left","width":100,"height":180},"mobile":{"show":false},"react":{"opacityDefault":0.7}});</script></body>
+</html>
